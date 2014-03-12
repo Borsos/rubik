@@ -13,11 +13,16 @@ from cubist.cube import Cube
 from cubist.shape import Shape
 from cubist.origins import Origins
 from cubist.selection import Selection
-from cubist.extract import extract
 
-def main_list_data_types(logger, args):
-    for data_type_name, data_type_description in data_types.DATA_TYPES.items():
-        log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
+if sys.version_info.major == 2:
+    PY3 = False
+else:
+    PY3 = True
+
+def main_list(logger, args):
+    if args.what == "data_types":
+        for data_type_name, data_type_description in data_types.DATA_TYPES.items():
+            log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
     return 0
 
 def _create_cube(logger, args):
@@ -41,7 +46,7 @@ def _create_cube(logger, args):
 
 def main_print(logger, args):
     cube = _create_cube(logger, args)
-    cube.print(input_filename=args.input_filename)
+    cube.dump(input_filename=args.input_filename)
 
 def main_create(logger, args):
     cube = _create_cube(logger, args)
@@ -66,8 +71,8 @@ Tool to read/write N-dimensional cubes
 """
     epilog=""
 
-    list_data_types_description = "List available data types"
-    list_data_types_epilog = ""
+    list_description = "List available data types"
+    list_epilog = ""
 
     print_description = "Print N-dimensional cubes"
 
@@ -113,22 +118,28 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
 
     subparsers = top_level_parser.add_subparsers()
 
-    list_data_types_parser = subparsers.add_parser(
-        "list_data_types",
-        aliases=["list", "l"],
-        description=list_data_types_description,
-        epilog=list_data_types_epilog,
+    list_parser = subparsers.add_parser(
+        "list",
+        description=list_description,
+        epilog=list_epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         parents=[common_parser],
     )
 
-    list_data_types_parser.set_defaults(
-        function=main_list_data_types,
+    list_parser.set_defaults(
+        function=main_list,
+        what="data_types",
     )
     
+    list_group = list_parser.add_mutually_exclusive_group()
+    list_group.add_argument("--data-types", "-d",
+        dest="what",
+        action="store_const",
+        const="data_types",
+        help="list available data types")
+
     print_parser = subparsers.add_parser(
         "print",
-        aliases=['p'],
         description=print_description,
         epilog=filename_data_type_epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -138,9 +149,9 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     print_parser.set_defaults(
         function=main_print,
     )
+
     create_parser = subparsers.add_parser(
         "create",
-        aliases=['c'],
         description=create_description,
         epilog=filename_data_type_epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -167,7 +178,6 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
 
     extract_parser = subparsers.add_parser(
         "extract",
-        aliases=['x'],
         description=extract_description,
         epilog=filename_data_type_epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,

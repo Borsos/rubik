@@ -64,7 +64,7 @@ class Cube(object):
             data_type=self.data_type,
         )
 
-    def print(self, input_filename):
+    def dump(self, input_filename):
         expected_input_count, expected_input_size, input_filename = self._check_input_filename(input_filename)
         with open(input_filename, "rb") as input_file:
             self.logger.info("reading {c} {t!r} elements ({b} bytes) from {i}...".format(
