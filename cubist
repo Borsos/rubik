@@ -115,7 +115,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
 
     list_data_types_parser = subparsers.add_parser(
         "list_data_types",
-        aliases=['l', "list"],
+        aliases=["list", "l"],
         description=list_data_types_description,
         epilog=list_data_types_epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -180,17 +180,13 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     
 
     for parser in print_parser, extract_parser:
-        parser.add_argument("--input", "-i",
-            metavar="I",
-            dest="input_filename",
-            required=True,
+        parser.add_argument(
+            "input_filename",
             help="input filename (*)")
 
     for parser in create_parser, extract_parser:
-        parser.add_argument("--output", "-o",
-            metavar="O",
-            dest="output_filename",
-            required=True,
+        parser.add_argument(
+            "output_filename",
             help="output filename (*)")
 
     for parser in extract_parser, create_parser, print_parser:
