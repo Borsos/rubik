@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+
+import sys
+import argparse
+
+import random
+
+import numpy as np
+
+from cubist.application import log
+from cubist import data_types
+from cubist.cube import Cube
+from cubist.shape import Shape
+from cubist.origins import Origins
+from cubist.selection import Selection
+from cubist.extract import extract
+
+def main_list_data_types(logger, args):
+    for data_type_name, data_type_description in data_types.DATA_TYPES.items():
+        log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
+    return 0
+
+def _create_cube(logger, args):
+    shape = Shape(args.shape)
+    if args.origins is None:
+        origins = Origins.from_rank(shape.rank())
+    else:
+        origins = Origins(args.origins)
+    #logger.debug("# origins are  {0}".format(origins))
+    #logger.debug("# shape is     {0}".format(shape))
+    #logger.debug("# selection is {0}".format(selection))
+    #logger.debug("# data_type is {0}".format(args.data_type))
+    
+    cube = Cube(
+            origins=origins,
+            shape=shape,
+            data_type=args.data_type,
+            logger=logger)
+
+    return cube
+
+def main_print(logger, args):
+    cube = _create_cube(logger, args)
+    cube.print(input_filename=args.input_filename)
+
+def main_create(logger, args):
+    cube = _create_cube(logger, args)
+    cube.create(
+            creation_mode=args.creation_mode,
+            output_filename=args.output_filename
+    )
+    
+def main_extract(logger, args):
+    cube = _create_cube(logger, args)
+    selection = Selection(args.selection)
+    cube.extract(
+            selection=selection,
+            input_filename=args.input_filename,
+            output_filename=args.output_filename
+    )
+    return 0
+
+def main():
+    description="""\
+Tool to read/write N-dimensional cubes
+"""
+    epilog=""
+
+    list_data_types_description = "List available data types"
+    list_data_types_epilog = ""
+
+    print_description = "Print N-dimensional cubes"
+
+    create_description = "Create N-dimensional cubes"
+
+    extract_description = """\
+Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
+"""
+    filename_data_type_epilog = """\
+(*) filenames are interpolated; the following keywords are substituted:
+ + shape: the cube shape, for instance '3,2,4';
+ + data_type: the data type, for instance 'float32';
+ + count: the number of elements, for instance '24';
+ + bytes: the number of elements, for instance '96'.
+ For instance, 'a_{xshape}.raw' is converted to 'a_3x2x4.raw'.
+
+(**) available data types are:
+"""
+    filename_data_type_epilog += "\n".join(" + {0:16s} {1}".format(data_type_name, data_type_description) for data_type_name, data_type_description in data_types.DATA_TYPES.items())
+    
+    common_parser = argparse.ArgumentParser(
+        add_help=False
+    )
+
+    common_parser.add_argument("--verbose", "-v",
+        dest="verbose_level",
+        action="count",
+        default=0,
+        help="set verbose level")
+
+    common_parser.add_argument("--trace-errors", "-t",
+        dest="trace_errors",
+        action="store_true",
+        default=False,
+        help="show error traceback")
+
+    top_level_parser = argparse.ArgumentParser(
+        parents=[common_parser],
+        description=description,
+        epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    subparsers = top_level_parser.add_subparsers()
+
+    list_data_types_parser = subparsers.add_parser(
+        "list_data_types",
+        aliases=['l', "list"],
+        description=list_data_types_description,
+        epilog=list_data_types_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[common_parser],
+    )
+
+    list_data_types_parser.set_defaults(
+        function=main_list_data_types,
+    )
+    
+    print_parser = subparsers.add_parser(
+        "print",
+        aliases=['p'],
+        description=print_description,
+        epilog=filename_data_type_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[common_parser],
+    )
+
+    print_parser.set_defaults(
+        function=main_print,
+    )
+    create_parser = subparsers.add_parser(
+        "create",
+        aliases=['c'],
+        description=create_description,
+        epilog=filename_data_type_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[common_parser],
+    )
+
+    create_parser.set_defaults(
+        function=main_create,
+    )
+
+    create_parser.add_argument("--random-seed", "-r",
+        metavar="R",
+        dest="random_seed",
+        type=str,
+        default=None,
+        help="random seed")
+    
+    create_parser.add_argument("--mode", "-m",
+        metavar="M",
+        dest="creation_mode",
+        choices=Cube.CREATION_MODES,
+        default=Cube.CREATION_MODE_RANGE,
+        help="creation mode")
+
+    extract_parser = subparsers.add_parser(
+        "extract",
+        aliases=['x'],
+        description=extract_description,
+        epilog=filename_data_type_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[common_parser],
+    )
+
+    extract_parser.set_defaults(
+        function=main_extract,
+    )
+    
+
+    for parser in print_parser, extract_parser:
+        parser.add_argument("--input", "-i",
+            metavar="I",
+            dest="input_filename",
+            required=True,
+            help="input filename (*)")
+
+    for parser in create_parser, extract_parser:
+        parser.add_argument("--output", "-o",
+            metavar="O",
+            dest="output_filename",
+            required=True,
+            help="output filename (*)")
+
+    for parser in extract_parser, create_parser, print_parser:
+        parser.add_argument("--origins", "-O",
+            metavar="[O0[:O1[...]]]",
+            default=None,
+            help="origins of the input filename")
+
+        parser.add_argument("--shape", "-s",
+            metavar="[D0[:D1[...]]]",
+            required=True,
+            help="shape of the input filename")
+
+        parser.add_argument("--data-type", "--dtype", "-d",
+            metavar="D",
+            dest="data_type",
+            choices=data_types.DATA_TYPES.keys(),
+            default=data_types.DEFAULT_DATA_TYPE,
+            help="data type name (**)")
+
+    extract_parser.add_argument("--extract", "-x",
+        metavar="S",
+        dest="selection",
+        required=True,
+        help="subcube selection")
+
+
+
+    args = top_level_parser.parse_args()
+
+    logger = log.set_logger(args.verbose_level)
+    
+    return_code = 0
+    try:
+        return_code = args.function(logger, args)
+    except:
+        log.trace_error(args.trace_errors)
+
+    if return_code:
+        sys.exit(return_code)
+
+
+if __name__ == "__main__":
+    main()
