@@ -194,9 +194,15 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             "input_filename",
             help="input filename (*)")
 
-    for parser in create_parser, extract_parser:
+    for parser in create_parser, :
         parser.add_argument(
             "output_filename",
+            help="output filename (*)")
+
+    for parser in extract_parser, :
+        parser.add_argument(
+            "output_filename",
+            nargs='?',
             help="output filename (*)")
 
     for parser in extract_parser, create_parser, print_parser:

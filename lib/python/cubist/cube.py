@@ -115,6 +115,8 @@ class Cube(object):
         return expected_input_count, expected_input_size, input_filename
 
     def extract(self, selection, input_filename, output_filename):
+        if output_filename is None:
+            output_filename = input_filename
         assert isinstance(selection, Selection)
         if selection.rank() != self.shape.rank():
             raise SubCubeError("invalid selection {selection} for shape {shape}: rank {rselection} does not match {rshape}".format(
@@ -131,15 +133,15 @@ class Cube(object):
                 b=expected_input_size,
                 i=input_filename))
             array = np.fromfile(input_file, dtype=self.dtype, count=expected_input_count)
-            cube = array.reshape(self.shape.shape())
-            subcube = cube[selection.picks(self.origins)]
-            output_filename = self.format_filename(output_filename, subcube.shape)
-            self.logger.info("writing {c} {t!r} elements ({b} bytes) to {o}...".format(
-                c=subcube.size,
-                t=self.data_type,
-                b=subcube.size * self.dtype_size,
-                o=output_filename))
-            with open(output_filename, "wb") as output_file:
-                subcube.tofile(output_file)
+        cube = array.reshape(self.shape.shape())
+        subcube = cube[selection.picks(self.origins)]
+        output_filename = self.format_filename(output_filename, subcube.shape)
+        self.logger.info("writing {c} {t!r} elements ({b} bytes) to {o}...".format(
+            c=subcube.size,
+            t=self.data_type,
+            b=subcube.size * self.dtype_size,
+            o=output_filename))
+        with open(output_filename, "wb") as output_file:
+            subcube.tofile(output_file)
  
         
