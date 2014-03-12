@@ -24,7 +24,7 @@ scripts = [
 
 setup(
     name = "cubist",
-    version = "1.0.1",
+    version = "1.0.2",
     requires = [],
     description = "Tool to read/write N-dimensional cubes",
     author = "Simone Campagna",

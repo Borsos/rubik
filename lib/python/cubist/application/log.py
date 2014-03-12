@@ -52,5 +52,5 @@ def trace_error(trace):
     if trace:
         traceback.print_exception(err_type, err, tb)
     else:
-        get_logger().error("error: {0}: {1}".format(err_type, err))
+        get_logger().error("error: {0}: {1}".format(err_type.__name__, err))
        
