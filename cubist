@@ -46,23 +46,29 @@ def _create_cubist(logger, args):
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None))
     return cubist
 
+def _read_and_extract(cubist, logger, args, input_filename, selection):
+    if args.shape is None:
+        raise CubistError("--shape/-s is mandatory when input files are provided")
+    cube = cubist.read(
+            shape=args.shape,
+            input_format=args.input_format,
+            input_filename=input_filename,
+            selection=selection)
+    return cube
+
 def _read(cubist, logger, args):
-    if not args.input_filenames:
-        raise CubistError("no input filenames")
-    selection_arg = getattr(args, 'selection', None)
-    for input_filename in args.input_filenames:
-        cube = cubist.read(
-                shape=args.shape,
-                input_format=args.input_format,
-                input_filename=input_filename)
-        if selection_arg is not None:
-            cube = cubist.extract(cube=cube, selection=selection_arg)
-    expression_arg = getattr(args, 'expression', None)
-    if expression_arg is None:
+    selection = getattr(args, 'selection', None)
+    expression = getattr(args, 'expression', None)
+    if expression:
+        for input_filename in args.input_filenames:
+            _read_and_extract(cubist, logger, args, input_filename, selection)
+        cube = cubist.evaluate_expression(expression=expression)
+    else:
         if len(args.input_filenames) > 1:
-            raise CubistError("--expression/-e is mandatory when more than 1 input filename is provided")
-    if expression_arg is not None:
-        cube = cubist.evaluate_expression(expression=expression_arg)
+            raise CubistError("too many input filenames")
+        elif len(args.input_filenames) == 0:
+            raise CubistError("no input filenames")
+        cube = _read_and_extract(cubist, logger, args, input_filename, selection)
     clip_arg = getattr(args, 'clip', None)
     if clip_arg is not None:
         cube = cubist.clip(cube=cube, clip=clip_arg)
@@ -250,7 +256,6 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             dest="input_filenames",
             type=InputFilename,
             action="append",
-            required=True,
             default=[],
             help="input filename (*)")
 
@@ -339,7 +344,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         parser.add_argument("--shape", "-s",
             metavar="[D0[:D1[...]]]",
             type=Shape,
-            required=True,
+            required=False,
             help="shape of the input filename")
 
         parser.add_argument("--data-type", "--dtype", "-d",

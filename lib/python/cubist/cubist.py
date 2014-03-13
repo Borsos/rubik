@@ -99,8 +99,9 @@ class Cubist(object):
     def register_input_cube(self, input_varname, input_filename, cube):
         self.input_cubes[input_varname] = cube
 
-    def read(self, shape, input_format, input_filename):
+    def read(self, shape, input_format, input_filename, selection=None):
         assert isinstance(input_filename, InputFilename)
+        assert (selection is None) or isinstance(selection, Selection)
         input_varname = input_filename.varname
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
@@ -170,6 +171,8 @@ class Cubist(object):
                     s=shape,
                     sc=shape.count(),
             ))
+        if selection:
+            cube = self.extract(cube, selection)
         self.register_input_cube(input_varname, input_filename, cube)
         return cube
 
@@ -237,6 +240,12 @@ class Cubist(object):
         cube_fraction_zero = 0.0
         if cube_count:
             cube_fraction_zero = cube_count_zero / float(cube_count)
+        cube_count_nan = np.count_nonzero(np.isnan(cube))
+        if cube_count:
+            cube_fraction_nan = cube_count_nan / float(cube_count)
+        cube_count_inf = np.count_nonzero(np.isinf(cube))
+        if cube_count:
+            cube_fraction_inf = cube_count_inf / float(cube_count)
         stat = """\
 shape         = {shape}
 #elements     = {count}
@@ -246,6 +255,8 @@ sum           = {sum}
 ave           = {ave}
 #zero         = {count_zero} [{fraction_zero:.2%}]
 #nonzero      = {count_nonzero} [{fraction_nonzero:.2%}]
+#nan          = {count_nan} [{fraction_nan:.2%}]
+#inf          = {count_inf} [{fraction_inf:.2%}]
 """.format(
             shape='x'.join(str(i) for i in cube.shape),
             count=cube_count,
@@ -257,6 +268,10 @@ ave           = {ave}
             fraction_zero=cube_fraction_zero,
             count_nonzero=cube_count_nonzero,
             fraction_nonzero=cube_fraction_nonzero,
+            count_nan=cube_count_nan,
+            fraction_nan=cube_fraction_nan,
+            count_inf=cube_count_inf,
+            fraction_inf=cube_fraction_inf,
         )
         log.PRINT(stat)
 
