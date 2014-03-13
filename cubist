@@ -162,12 +162,12 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     common_parser.add_argument("--input-text-converter", "-Ic",
         dest="input_text_converter",
         default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
-        help="converter to be used with '{0}' input file format (e.g. '%.18e')".format(Cubist.FILE_FORMAT_TEXT))
+        help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
     common_parser.add_argument("--output-text-converter", "-Oc",
         dest="output_text_converter",
         default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
-        help="converter to be used with '{0}' output file format (e.g. '%.18e')".format(Cubist.FILE_FORMAT_TEXT))
+        help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
     common_parser.add_argument("--accept-bigger-raw-files", "-a",
         action="store_true",
