@@ -36,8 +36,9 @@ class Cubist(object):
     FILE_FORMATS = (FILE_FORMAT_RAW, FILE_FORMAT_CSV, FILE_FORMAT_TEXT)
     DEFAULT_FILE_FORMAT = FILE_FORMATS[0]
     FILE_FORMAT_CSV_SEPARATOR = ','
-    FILE_FORMAT_TEXT_DELIMITER = ''
-    FILE_FORMAT_TEXT_NEWLINE = '\n'
+    FILE_FORMAT_TEXT_DELIMITER = None
+    FILE_FORMAT_TEXT_NEWLINE = None
+    FILE_FORMAT_TEXT_CONVERTER = None
     def __init__(self,
             data_type,
             logger,
@@ -47,6 +48,8 @@ class Cubist(object):
             output_text_delimiter=FILE_FORMAT_TEXT_DELIMITER,
             input_text_newline=FILE_FORMAT_TEXT_NEWLINE,
             output_text_newline=FILE_FORMAT_TEXT_NEWLINE,
+            input_text_converter=FILE_FORMAT_TEXT_CONVERTER,
+            output_text_converter=FILE_FORMAT_TEXT_CONVERTER,
             accept_bigger_raw_files=False):
         self.data_type = data_type
         self.dtype = data_types.get_dtype(data_type)
@@ -54,6 +57,12 @@ class Cubist(object):
         self.logger = logger
         self.input_csv_separator = input_csv_separator
         self.output_csv_separator = output_csv_separator
+        self.input_text_delimiter = input_text_delimiter
+        self.output_text_delimiter = output_text_delimiter
+        self.input_text_newline = input_text_newline
+        self.output_text_newline = output_text_newline
+        self.input_text_converter = input_text_converter
+        self.output_text_converter = output_text_converter
         self.accept_bigger_raw_files = accept_bigger_raw_files
 
     def format_filename(self, filename, shape, file_format):
@@ -93,8 +102,12 @@ class Cubist(object):
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.loadtx
-            numpy_function_nargs['delimiter'] = self.input_text_delimiter
-            numpy_function_nargs['newline'] = self.input_text_newline
+            if self.input_text_delimiter is not None:
+                numpy_function_nargs['delimiter'] = self.input_text_delimiter
+            if self.input_text_newline is not None:
+                numpy_function_nargs['newline'] = self.input_text_newline
+            if self.input_text_converter is not None:
+                numpy_function_nargs['fmt'] = self.input_text_convert
         else:
             raise CubistError("invalid file format {0!r}".format(input_format))
         input_filename = self.format_filename(input_filename, shape.shape(), input_format)
@@ -157,6 +170,12 @@ class Cubist(object):
             numpy_function = np.savetxt
             numpy_function_pargs.append(output_filename)
             numpy_function_pargs.append(cube)
+            if self.output_text_delimiter is not None:
+                numpy_function_nargs['delimiter'] = self.output_text_delimiter
+            if self.output_text_newline is not None:
+                numpy_function_nargs['newline'] = self.output_text_newline
+            if self.output_text_converter is not None:
+                numpy_function_nargs['fmt'] = self.output_text_converter
         else:
             raise CubistError("invalid file format {0!r}".format(output_format))
         self.logger.info("writing {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
