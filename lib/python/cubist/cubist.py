@@ -31,25 +31,26 @@ class Cubist(object):
     CREATION_MODE_ONES = 'ones'
     CREATION_MODES = (CREATION_MODE_RANDOM, CREATION_MODE_RANGE, CREATION_MODE_ZEROS, CREATION_MODE_ONES)
     FILE_FORMAT_RAW = 'raw'
+    FILE_FORMAT_CSV = 'csv'
     FILE_FORMAT_TEXT = 'text'
-    FILE_FORMATS = (FILE_FORMAT_RAW, FILE_FORMAT_TEXT)
+    FILE_FORMATS = (FILE_FORMAT_RAW, FILE_FORMAT_CSV, FILE_FORMAT_TEXT)
     DEFAULT_FILE_FORMAT = FILE_FORMATS[0]
-    FILE_FORMAT_TEXT_SEPARATOR = ','
+    FILE_FORMAT_CSV_SEPARATOR = ','
     def __init__(self,
             data_type,
             logger,
-            input_text_separator=FILE_FORMAT_TEXT_SEPARATOR,
-            output_text_separator=FILE_FORMAT_TEXT_SEPARATOR,
+            input_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
+            output_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
             accept_bigger_raw_files=False):
         self.data_type = data_type
         self.dtype = data_types.get_dtype(data_type)
         self.dtype_bytes = self.dtype().itemsize
         self.logger = logger
-        self.input_text_separator = input_text_separator
-        self.output_text_separator = output_text_separator
+        self.input_csv_separator = input_csv_separator
+        self.output_csv_separator = output_csv_separator
         self.accept_bigger_raw_files = accept_bigger_raw_files
 
-    def format_filename(self, filename, shape):
+    def format_filename(self, filename, shape, file_format):
         count = 0
         if shape:
             count = 1
@@ -57,11 +58,10 @@ class Cubist(object):
                 count *= i
         else:
             count = 0
-        num_bytes = count * self.dtype_bytes
         return filename.format(
             shape="x".join(str(i) for i in shape),
             count=count,
-            bytes=num_bytes,
+            format=file_format,
             data_type=self.data_type,
         )
 
@@ -69,18 +69,26 @@ class Cubist(object):
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         expected_input_count = shape.count()
+        numpy_function_name = None
+        numpy_function_args = {}
         if input_format == self.FILE_FORMAT_RAW:
             num_bytes = shape.count() * self.dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
-            sep = ''
-            count=expected_input_count
+            # read only expected elements (number of elements already checked)
+            numpy_function_name = 'fromfile'
+            numpy_function_args['count'] = expected_input_count
+        elif input_format == self.FILE_FORMAT_CSV:
+            msg_bytes = ''
+            # read all elements (must check number of elements)
+            numpy_function_name = 'fromfile'
+            numpy_function_args['sep'] = self.input_csv_separator
         elif input_format == self.FILE_FORMAT_TEXT:
             msg_bytes = ''
-            sep = self.input_text_separator
-            count=-1 # must check number of elements
+            # read all elements (must check number of elements)
+            numpy_function_name = 'loadtxt'
         else:
             raise CubistError("invalid file format {0!r}".format(input_format))
-        input_filename = self.format_filename(input_filename, shape.shape())
+        input_filename = self.format_filename(input_filename, shape.shape(), input_format)
         input_filename = self._check_input_filename(shape, input_format, input_filename)
         self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
             c=expected_input_count,
@@ -88,7 +96,7 @@ class Cubist(object):
             b=msg_bytes,
             f=input_format,
             i=input_filename))
-        array = np.fromfile(input_filename, dtype=self.dtype, count=count, sep=sep)
+        array = getattr(np, numpy_function_name)(input_filename, dtype=self.dtype, **numpy_function_args)
         input_count = array.size
         if array.size != expected_input_count:
             if input_count < expected_input_count:
@@ -121,23 +129,34 @@ class Cubist(object):
         return cube
 
     def write(self, cube, output_format, output_filename):
+        numpy_function = None
+        numpy_function_pargs = []
+        numpy_function_nargs = {}
+        output_filename = self.format_filename(output_filename, cube.shape, output_format)
         if output_format == self.FILE_FORMAT_RAW:
             num_bytes = cube.size * self.dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
-            sep = ''
+            numpy_function = cube.tofile
+            numpy_function_pargs.append(output_filename)
+        elif output_format == self.FILE_FORMAT_CSV:
+            msg_bytes = ''
+            numpy_function = cube.tofile
+            numpy_function_nargs['sep'] = self.output_csv_separator
+            numpy_function_pargs.append(output_filename)
         elif output_format == self.FILE_FORMAT_TEXT:
             msg_bytes = ''
-            sep = self.output_text_separator
+            numpy_function = np.savetxt
+            numpy_function_pargs.append(output_filename)
+            numpy_function_pargs.append(cube)
         else:
             raise CubistError("invalid file format {0!r}".format(output_format))
-        output_filename = self.format_filename(output_filename, cube.shape)
         self.logger.info("writing {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
             c=cube.size,
             t=self.data_type,
             b=msg_bytes,
             f=output_format,
             o=output_filename))
-        cube.tofile(output_filename, sep=sep)
+        numpy_function(*numpy_function_pargs, **numpy_function_nargs)
 
 
     def print_cube(self, cube):

@@ -32,8 +32,8 @@ def _create_cubist(logger, args):
     cubist = Cubist(
             data_type=args.data_type,
             logger=logger,
-            input_text_separator=args.input_text_separator,
-            output_text_separator=args.output_text_separator,
+            input_csv_separator=args.input_csv_separator,
+            output_csv_separator=args.output_csv_separator,
             accept_bigger_raw_files=args.accept_bigger_raw_files)
     return cubist
 
@@ -100,8 +100,8 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
  + shape: the cube shape, for instance '3,2,4';
  + data_type: the data type, for instance 'float32';
  + count: the number of elements, for instance '24';
- + bytes: the number of elements, for instance '96'.
- For instance, 'a_{xshape}.raw' is converted to 'a_3x2x4.raw'.
+ + format: the file format
+ For instance, 'a_{shape}.raw' is converted to 'a_3x2x4.raw'.
 
 (**) available data types are:
 """
@@ -123,15 +123,15 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         default=False,
         help="show error traceback")
 
-    common_parser.add_argument("--input-text-separator", "-is",
-        dest="input_text_separator",
-        default=Cubist.FILE_FORMAT_TEXT_SEPARATOR,
-        help="separator to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_TEXT))
+    common_parser.add_argument("--input-csv-separator", "-is",
+        dest="input_csv_separator",
+        default=Cubist.FILE_FORMAT_CSV_SEPARATOR,
+        help="separator to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_CSV))
 
-    common_parser.add_argument("--output-text-separator", "-os",
-        dest="output_text_separator",
-        default=Cubist.FILE_FORMAT_TEXT_SEPARATOR,
-        help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
+    common_parser.add_argument("--output-csv-separator", "-os",
+        dest="output_csv_separator",
+        default=Cubist.FILE_FORMAT_CSV_SEPARATOR,
+        help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_CSV))
 
     common_parser.add_argument("--accept-bigger-raw-files", "-a",
         action="store_true",
