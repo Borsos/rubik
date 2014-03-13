@@ -22,7 +22,7 @@ from .errors import CubistError
 class Filename(object):
     __prefix__ = 'x'
     __filenames__ = {}
-    __re_split__ = re.compile("^([a-zA-Z]+\w+)\@(.*)")
+    __re_split__ = re.compile("^([a-zA-Z]+\w*)\@(.*)")
     def __init__(self, init):
         varname = None
         if isinstance(init, Filename):

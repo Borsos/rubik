@@ -94,7 +94,7 @@ def main_extract(logger, args):
     cube = _read(cubist, logger, args)
     if args.output_filename is None:
         if len(args.input_filenames) == 1:
-            output_filename = OutputFilename(args.input_filename)
+            output_filename = OutputFilename(args.input_filenames[0])
         else:
             raise CubistError("--in-place/-Oi is not compatible with multiple input filenames")
     else:

@@ -319,6 +319,7 @@ ave           = {ave}
     def evaluate_expression(self, expression):
         globals_d = {
             'np': np,
+            'numpy': np,
         }
         globals_d.update(self.input_cubes)
         self.logger.info("evaluating expression {0!r}...".format(expression))
