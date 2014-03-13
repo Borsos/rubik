@@ -44,25 +44,31 @@ def _create_cube(logger, args):
 
     return cube
 
+def _read_and_extract(logger, args, cube):
+    c = cube.read(input_filename=args.input_filename)
+    selection_arg = getattr(args, 'selection', None)
+    if selection_arg is not None:
+        selection = Selection(selection_arg)
+        return cube.extract(cube=c, selection=selection)
+    else:
+        return c
+
 def main_print(logger, args):
     cube = _create_cube(logger, args)
-    cube.dump(input_filename=args.input_filename)
+    c = _read_and_extract(logger, args, cube)
+    cube.print_cube(cube=c)
+    return 0
 
 def main_create(logger, args):
     cube = _create_cube(logger, args)
-    cube.create(
-            creation_mode=args.creation_mode,
-            output_filename=args.output_filename
-    )
+    c = cube.create(creation_mode=args.creation_mode)
+    cube.write(cube=c, output_filename=args.output_filename)
+    return 0
     
 def main_extract(logger, args):
     cube = _create_cube(logger, args)
-    selection = Selection(args.selection)
-    cube.extract(
-            selection=selection,
-            input_filename=args.input_filename,
-            output_filename=args.output_filename
-    )
+    c = _read_and_extract(logger, args, cube)
+    cube.write(cube=c, output_filename=args.output_filename)
     return 0
 
 def main():
@@ -190,19 +196,15 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     
 
     for parser in print_parser, extract_parser:
-        parser.add_argument(
-            "input_filename",
+        parser.add_argument("--input-filename", "-i",
+            dest="input_filename",
+            required=True,
             help="input filename (*)")
 
-    for parser in create_parser, :
-        parser.add_argument(
-            "output_filename",
-            help="output filename (*)")
-
-    for parser in extract_parser, :
-        parser.add_argument(
-            "output_filename",
-            nargs='?',
+    for parser in create_parser, extract_parser:
+        parser.add_argument("--output-filename", "-o",
+            dest="output_filename",
+            required=True,
             help="output filename (*)")
 
     for parser in extract_parser, create_parser, print_parser:
@@ -223,13 +225,12 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             default=data_types.DEFAULT_DATA_TYPE,
             help="data type name (**)")
 
-    extract_parser.add_argument("--extract", "-x",
-        metavar="S",
-        dest="selection",
-        required=True,
-        help="subcube selection")
-
-
+    for parser, required in (extract_parser, True), (print_parser, False):
+        parser.add_argument("--extract", "-x",
+            metavar="S",
+            dest="selection",
+            required=required,
+            help="subcube selection")
 
     args = top_level_parser.parse_args()
 

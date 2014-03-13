@@ -64,7 +64,7 @@ class Cube(object):
             data_type=self.data_type,
         )
 
-    def dump(self, input_filename):
+    def read(self, input_filename):
         expected_input_count, expected_input_size, input_filename = self._check_input_filename(input_filename)
         with open(input_filename, "rb") as input_file:
             self.logger.info("reading {c} {t!r} elements ({b} bytes) from {i}...".format(
@@ -73,10 +73,23 @@ class Cube(object):
                 b=expected_input_size,
                 i=input_filename))
             array = np.fromfile(input_file, dtype=self.dtype, count=expected_input_count)
-            cube = array.reshape(self.shape.shape())
-            log.PRINT(cube)
+        cube = array.reshape(self.shape.shape())
+        return cube
 
-    def create(self, output_filename, creation_mode):
+    def write(self, cube, output_filename):
+        output_filename = self.format_filename(output_filename, cube.shape)
+        self.logger.info("writing {c} {t!r} elements ({b} bytes) to {o}...".format(
+            c=cube.size,
+            t=self.data_type,
+            b=cube.size * self.dtype_size,
+            o=output_filename))
+        with open(output_filename, "wb") as output_file:
+            cube.tofile(output_file)
+
+    def print_cube(self, cube):
+        log.PRINT(cube)
+
+    def create(self, creation_mode):
         if creation_mode == self.CREATION_MODE_RANGE:
             cube = np.array(np.linspace(0, self.shape.count() - 1, self.shape.count()), dtype=self.dtype)
         elif creation_mode == self.CREATION_MODE_RANDOM:
@@ -88,9 +101,7 @@ class Cube(object):
         else:
             raise SubCubeError("invalid creation mode {0}".format(creation_mode))
         cube = cube.reshape(self.shape.shape())
-        output_filename = self.format_filename(output_filename, cube.shape)
-        with open(output_filename, "wb") as output_file:
-            cube.tofile(output_file)
+        return cube
 
     def _check_input_filename(self, input_filename):
         input_filename = self.format_filename(input_filename, self.shape.shape())
@@ -114,9 +125,7 @@ class Cube(object):
             ))
         return expected_input_count, expected_input_size, input_filename
 
-    def extract(self, selection, input_filename, output_filename):
-        if output_filename is None:
-            output_filename = input_filename
+    def extract(self, selection, cube):
         assert isinstance(selection, Selection)
         if selection.rank() != self.shape.rank():
             raise SubCubeError("invalid selection {selection} for shape {shape}: rank {rselection} does not match {rshape}".format(
@@ -125,23 +134,7 @@ class Cube(object):
                 shape=shape,
                 rshape=shape.rank(),
             ))
-        expected_input_count, expected_input_size, input_filename = self._check_input_filename(input_filename)
-        with open(input_filename, "rb") as input_file:
-            self.logger.info("reading {c} {t!r} elements ({b} bytes) from {i}...".format(
-                c=expected_input_count,
-                t=self.data_type,
-                b=expected_input_size,
-                i=input_filename))
-            array = np.fromfile(input_file, dtype=self.dtype, count=expected_input_count)
-        cube = array.reshape(self.shape.shape())
         subcube = cube[selection.picks(self.origins)]
-        output_filename = self.format_filename(output_filename, subcube.shape)
-        self.logger.info("writing {c} {t!r} elements ({b} bytes) to {o}...".format(
-            c=subcube.size,
-            t=self.data_type,
-            b=subcube.size * self.dtype_size,
-            o=output_filename))
-        with open(output_filename, "wb") as output_file:
-            subcube.tofile(output_file)
+        return subcube
  
         
