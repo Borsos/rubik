@@ -31,12 +31,17 @@ def _create_cubist(logger, args):
     #logger.debug("# data_type is {0}".format(args.data_type))
     cubist = Cubist(
             data_type=args.data_type,
-            logger=logger)
-
+            logger=logger,
+            input_text_separator=args.input_text_separator,
+            output_text_separator=args.output_text_separator,
+            accept_bigger_raw_files=args.accept_bigger_raw_files)
     return cubist
 
 def _read_and_extract(cubist, logger, args):
-    cube = cubist.read(shape=args.shape, input_filename=args.input_filename)
+    cube = cubist.read(
+            shape=args.shape,
+            input_format=args.input_format,
+            input_filename=args.input_filename)
     selection_arg = getattr(args, 'selection', None)
     if selection_arg is not None:
         return cubist.extract(cube=cube, selection=args.selection)
@@ -58,13 +63,19 @@ def main_stat(logger, args):
 def main_create(logger, args):
     cubist = _create_cubist(logger, args)
     cube = cubist.create(shape=args.shape, creation_mode=args.creation_mode)
-    cubist.write(cube=cube, output_filename=args.output_filename)
+    cubist.write(
+            cube=cube,
+            output_format=args.output_format,
+            output_filename=args.output_filename)
     return 0
     
 def main_extract(logger, args):
     cubist = _create_cubist(logger, args)
     cube = _read_and_extract(cubist, logger, args)
-    cubist.write(cube=cube, output_filename=args.output_filename)
+    cubist.write(
+            cube=cube,
+            output_format=args.output_format,
+            output_filename=args.output_filename)
     return 0
 
 def main():
@@ -111,6 +122,21 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         action="store_true",
         default=False,
         help="show error traceback")
+
+    common_parser.add_argument("--input-text-separator", "-is",
+        dest="input_text_separator",
+        default=Cubist.FILE_FORMAT_TEXT_SEPARATOR,
+        help="separator to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_TEXT))
+
+    common_parser.add_argument("--output-text-separator", "-os",
+        dest="output_text_separator",
+        default=Cubist.FILE_FORMAT_TEXT_SEPARATOR,
+        help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
+
+    common_parser.add_argument("--accept-bigger-raw-files", "-a",
+        action="store_true",
+        default=False,
+        help="if an input raw file is bigger than expected, simply issue a warning message")
 
     top_level_parser = argparse.ArgumentParser(
         parents=[common_parser],
@@ -210,11 +236,23 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             required=True,
             help="input filename (*)")
 
+        parser.add_argument("--input-format", "-if",
+            dest="input_format",
+            choices=Cubist.FILE_FORMATS,
+            default=Cubist.DEFAULT_FILE_FORMAT,
+            help="input file format")
+
     for parser in create_parser, extract_parser:
         parser.add_argument("--output-filename", "-o",
             dest="output_filename",
             required=True,
             help="output filename (*)")
+
+        parser.add_argument("--output-format", "-of",
+            dest="output_format",
+            choices=Cubist.FILE_FORMATS,
+            default=Cubist.DEFAULT_FILE_FORMAT,
+            help="output file format")
 
     for parser in extract_parser, create_parser, print_parser, stat_parser:
         parser.add_argument("--shape", "-s",

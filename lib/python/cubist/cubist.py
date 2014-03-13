@@ -30,11 +30,24 @@ class Cubist(object):
     CREATION_MODE_ZEROS = 'zeros'
     CREATION_MODE_ONES = 'ones'
     CREATION_MODES = (CREATION_MODE_RANDOM, CREATION_MODE_RANGE, CREATION_MODE_ZEROS, CREATION_MODE_ONES)
-    def __init__(self, data_type, logger):
+    FILE_FORMAT_RAW = 'raw'
+    FILE_FORMAT_TEXT = 'text'
+    FILE_FORMATS = (FILE_FORMAT_RAW, FILE_FORMAT_TEXT)
+    DEFAULT_FILE_FORMAT = FILE_FORMATS[0]
+    FILE_FORMAT_TEXT_SEPARATOR = ','
+    def __init__(self,
+            data_type,
+            logger,
+            input_text_separator=FILE_FORMAT_TEXT_SEPARATOR,
+            output_text_separator=FILE_FORMAT_TEXT_SEPARATOR,
+            accept_bigger_raw_files=False):
         self.data_type = data_type
         self.dtype = data_types.get_dtype(data_type)
-        self.dtype_size = self.dtype().itemsize
+        self.dtype_bytes = self.dtype().itemsize
         self.logger = logger
+        self.input_text_separator = input_text_separator
+        self.output_text_separator = output_text_separator
+        self.accept_bigger_raw_files = accept_bigger_raw_files
 
     def format_filename(self, filename, shape):
         count = 0
@@ -44,7 +57,7 @@ class Cubist(object):
                 count *= i
         else:
             count = 0
-        num_bytes = count * self.dtype_size
+        num_bytes = count * self.dtype_bytes
         return filename.format(
             shape="x".join(str(i) for i in shape),
             count=count,
@@ -52,29 +65,80 @@ class Cubist(object):
             data_type=self.data_type,
         )
 
-    def read(self, shape, input_filename):
+    def read(self, shape, input_format, input_filename):
         if not isinstance(shape, Shape):
             shape = Shape(shape)
-        expected_input_count, expected_input_size, input_filename = self._check_input_filename(shape, input_filename)
-        with open(input_filename, "rb") as input_file:
-            self.logger.info("reading {c} {t!r} elements ({b} bytes) from {i}...".format(
-                c=expected_input_count,
-                t=self.data_type,
-                b=expected_input_size,
-                i=input_filename))
-            array = np.fromfile(input_file, dtype=self.dtype, count=expected_input_count)
-        cube = array.reshape(shape.shape())
+        expected_input_count = shape.count()
+        if input_format == self.FILE_FORMAT_RAW:
+            num_bytes = shape.count() * self.dtype_bytes
+            msg_bytes = "({b} bytes) ".format(b=num_bytes)
+            sep = ''
+            count=expected_input_count
+        elif input_format == self.FILE_FORMAT_TEXT:
+            msg_bytes = ''
+            sep = self.input_text_separator
+            count=-1 # must check number of elements
+        else:
+            raise CubistError("invalid file format {0!r}".format(input_format))
+        input_filename = self.format_filename(input_filename, shape.shape())
+        input_filename = self._check_input_filename(shape, input_format, input_filename)
+        self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
+            c=expected_input_count,
+            t=self.data_type,
+            b=msg_bytes,
+            f=input_format,
+            i=input_filename))
+        array = np.fromfile(input_filename, dtype=self.dtype, count=count, sep=sep)
+        input_count = array.size
+        if array.size != expected_input_count:
+            if input_count < expected_input_count:
+                raise CubistError("input file {0} is not big enough: it contains {1} elements, expected {2} elements".format(
+                    input_filename,
+                    input_count,
+                    expected_input_count,
+                ))
+            elif input_count > expected_input_count:
+                message = "input file {0} is greater than expected: {1} elements found, {2} elements expected".format(
+                    input_filename,
+                    input_count,
+                    expected_input_count,
+                )
+                if self.accept_bigger_raw_files:
+                    self.logger.warning("warning: " + message)
+                else:
+                    raise CubistError(message)
+                array.resize(shape.shape())
+        try:
+            cube = array.reshape(shape.shape())
+        except ValueError as err:
+            raise CubistError("cannot reshape read data: {t}: {e} [input size={ic}, shape={s}, shape size={sc}]".format(
+                    t=type(err).__name__,
+                    e=err,
+                    ic=array.size,
+                    s=shape,
+                    sc=shape.count(),
+            ))
         return cube
 
-    def write(self, cube, output_filename):
+    def write(self, cube, output_format, output_filename):
+        if output_format == self.FILE_FORMAT_RAW:
+            num_bytes = cube.size * self.dtype_bytes
+            msg_bytes = "({b} bytes) ".format(b=num_bytes)
+            sep = ''
+        elif output_format == self.FILE_FORMAT_TEXT:
+            msg_bytes = ''
+            sep = self.output_text_separator
+        else:
+            raise CubistError("invalid file format {0!r}".format(output_format))
         output_filename = self.format_filename(output_filename, cube.shape)
-        self.logger.info("writing {c} {t!r} elements ({b} bytes) to {o}...".format(
+        self.logger.info("writing {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
             c=cube.size,
             t=self.data_type,
-            b=cube.size * self.dtype_size,
+            b=msg_bytes,
+            f=output_format,
             o=output_filename))
-        with open(output_filename, "wb") as output_file:
-            cube.tofile(output_file)
+        cube.tofile(output_filename, sep=sep)
+
 
     def print_cube(self, cube):
         log.PRINT(cube)
@@ -140,29 +204,33 @@ ave           = {ave}
         cube = cube.reshape(shape.shape())
         return cube
 
-    def _check_input_filename(self, shape, input_filename):
+    def _check_input_filename(self, shape, input_format, input_filename):
         if not isinstance(shape, Shape):
             shape = Shape(shape)
-        input_filename = self.format_filename(input_filename, shape.shape())
         if not os.path.isfile(input_filename):
             raise CubistError("missing input file {0}".format(input_filename))
-        input_stat_result = os.stat(input_filename)
-        input_size = input_stat_result.st_size
-        expected_input_count = shape.count()
-        expected_input_size = expected_input_count * self.dtype_size
-        if input_size < expected_input_size:
-            raise CubistError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
-                input_filename,
-                input_size,
-                expected_input_size,
-            ))
-        elif input_size > expected_input_size:
-            self.logger.warning("warning: input file {0} is greater than expected: {1} bytes found, {2} bytes expected".format(
-                input_filename,
-                input_size,
-                expected_input_size,
-            ))
-        return expected_input_count, expected_input_size, input_filename
+        if input_format == self.FILE_FORMAT_RAW:
+            expected_input_count = shape.count()
+            expected_input_bytes = expected_input_count * self.dtype_bytes
+            input_stat_result = os.stat(input_filename)
+            input_bytes = input_stat_result.st_size
+            if input_bytes < expected_input_bytes:
+                raise CubistError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
+                    input_filename,
+                    input_bytes,
+                    expected_input_bytes,
+                ))
+            elif input_bytes > expected_input_bytes:
+                message = "input file {0} is greater than expected: {1} bytes found, {2} bytes expected".format(
+                    input_filename,
+                    input_bytes,
+                    expected_input_bytes,
+                )
+                if self.accept_bigger_raw_files:
+                    self.logger.warning("warning: " + message)
+                else:
+                    raise CubistError(message)
+        return input_filename
 
     def extract(self, cube, selection):
         assert isinstance(selection, Selection)
