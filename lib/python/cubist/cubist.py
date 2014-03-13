@@ -36,11 +36,17 @@ class Cubist(object):
     FILE_FORMATS = (FILE_FORMAT_RAW, FILE_FORMAT_CSV, FILE_FORMAT_TEXT)
     DEFAULT_FILE_FORMAT = FILE_FORMATS[0]
     FILE_FORMAT_CSV_SEPARATOR = ','
+    FILE_FORMAT_TEXT_DELIMITER = ''
+    FILE_FORMAT_TEXT_NEWLINE = '\n'
     def __init__(self,
             data_type,
             logger,
             input_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
             output_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
+            input_text_delimiter=FILE_FORMAT_TEXT_DELIMITER,
+            output_text_delimiter=FILE_FORMAT_TEXT_DELIMITER,
+            input_text_newline=FILE_FORMAT_TEXT_NEWLINE,
+            output_text_newline=FILE_FORMAT_TEXT_NEWLINE,
             accept_bigger_raw_files=False):
         self.data_type = data_type
         self.dtype = data_types.get_dtype(data_type)
@@ -69,23 +75,26 @@ class Cubist(object):
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         expected_input_count = shape.count()
-        numpy_function_name = None
-        numpy_function_args = {}
+        numpy_function = None
+        numpy_function_nargs = {}
+        numpy_function_pargs = []
         if input_format == self.FILE_FORMAT_RAW:
             num_bytes = shape.count() * self.dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
             # read only expected elements (number of elements already checked)
-            numpy_function_name = 'fromfile'
-            numpy_function_args['count'] = expected_input_count
+            numpy_function = np.fromfile
+            numpy_function_nargs['count'] = expected_input_count
         elif input_format == self.FILE_FORMAT_CSV:
             msg_bytes = ''
             # read all elements (must check number of elements)
-            numpy_function_name = 'fromfile'
-            numpy_function_args['sep'] = self.input_csv_separator
+            numpy_function = np.fromfile
+            numpy_function_nargs['sep'] = self.input_csv_separator
         elif input_format == self.FILE_FORMAT_TEXT:
             msg_bytes = ''
             # read all elements (must check number of elements)
-            numpy_function_name = 'loadtxt'
+            numpy_function = np.loadtx
+            numpy_function_nargs['delimiter'] = self.input_text_delimiter
+            numpy_function_nargs['newline'] = self.input_text_newline
         else:
             raise CubistError("invalid file format {0!r}".format(input_format))
         input_filename = self.format_filename(input_filename, shape.shape(), input_format)
@@ -96,7 +105,7 @@ class Cubist(object):
             b=msg_bytes,
             f=input_format,
             i=input_filename))
-        array = getattr(np, numpy_function_name)(input_filename, dtype=self.dtype, **numpy_function_args)
+        array = numpy_function(input_filename, dtype=self.dtype, *numpy_function_pargs, **numpy_function_nargs)
         input_count = array.size
         if array.size != expected_input_count:
             if input_count < expected_input_count:
