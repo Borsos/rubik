@@ -81,10 +81,14 @@ def main_create(logger, args):
 def main_extract(logger, args):
     cubist = _create_cubist(logger, args)
     cube = _read(cubist, logger, args)
+    if args.output_filename is None:
+        output_filename = args.input_filename
+    else:
+        output_filename = args.output_filename
     cubist.write(
             cube=cube,
             output_format=args.output_format,
-            output_filename=args.output_filename)
+            output_filename=output_filename)
     return 0
 
 def main():
@@ -231,31 +235,32 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             required=True,
             help="input filename (*)")
 
-        parser.add_argument("--input-format", "-If",
+        input_formatting = parser.add_argument_group('input formatting')
+        input_formatting.add_argument("--input-format", "-If",
             dest="input_format",
             choices=Cubist.FILE_FORMATS,
             default=Cubist.DEFAULT_FILE_FORMAT,
             help="input file format")
 
-        parser.add_argument("--input-csv-separator", "-Is",
+        input_formatting.add_argument("--input-csv-separator", "-Is",
             metavar='S',
             dest="input_csv_separator",
             default=Cubist.FILE_FORMAT_CSV_SEPARATOR,
             help="separator to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_CSV))
     
-        parser.add_argument("--input-text-delimiter", "-Id",
+        input_formatting.add_argument("--input-text-delimiter", "-Id",
             metavar='D',
             dest="input_text_delimiter",
             default=Cubist.FILE_FORMAT_TEXT_DELIMITER,
             help="delimiter to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_TEXT))
     
-        parser.add_argument("--input-text-newline", "-In",
+        input_formatting.add_argument("--input-text-newline", "-In",
             metavar='N',
             dest="input_text_newline",
             default=Cubist.FILE_FORMAT_TEXT_NEWLINE,
             help="newline to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_TEXT))
     
-        parser.add_argument("--input-text-converter", "-Ic",
+        input_formatting.add_argument("--input-text-converter", "-Ic",
             metavar='C',
             dest="input_text_converter",
             default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
@@ -266,38 +271,45 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             default=False,
             help="if an input raw file is bigger than expected, simply issue a warning message")
 
-    for parser in create_parser, extract_parser:
+    extract_output_filename_group = extract_parser.add_mutually_exclusive_group(required=True)
+    extract_output_filename_group.add_argument("--in-place", "-Oi",
+        action="store_true",
+        help="output filename is input filename (notice that, due to interpolation, output file can be different from input file)")
+
+    for parser, required in (create_parser, True), (extract_output_filename_group, False):
         parser.add_argument("--output-filename", "-o",
             metavar='O',
             dest="output_filename",
-            required=True,
+            required=required,
             help="output filename (*)")
 
-        parser.add_argument("--output-format", "-Of",
+    for parser in create_parser, extract_parser:
+        output_formatting = parser.add_argument_group("output formatting")
+        output_formatting.add_argument("--output-format", "-Of",
             dest="output_format",
             choices=Cubist.FILE_FORMATS,
             default=Cubist.DEFAULT_FILE_FORMAT,
             help="output file format")
 
-        parser.add_argument("--output-csv-separator", "-Os",
+        output_formatting.add_argument("--output-csv-separator", "-Os",
             metavar='S',
             dest="output_csv_separator",
             default=Cubist.FILE_FORMAT_CSV_SEPARATOR,
             help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_CSV))
 
-        parser.add_argument("--output-text-delimiter", "-Od",
+        output_formatting.add_argument("--output-text-delimiter", "-Od",
             metavar='D',
             dest="output_text_delimiter",
             default=Cubist.FILE_FORMAT_TEXT_DELIMITER,
             help="delimiter to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
 
-        parser.add_argument("--output-text-newline", "-On",
+        output_formatting.add_argument("--output-text-newline", "-On",
             metavar='N',
             dest="output_text_newline",
             default=Cubist.FILE_FORMAT_TEXT_NEWLINE,
             help="newline to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
 
-        parser.add_argument("--output-text-converter", "-Oc",
+        output_formatting.add_argument("--output-text-converter", "-Oc",
             metavar='C',
             dest="output_text_converter",
             default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
@@ -317,7 +329,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             default=data_types.DEFAULT_DATA_TYPE,
             help="data type name (**)")
 
-    for parser, required in extract_parser, print_parser, stat_parser:
+    for parser in extract_parser, print_parser, stat_parser:
         parser.add_argument("--extract", "-x",
             metavar="S",
             dest="selection",
