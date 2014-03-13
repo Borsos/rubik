@@ -209,7 +209,6 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         help="random seed")
     
     create_parser.add_argument("--mode", "-m",
-        metavar="M",
         dest="creation_mode",
         choices=Cubist.CREATION_MODES,
         default=Cubist.CREATION_MODE_RANGE,
