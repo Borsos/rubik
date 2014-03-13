@@ -23,6 +23,7 @@ from .application import log
 from .errors import CubistError
 from .shape import Shape
 from .selection import Selection
+from .clip import Clip
 
 class Cubist(object):
     CREATION_MODE_RANDOM = 'random'
@@ -51,9 +52,7 @@ class Cubist(object):
             input_text_converter=FILE_FORMAT_TEXT_CONVERTER,
             output_text_converter=FILE_FORMAT_TEXT_CONVERTER,
             accept_bigger_raw_files=False):
-        self.data_type = data_type
-        self.dtype = data_types.get_dtype(data_type)
-        self.dtype_bytes = self.dtype().itemsize
+        self._set_dtype(data_type)
         self.logger = logger
         self.input_csv_separator = input_csv_separator
         self.output_csv_separator = output_csv_separator
@@ -64,6 +63,21 @@ class Cubist(object):
         self.input_text_converter = input_text_converter
         self.output_text_converter = output_text_converter
         self.accept_bigger_raw_files = accept_bigger_raw_files
+
+    def _set_dtype(self, data_type):
+        self.data_type = data_type
+        self.dtype = data_types.get_dtype(data_type)
+        self.dtype_bytes = self.dtype().itemsize
+        for f in 'finfo', 'iinfo':
+            try:
+                dtinfo = np.finfo(self.dtype)
+            except ValueError:
+                dtinfo = None
+        if dtinfo is None:
+            self.dtype_min = self.dtype_max = None
+        else:
+            self.dtype_min = dtinfo.min
+            self.dtype_max = dtinfo.max
 
     def format_filename(self, filename, shape, file_format):
         count = 0
@@ -101,7 +115,7 @@ class Cubist(object):
         elif input_format == self.FILE_FORMAT_TEXT:
             msg_bytes = ''
             # read all elements (must check number of elements)
-            numpy_function = np.loadtx
+            numpy_function = np.loadtxt
             if self.input_text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = self.input_text_delimiter
             if self.input_text_newline is not None:
@@ -291,4 +305,13 @@ ave           = {ave}
         subcube = cube[selection.picks()]
         return subcube
  
-        
+    def clip(self, cube, clip):
+        assert isinstance(clip, Clip)
+        cmin = clip.min()
+        if cmin is None:
+            cmin = self.dtype_min
+        cmax = clip.max()
+        if cmax is None:
+            cmax = self.dtype_max
+        np.clip(cube, cmin, cmax, cube)
+        return cube

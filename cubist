@@ -12,6 +12,7 @@ from cubist import data_types
 from cubist.cubist import Cubist
 from cubist.shape import Shape
 from cubist.selection import Selection
+from cubist.clip import Clip
 
 if sys.version_info.major == 2:
     PY3 = False
@@ -43,26 +44,28 @@ def _create_cubist(logger, args):
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None))
     return cubist
 
-def _read_and_extract(cubist, logger, args):
+def _read(cubist, logger, args):
     cube = cubist.read(
             shape=args.shape,
             input_format=args.input_format,
             input_filename=args.input_filename)
     selection_arg = getattr(args, 'selection', None)
     if selection_arg is not None:
-        return cubist.extract(cube=cube, selection=args.selection)
-    else:
-        return cube
+        cube = cubist.extract(cube=cube, selection=selection_arg)
+    clip_arg = getattr(args, 'clip', None)
+    if clip_arg is not None:
+        cube = cubist.clip(cube=cube, clip=clip_arg)
+    return cube
 
 def main_print(logger, args):
     cubist = _create_cubist(logger, args)
-    cube = _read_and_extract(cubist, logger, args)
+    cube = _read(cubist, logger, args)
     cubist.print_cube(cube=cube)
     return 0
 
 def main_stat(logger, args):
     cubist = _create_cubist(logger, args)
-    cube = _read_and_extract(cubist, logger, args)
+    cube = _read(cubist, logger, args)
     cubist.stat(cube=cube)
     return 0
 
@@ -77,7 +80,7 @@ def main_create(logger, args):
     
 def main_extract(logger, args):
     cubist = _create_cubist(logger, args)
-    cube = _read_and_extract(cubist, logger, args)
+    cube = _read(cubist, logger, args)
     cubist.write(
             cube=cube,
             output_format=args.output_format,
@@ -321,6 +324,12 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             type=Selection,
             required=required,
             help="subcube selection")
+
+        parser.add_argument("--clip", "-c",
+            metavar="MIN[:MAX]",
+            dest="clip",
+            type=Clip,
+            help="clipping")
 
     args = top_level_parser.parse_args()
 
