@@ -31,19 +31,8 @@ class Pick(object):
                 t=type(init).__name__,
                 o=init))
 
-    def value(self, origin):
-        if origin:
-            if isinstance(self._value, slice):
-                start, stop, step = self._value.start, self._value.stop, self._value.step
-                if start is not None:
-                    start -= origin
-                if stop is not None:
-                    stop -= origin
-                return slice(start, stop, step)
-            else:
-                return self._value - origin
-        else:
-            return self._value
+    def value(self):
+        return self._value
 
     @classmethod
     def _from_string(cls, value):

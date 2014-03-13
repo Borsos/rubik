@@ -15,5 +15,5 @@
 # limitations under the License.
 #
 
-class SubCubeError(Exception):
+class CubistError(Exception):
     pass

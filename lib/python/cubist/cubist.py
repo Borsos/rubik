@@ -20,29 +20,17 @@ import numpy as np
 
 from . import data_types
 from .application import log
-from .errors import SubCubeError
-from .origins import Origins
+from .errors import CubistError
 from .shape import Shape
 from .selection import Selection
 
-class Cube(object):
+class Cubist(object):
     CREATION_MODE_RANDOM = 'random'
     CREATION_MODE_RANGE = 'range'
     CREATION_MODE_ZEROS = 'zeros'
     CREATION_MODE_ONES = 'ones'
     CREATION_MODES = (CREATION_MODE_RANDOM, CREATION_MODE_RANGE, CREATION_MODE_ZEROS, CREATION_MODE_ONES)
-    def __init__(self, origins, shape, data_type, logger):
-        assert isinstance(origins, Origins)
-        assert isinstance(shape, Shape)
-        if origins.rank() != shape.rank():
-            raise SubCubeError("invalid origins {origins} for shape {shape}: rank {rorigins} does not match {rshape}".format(
-                origins=origins,
-                rorigins=origins.rank(),
-                shape=shape,
-                rshape=shape.rank(),
-            ))
-        self.shape = shape
-        self.origins = origins
+    def __init__(self, data_type, logger):
         self.data_type = data_type
         self.dtype = data_types.get_dtype(data_type)
         self.dtype_size = self.dtype().itemsize
@@ -64,8 +52,10 @@ class Cube(object):
             data_type=self.data_type,
         )
 
-    def read(self, input_filename):
-        expected_input_count, expected_input_size, input_filename = self._check_input_filename(input_filename)
+    def read(self, shape, input_filename):
+        if not isinstance(shape, Shape):
+            shape = Shape(shape)
+        expected_input_count, expected_input_size, input_filename = self._check_input_filename(shape, input_filename)
         with open(input_filename, "rb") as input_file:
             self.logger.info("reading {c} {t!r} elements ({b} bytes) from {i}...".format(
                 c=expected_input_count,
@@ -73,7 +63,7 @@ class Cube(object):
                 b=expected_input_size,
                 i=input_filename))
             array = np.fromfile(input_file, dtype=self.dtype, count=expected_input_count)
-        cube = array.reshape(self.shape.shape())
+        cube = array.reshape(shape.shape())
         return cube
 
     def write(self, cube, output_filename):
@@ -89,30 +79,79 @@ class Cube(object):
     def print_cube(self, cube):
         log.PRINT(cube)
 
-    def create(self, creation_mode):
-        if creation_mode == self.CREATION_MODE_RANGE:
-            cube = np.array(np.linspace(0, self.shape.count() - 1, self.shape.count()), dtype=self.dtype)
-        elif creation_mode == self.CREATION_MODE_RANDOM:
-            cube = np.random.rand(self.shape.count())
-        elif creation_mode == self.CREATION_MODE_ZEROS:
-            cube = np.random.zeros(self.shape.count())
-        elif creation_mode == self.CREATION_MODE_ONES:
-            cube = np.random.ones(self.shape.count())
+    def stat(self, cube):
+        cube_sum = cube.sum()
+        cube_ave = None
+        cobe_count = 0
+        if cube.shape != 0:
+            cube_count = 1
+            for d in cube.shape:
+                cube_count *= d
         else:
-            raise SubCubeError("invalid creation mode {0}".format(creation_mode))
-        cube = cube.reshape(self.shape.shape())
+            cube_count = 0
+        if cube_count:
+            cube_ave = cube_sum / float(cube_count)
+        else:
+            cube_ave = None
+        cube_count_nonzero = np.count_nonzero(cube)
+        cube_count_zero = cube_count - cube_count_nonzero
+        cube_fraction_nonzero = 0.0
+        if cube_count:
+            cube_fraction_nonzero = cube_count_nonzero / float(cube_count)
+        cube_fraction_zero = 0.0
+        if cube_count:
+            cube_fraction_zero = cube_count_zero / float(cube_count)
+        stat = """\
+shape         = {shape}
+#elements     = {count}
+min           = {min}
+max           = {max}
+sum           = {sum}
+ave           = {ave}
+#zero         = {count_zero} [{fraction_zero:.2%}]
+#nonzero      = {count_nonzero} [{fraction_nonzero:.2%}]
+""".format(
+            shape='x'.join(str(i) for i in cube.shape),
+            count=cube_count,
+            min=cube.min(),
+            max=cube.max(),
+            sum=cube_sum,
+            ave=cube_ave,
+            count_zero=cube_count_zero,
+            fraction_zero=cube_fraction_zero,
+            count_nonzero=cube_count_nonzero,
+            fraction_nonzero=cube_fraction_nonzero,
+        )
+        log.PRINT(stat)
+
+    def create(self, shape, creation_mode):
+        if not isinstance(shape, Shape):
+            shape = Shape(shape)
+        if creation_mode == self.CREATION_MODE_RANGE:
+            cube = np.array(np.linspace(0, shape.count() - 1, shape.count()), dtype=self.dtype)
+        elif creation_mode == self.CREATION_MODE_RANDOM:
+            cube = np.random.rand(shape.count())
+        elif creation_mode == self.CREATION_MODE_ZEROS:
+            cube = np.random.zeros(shape.count())
+        elif creation_mode == self.CREATION_MODE_ONES:
+            cube = np.random.ones(shape.count())
+        else:
+            raise CubistError("invalid creation mode {0}".format(creation_mode))
+        cube = cube.reshape(shape.shape())
         return cube
 
-    def _check_input_filename(self, input_filename):
-        input_filename = self.format_filename(input_filename, self.shape.shape())
+    def _check_input_filename(self, shape, input_filename):
+        if not isinstance(shape, Shape):
+            shape = Shape(shape)
+        input_filename = self.format_filename(input_filename, shape.shape())
         if not os.path.isfile(input_filename):
-            raise SubCubeError("missing input file {0}".format(input_filename))
+            raise CubistError("missing input file {0}".format(input_filename))
         input_stat_result = os.stat(input_filename)
         input_size = input_stat_result.st_size
-        expected_input_count = self.shape.count()
+        expected_input_count = shape.count()
         expected_input_size = expected_input_count * self.dtype_size
         if input_size < expected_input_size:
-            raise SubCubeError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
+            raise CubistError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
                 input_filename,
                 input_size,
                 expected_input_size,
@@ -125,16 +164,16 @@ class Cube(object):
             ))
         return expected_input_count, expected_input_size, input_filename
 
-    def extract(self, selection, cube):
+    def extract(self, cube, selection):
         assert isinstance(selection, Selection)
-        if selection.rank() != self.shape.rank():
-            raise SubCubeError("invalid selection {selection} for shape {shape}: rank {rselection} does not match {rshape}".format(
+        if selection.rank() != len(cube.shape):
+            raise CubistError("invalid selection {selection} for shape {shape}: rank {rselection} does not match {rshape}".format(
                 selection=selection,
                 rselection=selection.rank(),
                 shape=shape,
                 rshape=shape.rank(),
             ))
-        subcube = cube[selection.picks(self.origins)]
+        subcube = cube[selection.picks()]
         return subcube
  
         

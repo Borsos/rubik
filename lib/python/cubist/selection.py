@@ -25,10 +25,8 @@ class Selection(Values):
     def rank(self):
         return len(self._values)
 
-    def picks(self, origins=None):
-        if origins is None:
-            origins = Origins.from_rank(self.rank())
-        return tuple(pick.value(origin) for pick, origin in zip(self._values, origins.values()))
+    def picks(self):
+        return tuple(pick.value() for pick in self._values)
 
     @classmethod
     def _item_from_string(cls, item):

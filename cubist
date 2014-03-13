@@ -9,9 +9,8 @@ import numpy as np
 
 from cubist.application import log
 from cubist import data_types
-from cubist.cube import Cube
+from cubist.cubist import Cubist
 from cubist.shape import Shape
-from cubist.origins import Origins
 from cubist.selection import Selection
 
 if sys.version_info.major == 2:
@@ -25,50 +24,47 @@ def main_list(logger, args):
             log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
     return 0
 
-def _create_cube(logger, args):
-    shape = Shape(args.shape)
-    if args.origins is None:
-        origins = Origins.from_rank(shape.rank())
-    else:
-        origins = Origins(args.origins)
+def _create_cubist(logger, args):
     #logger.debug("# origins are  {0}".format(origins))
     #logger.debug("# shape is     {0}".format(shape))
     #logger.debug("# selection is {0}".format(selection))
     #logger.debug("# data_type is {0}".format(args.data_type))
-    
-    cube = Cube(
-            origins=origins,
-            shape=shape,
+    cubist = Cubist(
             data_type=args.data_type,
             logger=logger)
 
-    return cube
+    return cubist
 
-def _read_and_extract(logger, args, cube):
-    c = cube.read(input_filename=args.input_filename)
+def _read_and_extract(cubist, logger, args):
+    cube = cubist.read(shape=args.shape, input_filename=args.input_filename)
     selection_arg = getattr(args, 'selection', None)
     if selection_arg is not None:
-        selection = Selection(selection_arg)
-        return cube.extract(cube=c, selection=selection)
+        return cubist.extract(cube=cube, selection=args.selection)
     else:
-        return c
+        return cube
 
 def main_print(logger, args):
-    cube = _create_cube(logger, args)
-    c = _read_and_extract(logger, args, cube)
-    cube.print_cube(cube=c)
+    cubist = _create_cubist(logger, args)
+    cube = _read_and_extract(cubist, logger, args)
+    cubist.print_cube(cube=cube)
+    return 0
+
+def main_stat(logger, args):
+    cubist = _create_cubist(logger, args)
+    cube = _read_and_extract(cubist, logger, args)
+    cubist.stat(cube=cube)
     return 0
 
 def main_create(logger, args):
-    cube = _create_cube(logger, args)
-    c = cube.create(creation_mode=args.creation_mode)
-    cube.write(cube=c, output_filename=args.output_filename)
+    cubist = _create_cubist(logger, args)
+    cube = cubist.create(shape=args.shape, creation_mode=args.creation_mode)
+    cubist.write(cube=cube, output_filename=args.output_filename)
     return 0
     
 def main_extract(logger, args):
-    cube = _create_cube(logger, args)
-    c = _read_and_extract(logger, args, cube)
-    cube.write(cube=c, output_filename=args.output_filename)
+    cubist = _create_cubist(logger, args)
+    cube = _read_and_extract(cubist, logger, args)
+    cubist.write(cube=cube, output_filename=args.output_filename)
     return 0
 
 def main():
@@ -81,6 +77,7 @@ Tool to read/write N-dimensional cubes
     list_epilog = ""
 
     print_description = "Print N-dimensional cubes"
+    stat_description = "Print statistics about N-dimensional cubes"
 
     create_description = "Create N-dimensional cubes"
 
@@ -156,6 +153,18 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         function=main_print,
     )
 
+    stat_parser = subparsers.add_parser(
+        "stat",
+        description=stat_description,
+        epilog=filename_data_type_epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[common_parser],
+    )
+
+    stat_parser.set_defaults(
+        function=main_stat,
+    )
+
     create_parser = subparsers.add_parser(
         "create",
         description=create_description,
@@ -178,8 +187,8 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     create_parser.add_argument("--mode", "-m",
         metavar="M",
         dest="creation_mode",
-        choices=Cube.CREATION_MODES,
-        default=Cube.CREATION_MODE_RANGE,
+        choices=Cubist.CREATION_MODES,
+        default=Cubist.CREATION_MODE_RANGE,
         help="creation mode")
 
     extract_parser = subparsers.add_parser(
@@ -195,7 +204,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     )
     
 
-    for parser in print_parser, extract_parser:
+    for parser in print_parser, stat_parser, extract_parser:
         parser.add_argument("--input-filename", "-i",
             dest="input_filename",
             required=True,
@@ -207,14 +216,10 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             required=True,
             help="output filename (*)")
 
-    for parser in extract_parser, create_parser, print_parser:
-        parser.add_argument("--origins", "-O",
-            metavar="[O0[:O1[...]]]",
-            default=None,
-            help="origins of the input filename")
-
+    for parser in extract_parser, create_parser, print_parser, stat_parser:
         parser.add_argument("--shape", "-s",
             metavar="[D0[:D1[...]]]",
+            type=Shape,
             required=True,
             help="shape of the input filename")
 
@@ -225,10 +230,11 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             default=data_types.DEFAULT_DATA_TYPE,
             help="data type name (**)")
 
-    for parser, required in (extract_parser, True), (print_parser, False):
+    for parser, required in (extract_parser, True), (print_parser, False), (stat_parser, False):
         parser.add_argument("--extract", "-x",
             metavar="S",
             dest="selection",
+            type=Selection,
             required=required,
             help="subcube selection")
 
