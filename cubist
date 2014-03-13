@@ -317,12 +317,12 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
             default=data_types.DEFAULT_DATA_TYPE,
             help="data type name (**)")
 
-    for parser, required in (extract_parser, True), (print_parser, False), (stat_parser, False):
+    for parser, required in extract_parser, print_parser, stat_parser:
         parser.add_argument("--extract", "-x",
             metavar="S",
             dest="selection",
             type=Selection,
-            required=required,
+            required=False,
             help="subcube selection")
 
         parser.add_argument("--clip", "-c",
