@@ -9,10 +9,12 @@ import numpy as np
 
 from cubist.application import log
 from cubist import data_types
-from cubist.cubist import Cubist
-from cubist.shape import Shape
-from cubist.selection import Selection
 from cubist.clip import Clip
+from cubist.shape import Shape
+from cubist.cubist import Cubist
+from cubist.errors import CubistError
+from cubist.filename import InputFilename, OutputFilename
+from cubist.selection import Selection
 
 if sys.version_info.major == 2:
     PY3 = False
@@ -45,13 +47,22 @@ def _create_cubist(logger, args):
     return cubist
 
 def _read(cubist, logger, args):
-    cube = cubist.read(
-            shape=args.shape,
-            input_format=args.input_format,
-            input_filename=args.input_filename)
+    if not args.input_filenames:
+        raise CubistError("no input filenames")
     selection_arg = getattr(args, 'selection', None)
-    if selection_arg is not None:
-        cube = cubist.extract(cube=cube, selection=selection_arg)
+    for input_filename in args.input_filenames:
+        cube = cubist.read(
+                shape=args.shape,
+                input_format=args.input_format,
+                input_filename=input_filename)
+        if selection_arg is not None:
+            cube = cubist.extract(cube=cube, selection=selection_arg)
+    expression_arg = getattr(args, 'expression', None)
+    if expression_arg is None:
+        if len(args.input_filenames) > 1:
+            raise CubistError("--expression/-e is mandatory when more than 1 input filename is provided")
+    if expression_arg is not None:
+        cube = cubist.evaluate_expression(expression=expression_arg)
     clip_arg = getattr(args, 'clip', None)
     if clip_arg is not None:
         cube = cubist.clip(cube=cube, clip=clip_arg)
@@ -82,9 +93,14 @@ def main_extract(logger, args):
     cubist = _create_cubist(logger, args)
     cube = _read(cubist, logger, args)
     if args.output_filename is None:
-        output_filename = args.input_filename
+        if len(args.input_filenames) == 1:
+            output_filename = OutputFilename(args.input_filename)
+        else:
+            raise CubistError("--in-place/-Oi is not compatible with multiple input filenames")
     else:
         output_filename = args.output_filename
+    #print "I", InputFilename.__filenames__
+    #print "O", OutputFilename.__filenames__
     cubist.write(
             cube=cube,
             output_format=args.output_format,
@@ -231,8 +247,11 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
     for parser in print_parser, stat_parser, extract_parser:
         parser.add_argument("--input-filename", "-i",
             metavar='I',
-            dest="input_filename",
+            dest="input_filenames",
+            type=InputFilename,
+            action="append",
             required=True,
+            default=[],
             help="input filename (*)")
 
         input_formatting = parser.add_argument_group('input formatting')
@@ -280,6 +299,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         parser.add_argument("--output-filename", "-o",
             metavar='O',
             dest="output_filename",
+            type=OutputFilename,
             required=required,
             help="output filename (*)")
 
@@ -331,11 +351,18 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
 
     for parser in extract_parser, print_parser, stat_parser:
         parser.add_argument("--extract", "-x",
-            metavar="S",
+            metavar="X",
             dest="selection",
             type=Selection,
             required=False,
             help="subcube selection")
+
+        parser.add_argument("--expression", "-e",
+            metavar="E",
+            dest="expression",
+            type=str,
+            required=False,
+            help="expression to evaluate")
 
         parser.add_argument("--clip", "-c",
             metavar="MIN[:MAX]",

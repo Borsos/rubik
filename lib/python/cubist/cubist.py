@@ -21,9 +21,10 @@ import numpy as np
 from . import data_types
 from .application import log
 from .errors import CubistError
-from .shape import Shape
-from .selection import Selection
 from .clip import Clip
+from .shape import Shape
+from .filename import InputFilename, OutputFilename
+from .selection import Selection
 
 class Cubist(object):
     CREATION_MODE_RANDOM = 'random'
@@ -63,6 +64,7 @@ class Cubist(object):
         self.input_text_converter = input_text_converter
         self.output_text_converter = output_text_converter
         self.accept_bigger_raw_files = accept_bigger_raw_files
+        self.input_cubes = {}
 
     def _set_dtype(self, data_type):
         self.data_type = data_type
@@ -94,7 +96,13 @@ class Cubist(object):
             data_type=self.data_type,
         )
 
+    def register_input_cube(self, input_varname, input_filename, cube):
+        self.input_cubes[input_varname] = cube
+
     def read(self, shape, input_format, input_filename):
+        assert isinstance(input_filename, InputFilename)
+        input_varname = input_filename.varname
+        input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         expected_input_count = shape.count()
@@ -162,9 +170,12 @@ class Cubist(object):
                     s=shape,
                     sc=shape.count(),
             ))
+        self.register_input_cube(input_varname, input_filename, cube)
         return cube
 
     def write(self, cube, output_format, output_filename):
+        assert isinstance(output_filename, OutputFilename)
+        output_filename = output_filename.filename
         numpy_function = None
         numpy_function_pargs = []
         numpy_function_nargs = {}
@@ -305,6 +316,18 @@ ave           = {ave}
         subcube = cube[selection.picks()]
         return subcube
  
+    def evaluate_expression(self, expression):
+        globals_d = {
+            'np': np,
+        }
+        globals_d.update(self.input_cubes)
+        self.logger.info("evaluating expression {0!r}...".format(expression))
+        try:
+            result = eval(expression, globals_d, {})
+        except Exception as e:
+            raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(e).__name__, e))
+        return result
+        
     def clip(self, cube, clip):
         assert isinstance(clip, Clip)
         cmin = clip.min()
