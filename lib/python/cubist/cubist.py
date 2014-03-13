@@ -218,7 +218,7 @@ class Cubist(object):
     def print_cube(self, cube):
         log.PRINT(cube)
 
-    def stat(self, cube):
+    def stats(self, cube):
         cube_sum = cube.sum()
         cube_ave = None
         cobe_count = 0
@@ -342,6 +342,8 @@ ave           = {ave}
             result = eval(expression, globals_d, {})
         except Exception as e:
             raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(e).__name__, e))
+        if result.dtype != self.dtype:
+            result = result.astype(self.dtype)
         return result
         
     def clip(self, cube, clip):
