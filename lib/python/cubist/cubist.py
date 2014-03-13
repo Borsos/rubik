@@ -328,6 +328,7 @@ ave           = {ave}
                 shape=shape,
                 rshape=shape.rank(),
             ))
+        self.logger.info("extracting {0!r}...".format(selection))
         subcube = cube[selection.picks()]
         return subcube
  

@@ -118,7 +118,7 @@ def main_write(logger, args):
     elif args.write_mode == 'stats':
         cubist.stats(cube=cube)
         useless_run = False
-    if args.output_filename is not None:
+    if output_filename is not None:
         useless_run = False
         cubist.write(
             cube=cube,
