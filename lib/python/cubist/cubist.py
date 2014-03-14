@@ -25,6 +25,7 @@ from .clip import Clip
 from .shape import Shape
 from .filename import InputFilename, OutputFilename
 from .selection import Selection
+from . import cubist_numpy
 
 class Cubist(object):
     CREATION_MODE_RANDOM = 'random'
@@ -69,6 +70,7 @@ class Cubist(object):
     def _set_dtype(self, data_type):
         self.data_type = data_type
         self.dtype = data_types.get_dtype(data_type)
+        cubist_numpy.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
         for f in 'finfo', 'iinfo':
             try:
@@ -91,6 +93,7 @@ class Cubist(object):
             count = 0
         return filename.format(
             shape="x".join(str(i) for i in shape),
+            rank=len(shape),
             count=count,
             format=file_format,
             data_type=self.data_type,
@@ -336,6 +339,8 @@ ave           = {ave}
         globals_d = {
             'np': np,
             'numpy': np,
+            'cnp': cubist_numpy,
+            'cubist_numpy': cubist_numpy,
         }
         globals_d.update(self.input_cubes)
         self.logger.info("evaluating expression {0!r}...".format(expression))
