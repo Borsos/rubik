@@ -22,7 +22,7 @@ from .errors import CubistError
 class Filename(object):
     __prefix__ = 'x'
     __filenames__ = {}
-    __re_split__ = re.compile("^([a-zA-Z]+\w*)\@(.*)")
+    __re_split__ = re.compile("^([a-zA-Z]+\w*)\=(.*)")
     def __init__(self, init):
         varname = None
         if isinstance(init, Filename):
@@ -45,7 +45,7 @@ class Filename(object):
         if filename_instance._varname is None:
             filename_instance._varname = "{0}{1}".format(cls.__prefix__, len(cls.__filenames__))
         if filename_instance._varname in cls.__filenames__:
-            raise CubistError("invalid filename {0}@{1}: varname {0} already in use".format(filename_instance._varname, filename_instance._filename))
+            raise CubistError("invalid filename {0}={1}: varname {0} already in use".format(filename_instance._varname, filename_instance._filename))
         cls.__filenames__[filename_instance._varname] = filename_instance
 
     @property
@@ -57,7 +57,7 @@ class Filename(object):
         return self._varname
 
     def __str__(self):
-        return "{0}@{1}".format(self._varname, self._filename)
+        return "{0}={1}".format(self._varname, self._filename)
 
     def __repr__(self):
         return "{0}(varname={1!r}, filename={2!r})".format(self.__class__.__name__, self._varname, self._filename)
