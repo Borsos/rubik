@@ -21,9 +21,10 @@ import numpy as np
 from . import data_types
 from .application import log
 from .errors import CubistError
-from .shape import Shape
-from .selection import Selection
 from .clip import Clip
+from .shape import Shape
+from .filename import InputFilename, OutputFilename
+from .selection import Selection
 
 class Cubist(object):
     CREATION_MODE_RANDOM = 'random'
@@ -63,6 +64,7 @@ class Cubist(object):
         self.input_text_converter = input_text_converter
         self.output_text_converter = output_text_converter
         self.accept_bigger_raw_files = accept_bigger_raw_files
+        self.input_cubes = {}
 
     def _set_dtype(self, data_type):
         self.data_type = data_type
@@ -94,7 +96,14 @@ class Cubist(object):
             data_type=self.data_type,
         )
 
-    def read(self, shape, input_format, input_filename):
+    def register_input_cube(self, input_varname, input_filename, cube):
+        self.input_cubes[input_varname] = cube
+
+    def read(self, shape, input_format, input_filename, selection=None):
+        assert isinstance(input_filename, InputFilename)
+        assert (selection is None) or isinstance(selection, Selection)
+        input_varname = input_filename.varname
+        input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         expected_input_count = shape.count()
@@ -162,9 +171,14 @@ class Cubist(object):
                     s=shape,
                     sc=shape.count(),
             ))
+        if selection:
+            cube = self.extract(cube, selection)
+        self.register_input_cube(input_varname, input_filename, cube)
         return cube
 
     def write(self, cube, output_format, output_filename):
+        assert isinstance(output_filename, OutputFilename)
+        output_filename = output_filename.filename
         numpy_function = None
         numpy_function_pargs = []
         numpy_function_nargs = {}
@@ -204,7 +218,7 @@ class Cubist(object):
     def print_cube(self, cube):
         log.PRINT(cube)
 
-    def stat(self, cube):
+    def stats(self, cube):
         cube_sum = cube.sum()
         cube_ave = None
         cobe_count = 0
@@ -226,6 +240,12 @@ class Cubist(object):
         cube_fraction_zero = 0.0
         if cube_count:
             cube_fraction_zero = cube_count_zero / float(cube_count)
+        cube_count_nan = np.count_nonzero(np.isnan(cube))
+        if cube_count:
+            cube_fraction_nan = cube_count_nan / float(cube_count)
+        cube_count_inf = np.count_nonzero(np.isinf(cube))
+        if cube_count:
+            cube_fraction_inf = cube_count_inf / float(cube_count)
         stat = """\
 shape         = {shape}
 #elements     = {count}
@@ -235,6 +255,8 @@ sum           = {sum}
 ave           = {ave}
 #zero         = {count_zero} [{fraction_zero:.2%}]
 #nonzero      = {count_nonzero} [{fraction_nonzero:.2%}]
+#nan          = {count_nan} [{fraction_nan:.2%}]
+#inf          = {count_inf} [{fraction_inf:.2%}]
 """.format(
             shape='x'.join(str(i) for i in cube.shape),
             count=cube_count,
@@ -246,6 +268,10 @@ ave           = {ave}
             fraction_zero=cube_fraction_zero,
             count_nonzero=cube_count_nonzero,
             fraction_nonzero=cube_fraction_nonzero,
+            count_nan=cube_count_nan,
+            fraction_nan=cube_fraction_nan,
+            count_inf=cube_count_inf,
+            fraction_inf=cube_fraction_inf,
         )
         log.PRINT(stat)
 
@@ -302,9 +328,25 @@ ave           = {ave}
                 shape=shape,
                 rshape=shape.rank(),
             ))
+        self.logger.info("extracting {0!r}...".format(selection))
         subcube = cube[selection.picks()]
         return subcube
  
+    def evaluate_expression(self, expression):
+        globals_d = {
+            'np': np,
+            'numpy': np,
+        }
+        globals_d.update(self.input_cubes)
+        self.logger.info("evaluating expression {0!r}...".format(expression))
+        try:
+            result = eval(expression, globals_d, {})
+        except Exception as e:
+            raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(e).__name__, e))
+        if result.dtype != self.dtype:
+            result = result.astype(self.dtype)
+        return result
+        
     def clip(self, cube, clip):
         assert isinstance(clip, Clip)
         cmin = clip.min()

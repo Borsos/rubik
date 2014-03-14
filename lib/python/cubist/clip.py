@@ -15,8 +15,6 @@
 # limitations under the License.
 #
 
-import re
-
 class Clip(object):
     def __init__(self, init):
         if isinstance(init, Clip):

@@ -1,4 +1,4 @@
 cubist
 ======
 
-Read N-dimensional arrays and write M-dimensional sub-arrays
+Read AND PROCESS N-dimensional CUBES, and write M-dimensional subcubes
