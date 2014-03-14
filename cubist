@@ -9,7 +9,7 @@ import numpy as np
 
 from cubist.application import log
 from cubist import data_types
-from cubist.clip import Clip
+#from cubist.clip import Clip
 from cubist.shape import Shape
 from cubist.cubist import Cubist
 from cubist.errors import CubistError
@@ -65,9 +65,9 @@ def _read(cubist, logger, args):
             raise CubistError("no input filenames")
         input_filename = args.input_filenames[0]
         cube = _read_and_extract(cubist, logger, args, input_filename, selection)
-    clip_arg = getattr(args, 'clip', None)
-    if clip_arg is not None:
-        cube = cubist.clip(cube=cube, clip=clip_arg)
+    #clip_arg = getattr(args, 'clip', None)
+    #if clip_arg is not None:
+    #    cube = cubist.clip(cube=cube, clip=clip_arg)
     return cube
 
 def main_print(logger, args):
@@ -172,31 +172,43 @@ expressions, and write the result.
         function=main_write,
     )
     
-    parser.add_argument("--help-data-types", "-hd",
-        dest="help_data_types",
+    parser.add_argument("--data-type", "--dtype", "-d",
+        metavar="D",
+        dest="data_type",
+        choices=data_types.DATA_TYPES.keys(),
+        default=data_types.DEFAULT_DATA_TYPE,
+        help="data type name (add --help-data-types/-hd flag to show all available data types)")
+
+    parser.add_argument("--accept-bigger-raw-files", "-a",
         action="store_true",
         default=False,
-        help="show available data types")
+        help="if an input raw file is bigger than expected, simply issue a warning message")
 
-    parser.add_argument("--help-cubist-numpy", "-hc",
-        dest="help_cubist_numpy",
-        action="store_true",
-        default=False,
-        help="show content of the cubist_numpy module")
+    parser.add_argument("--shape", "-s",
+        metavar="[D0[:D1[...]]]",
+        type=Shape,
+        required=False,
+        help="shape of the input filename")
 
-    parser.add_argument("--help-filename-interpolation", "-hi",
-        dest="help_filename_interpolation",
-        action="store_true",
-        default=False,
-        help="show available keywords for filename interpolation")
+    parser.add_argument("--extract", "-x",
+        metavar="X",
+        dest="selection",
+        type=Selection,
+        required=False,
+        help="subcube selection")
 
-    parser.add_argument("--input-filename", "-i",
-        metavar='I',
-        dest="input_filenames",
-        type=InputFilename,
-        action="append",
-        default=[],
-        help="input filename (add --help-filename-interpolation/-hi flag for an explanation about filename interpolation)")
+    parser.add_argument("--expression", "-e",
+        metavar="E",
+        dest="expression",
+        type=str,
+        required=False,
+        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (add --help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
+
+    #parser.add_argument("--clip", "-c",
+    #    metavar="MIN[:MAX]",
+    #    dest="clip",
+    #    type=Clip,
+    #    help="clipping")
 
     input_formatting = parser.add_argument_group('input formatting')
     input_formatting.add_argument("--input-format", "-If",
@@ -229,23 +241,6 @@ expressions, and write the result.
         default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
         help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
-    parser.add_argument("--accept-bigger-raw-files", "-a",
-        action="store_true",
-        default=False,
-        help="if an input raw file is bigger than expected, simply issue a warning message")
-
-    write_output_filename_group = parser.add_mutually_exclusive_group()
-    write_output_filename_group.add_argument("--in-place", "-Oi",
-        action="store_true",
-        help="output filename is input filename (notice that, due to interpolation, output file can be different from input file)")
-
-    write_output_filename_group.add_argument("--output-filename", "-o",
-        metavar='O',
-        dest="output_filename",
-        type=OutputFilename,
-        required=False,
-        help="output filename (add --help-filename-interpolation/-hi flag for an explanation about filename interpolation)")
-
     output_formatting = parser.add_argument_group("output formatting")
     output_formatting.add_argument("--output-format", "-Of",
         dest="output_format",
@@ -277,39 +272,6 @@ expressions, and write the result.
         default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
         help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
-    parser.add_argument("--shape", "-s",
-        metavar="[D0[:D1[...]]]",
-        type=Shape,
-        required=False,
-        help="shape of the input filename")
-
-    parser.add_argument("--data-type", "--dtype", "-d",
-        metavar="D",
-        dest="data_type",
-        choices=data_types.DATA_TYPES.keys(),
-        default=data_types.DEFAULT_DATA_TYPE,
-        help="data type name (add --help-data-types/-hd flag to show all available data types)")
-
-    parser.add_argument("--extract", "-x",
-        metavar="X",
-        dest="selection",
-        type=Selection,
-        required=False,
-        help="subcube selection")
-
-    parser.add_argument("--expression", "-e",
-        metavar="E",
-        dest="expression",
-        type=str,
-        required=False,
-        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (add --help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
-
-    parser.add_argument("--clip", "-c",
-        metavar="MIN[:MAX]",
-        dest="clip",
-        type=Clip,
-        help="clipping")
-
     parser.add_argument("--add-var", "-V",
         metavar="N=V",
         action="append",
@@ -317,17 +279,59 @@ expressions, and write the result.
         default=[],
         help="add a variable definition")
 
-    parser.add_argument('--print', '-P',
+    input_group = parser.add_argument_group("input options")
+    input_group.add_argument("--input-filename", "-i",
+        metavar='I',
+        dest="input_filenames",
+        type=InputFilename,
+        action="append",
+        default=[],
+        help="input filename (add --help-filename/-hf flag for an explanation about filenames)")
+
+    output_group = parser.add_argument_group("output options")
+
+    write_output_filename_group = output_group.add_mutually_exclusive_group()
+    write_output_filename_group.add_argument("--in-place", "-Oi",
+        action="store_true",
+        help="output filename is input filename (notice that, due to interpolation, output file can be different from input file)")
+
+    write_output_filename_group.add_argument("--output-filename", "-o",
+        metavar='O',
+        dest="output_filename",
+        type=OutputFilename,
+        required=False,
+        help="output filename (add --help-filename/-hf flag for an explanation about filenames)")
+
+    output_group.add_argument('--print', '-P',
         dest="print_cube",
         action="store_true",
         default=False,
         help="print the result cube")
 
-    parser.add_argument('--stats', '-S',
+    output_group.add_argument('--stats', '-S',
         dest="print_stats",
         action="store_true",
         default=False,
         help="print statistics about the result cube")
+
+    help_group = parser.add_argument_group("help options")
+    help_group.add_argument("--help-data-types", "-hd",
+        dest="help_data_types",
+        action="store_true",
+        default=False,
+        help="show available data types")
+
+    help_group.add_argument("--help-cubist-numpy", "-hc",
+        dest="help_cubist_numpy",
+        action="store_true",
+        default=False,
+        help="show content of the cubist_numpy module")
+
+    help_group.add_argument("--help-filename", "-hf",
+        dest="help_filename",
+        action="store_true",
+        default=False,
+        help="show available keywords for filename interpolation")
 
     args = parser.parse_args()
 
@@ -341,8 +345,33 @@ expressions, and write the result.
         help(cubist_numpy)
         sys.exit(0)
 
-    if args.help_filename_interpolation:
+    if args.help_filename:
         log.PRINT("""\
+[Input filenames]
+For each input filename, a variable _i<N>_ is generated referring to the cube
+read from this file; _N_ is the ordinal of the input filename.
+
+For instance, _i0_ refers to the cube read from the first file, _i1_ to the cube
+read from the second file, and so on.
+
+To be precise, that the extract expression (--extract/-x) is applied just after
+the cube has been read, so _i0_ is the subcube extracted from the cube read from
+the first file.
+
+These variables referring to the read cubes can be used inside the generic
+expressions (--expression/-e); for instance, "-e 'i0 - i1'" to subtract the
+second cube from the first.
+
+You can change the name of the variable referring to a cube; simply put the
+variable name before the filename, separated by '=': so, the option
+  -i a=a_8x10.raw
+will associate the read cube to the variable a.
+
+[Output filename]
+Also the output filename has a variable name (by default _o0_); but it is never
+ used.
+
+[Filename interpolation]
 Filenames are interpolated; the following keywords are substituted:
  + shape: the cube shape, for instance '3,2,4';
  + rank: the cube shape rank, for instance '3' if the shape is '3,2,4';
@@ -352,6 +381,11 @@ Filenames are interpolated; the following keywords are substituted:
 
 For instance, 'a_{{shape}}.{{format}}' is converted to 'a_3x2x4.raw' if shape
 is '3x2x4' and file format is 'raw'.
+
+This allows to specify the same filename as input and output, and still have
+the output on separate files. For instance,
+  -i a_{shape}.{format} -Oi -s 8x10 -If raw -Of text -Oc '%.4e'
+will read 'a_8x10.raw' and write 'a_8x10.text'.
 """.format(ff='|'.join(Cubist.FILE_FORMATS)))
         sys.exit(0)
 
