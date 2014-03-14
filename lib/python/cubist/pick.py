@@ -76,15 +76,3 @@ class Pick(object):
 
     def __repr__(self):
         return repr(self._value)
-
-if __name__ == "__main__":
-    import sys
-    for arg in sys.argv[1:]:
-        try:
-            pick = Pick(arg)
-        except:
-            import traceback
-            traceback.print_exc()
-            print("ERR: invalid arg {0}".format(arg))
-        else:
-            print("{arg!r:40s} {pick!r}".format(arg=arg, pick=pick))

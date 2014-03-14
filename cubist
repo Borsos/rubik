@@ -13,6 +13,7 @@ from cubist.clip import Clip
 from cubist.shape import Shape
 from cubist.cubist import Cubist
 from cubist.errors import CubistError
+from cubist.variable import VariableDefinition
 from cubist.filename import InputFilename, OutputFilename
 from cubist.selection import Selection
 
@@ -106,10 +107,10 @@ def main_write(logger, args):
     #print "I", InputFilename.__filenames__
     #print "O", OutputFilename.__filenames__
     useless_run = True
-    if args.write_mode == 'print':
+    if args.print_cube:
         cubist.print_cube(cube=cube)
         useless_run = False
-    elif args.write_mode == 'stats':
+    if args.print_stats:
         cubist.stats(cube=cube)
         useless_run = False
     if output_filename is not None:
@@ -119,7 +120,7 @@ def main_write(logger, args):
             output_format=args.output_format,
             output_filename=output_filename)
     if useless_run:
-        logger.warning("warning: nothing to do; you should use --print/-P|--stats/-S and/or --output-filename/-o")
+        logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
     return 0
 
 def main():
@@ -309,19 +310,23 @@ expressions, and write the result.
         type=Clip,
         help="clipping")
 
-    mode_group = parser.add_mutually_exclusive_group()
-    mode_group.add_argument('--print', '-P',
-        dest="write_mode",
-        action="store_const",
-        const="print",
-        default=None,
+    parser.add_argument("--add-var", "-V",
+        metavar="N=V",
+        action="append",
+        type=VariableDefinition,
+        default=[],
+        help="add a variable definition")
+
+    parser.add_argument('--print', '-P',
+        dest="print_cube",
+        action="store_true",
+        default=False,
         help="print the result cube")
 
-    mode_group.add_argument('--stats', '-S',
-        dest="write_mode",
-        action="store_const",
-        const="stats",
-        default=None,
+    parser.add_argument('--stats', '-S',
+        dest="print_stats",
+        action="store_true",
+        default=False,
         help="print statistics about the result cube")
 
     args = parser.parse_args()

@@ -24,6 +24,7 @@ from .errors import CubistError
 from .clip import Clip
 from .shape import Shape
 from .filename import InputFilename, OutputFilename
+from .variable import VariableDefinition
 from .selection import Selection
 from . import cubist_numpy
 
@@ -343,9 +344,11 @@ ave           = {ave}
             'cubist_numpy': cubist_numpy,
         }
         globals_d.update(self.input_cubes)
+        locals_d = {}
+        locals_d.update(VariableDefinition.__variables__)
         self.logger.info("evaluating expression {0!r}...".format(expression))
         try:
-            result = eval(expression, globals_d, {})
+            result = eval(expression, globals_d, locals_d)
         except Exception as e:
             raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(e).__name__, e))
         if result.dtype != self.dtype:
