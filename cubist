@@ -21,12 +21,6 @@ if sys.version_info.major == 2:
 else:
     PY3 = True
 
-def main_list(logger, args):
-    if args.what == "data_types":
-        for data_type_name, data_type_description in data_types.DATA_TYPES.items():
-            log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
-    return 0
-
 def _create_cubist(logger, args):
     #logger.debug("# origins are  {0}".format(origins))
     #logger.debug("# shape is     {0}".format(shape))
@@ -129,23 +123,12 @@ def main_write(logger, args):
     return 0
 
 def main():
-    description="""\
+
+    description = """\
 Tool to read/write N-dimensional cubes
+Read N-dimensional cubes, extract M-dimensional subcubes, evaluate generic numpy expressions, and write the result.
 """
-    epilog=""
-
-    list_description = "List available data types"
-    list_epilog = ""
-
-    print_description = "Print N-dimensional cubes"
-    stat_description = "Print statistics about N-dimensional cubes"
-
-    create_description = "Create N-dimensional cubes"
-
-    write_description = """\
-Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
-"""
-    filename_data_type_epilog = """\
+    epilog = """\
 (*) filenames are interpolated; the following keywords are substituted:
  + shape: the cube shape, for instance '3,2,4';
  + data_type: the data type, for instance 'float32';
@@ -155,7 +138,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
 
 (**) available data types are:
 """
-    filename_data_type_epilog += "\n".join(" + {0:16s} {1}".format(data_type_name, data_type_description) for data_type_name, data_type_description in data_types.DATA_TYPES.items())
+    epilog += "\n".join(" + {0:16s} {1}".format(data_type_name, data_type_description) for data_type_name, data_type_description in data_types.DATA_TYPES.items())
     
     common_parser = argparse.ArgumentParser(
         add_help=False
@@ -173,74 +156,25 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         default=False,
         help="show error traceback")
 
-    top_level_parser = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         parents=[common_parser],
         description=description,
         epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    subparsers = top_level_parser.add_subparsers()
-
-    list_parser = subparsers.add_parser(
-        "list",
-        description=list_description,
-        epilog=list_epilog,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        parents=[common_parser],
-    )
-
-    list_parser.set_defaults(
-        function=main_list,
-        what="data_types",
-    )
-    
-    list_group = list_parser.add_mutually_exclusive_group()
-    list_group.add_argument("--data-types", "-d",
-        dest="what",
-        action="store_const",
-        const="data_types",
-        help="list available data types")
-
-    create_parser = subparsers.add_parser(
-        "create",
-        description=create_description,
-        epilog=filename_data_type_epilog,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        parents=[common_parser],
-    )
-
-    create_parser.set_defaults(
-        function=main_create,
-    )
-
-    create_parser.add_argument("--random-seed", "-r",
-        metavar="R",
-        dest="random_seed",
-        type=str,
-        default=None,
-        help="random seed")
-    
-    create_parser.add_argument("--mode", "-m",
-        dest="creation_mode",
-        choices=Cubist.CREATION_MODES,
-        default=Cubist.CREATION_MODE_RANGE,
-        help="creation mode")
-
-    write_parser = subparsers.add_parser(
-        "write",
-        description=write_description,
-        epilog=filename_data_type_epilog,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        parents=[common_parser],
-    )
-
-    write_parser.set_defaults(
+    parser.set_defaults(
         function=main_write,
     )
     
+    parser.add_argument("--list-data-types", "-l",
+        dest="list_data_types",
+        action="store_true",
+        default=False,
+        help="list available data types")
 
-    write_parser.add_argument("--input-filename", "-i",
+
+    parser.add_argument("--input-filename", "-i",
         metavar='I',
         dest="input_filenames",
         type=InputFilename,
@@ -248,7 +182,7 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         default=[],
         help="input filename (*)")
 
-    input_formatting = write_parser.add_argument_group('input formatting')
+    input_formatting = parser.add_argument_group('input formatting')
     input_formatting.add_argument("--input-format", "-If",
         dest="input_format",
         choices=Cubist.FILE_FORMATS,
@@ -279,91 +213,88 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
         help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
-    write_parser.add_argument("--accept-bigger-raw-files", "-a",
+    parser.add_argument("--accept-bigger-raw-files", "-a",
         action="store_true",
         default=False,
         help="if an input raw file is bigger than expected, simply issue a warning message")
 
-    write_output_filename_group = write_parser.add_mutually_exclusive_group()
+    write_output_filename_group = parser.add_mutually_exclusive_group()
     write_output_filename_group.add_argument("--in-place", "-Oi",
         action="store_true",
         help="output filename is input filename (notice that, due to interpolation, output file can be different from input file)")
 
-    for parser, required in (create_parser, True), (write_output_filename_group, False):
-        parser.add_argument("--output-filename", "-o",
+    write_output_filename_group.add_argument("--output-filename", "-o",
             metavar='O',
             dest="output_filename",
             type=OutputFilename,
-            required=required,
+            required=False,
             help="output filename (*)")
 
-    for parser in create_parser, write_parser:
-        output_formatting = parser.add_argument_group("output formatting")
-        output_formatting.add_argument("--output-format", "-Of",
-            dest="output_format",
-            choices=Cubist.FILE_FORMATS,
-            default=Cubist.DEFAULT_FILE_FORMAT,
-            help="output file format")
+    output_formatting = parser.add_argument_group("output formatting")
+    output_formatting.add_argument("--output-format", "-Of",
+        dest="output_format",
+        choices=Cubist.FILE_FORMATS,
+        default=Cubist.DEFAULT_FILE_FORMAT,
+        help="output file format")
 
-        output_formatting.add_argument("--output-csv-separator", "-Os",
-            metavar='S',
-            dest="output_csv_separator",
-            default=Cubist.FILE_FORMAT_CSV_SEPARATOR,
-            help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_CSV))
+    output_formatting.add_argument("--output-csv-separator", "-Os",
+        metavar='S',
+        dest="output_csv_separator",
+        default=Cubist.FILE_FORMAT_CSV_SEPARATOR,
+        help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_CSV))
 
-        output_formatting.add_argument("--output-text-delimiter", "-Od",
-            metavar='D',
-            dest="output_text_delimiter",
-            default=Cubist.FILE_FORMAT_TEXT_DELIMITER,
-            help="delimiter to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
+    output_formatting.add_argument("--output-text-delimiter", "-Od",
+        metavar='D',
+        dest="output_text_delimiter",
+        default=Cubist.FILE_FORMAT_TEXT_DELIMITER,
+        help="delimiter to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
 
-        output_formatting.add_argument("--output-text-newline", "-On",
-            metavar='N',
-            dest="output_text_newline",
-            default=Cubist.FILE_FORMAT_TEXT_NEWLINE,
-            help="newline to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
+    output_formatting.add_argument("--output-text-newline", "-On",
+        metavar='N',
+        dest="output_text_newline",
+        default=Cubist.FILE_FORMAT_TEXT_NEWLINE,
+        help="newline to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
 
-        output_formatting.add_argument("--output-text-converter", "-Oc",
-            metavar='C',
-            dest="output_text_converter",
-            default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
-            help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
+    output_formatting.add_argument("--output-text-converter", "-Oc",
+        metavar='C',
+        dest="output_text_converter",
+        default=Cubist.FILE_FORMAT_TEXT_CONVERTER,
+        help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
-    for parser in write_parser, create_parser:
-        parser.add_argument("--shape", "-s",
-            metavar="[D0[:D1[...]]]",
-            type=Shape,
-            required=False,
-            help="shape of the input filename")
+    parser.add_argument("--shape", "-s",
+        metavar="[D0[:D1[...]]]",
+        type=Shape,
+        required=False,
+        help="shape of the input filename")
 
-        parser.add_argument("--data-type", "--dtype", "-d",
-            metavar="D",
-            dest="data_type",
-            choices=data_types.DATA_TYPES.keys(),
-            default=data_types.DEFAULT_DATA_TYPE,
-            help="data type name (**)")
+    parser.add_argument("--data-type", "--dtype", "-d",
+        metavar="D",
+        dest="data_type",
+        choices=data_types.DATA_TYPES.keys(),
+        default=data_types.DEFAULT_DATA_TYPE,
+        help="data type name (**)")
 
-    write_parser.add_argument("--extract", "-x",
+    parser.add_argument("--extract", "-x",
         metavar="X",
         dest="selection",
         type=Selection,
         required=False,
         help="subcube selection")
 
-    write_parser.add_argument("--expression", "-e",
+    parser.add_argument("--expression", "-e",
         metavar="E",
         dest="expression",
         type=str,
         required=False,
         help="expression to evaluate")
 
-    write_parser.add_argument("--clip", "-c",
+    parser.add_argument("--clip", "-c",
         metavar="MIN[:MAX]",
         dest="clip",
         type=Clip,
         help="clipping")
 
-    mode_group = write_parser.add_mutually_exclusive_group()
+    mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument('--print', '-P',
         dest="write_mode",
         action="store_const",
@@ -378,7 +309,12 @@ Extract M-dimensional subcubes from an N-dimensional cube (with M<=N)
         default=None,
         help="print statistics about the result cube")
 
-    args = top_level_parser.parse_args()
+    args = parser.parse_args()
+
+    if args.list_data_types:
+        for data_type_name, data_type_description in data_types.DATA_TYPES.items():
+            log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
+        sys.exit(0)
 
     logger = log.set_logger(args.verbose_level)
     
