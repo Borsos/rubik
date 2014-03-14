@@ -132,18 +132,6 @@ Read N-dimensional cubes, extract M-dimensional subcubes, evaluate generic numpy
 expressions, and write the result.
 """
     epilog = ""
-#(*) filenames are interpolated; the following keywords are substituted:
-# + shape: the cube shape, for instance '3,2,4';
-# + rank: the cube shape rank, for instance '3' if the shape is '3,2,4';
-# + count: the number of elements, for instance '24';
-# + data_type: the data type, for instance 'float32';
-# + format: the file format ({ff})
-# For instance, 'a_{{shape}}.{{format}}' is converted to 'a_3x2x4.raw' if shape
-# is '3x2x4' and file format is 'raw'.
-#""".format(ff='|'.join(Cubist.FILE_FORMATS))
-
-#(**) available data types are:
-#    epilog += "\n".join(" + {0:16s} {1}".format(data_type_name, data_type_description) for data_type_name, data_type_description in data_types.DATA_TYPES.items())
     
     common_parser = argparse.ArgumentParser(
         add_help=False
@@ -365,7 +353,7 @@ second cube from the first.
 You can change the name of the variable referring to a cube; simply put the
 variable name before the filename, separated by '=': so, the option
   -i a=a_8x10.raw
-will associate the read cube to the variable a.
+will associate the read cube to the variable 'a'.
 
 [Output filename]
 Also the output filename has a variable name (by default 'o0'); but it is never
@@ -373,9 +361,9 @@ Also the output filename has a variable name (by default 'o0'); but it is never
 
 [Filename interpolation]
 Filenames are interpolated; the following keywords are substituted:
- + shape: the cube shape, for instance '3,2,4';
- + rank: the cube shape rank, for instance '3' if the shape is '3,2,4';
- + count: the number of elements, for instance '24';
+ + shape: the cube shape, for instance '3x2x4';
+ + rank: the cube shape rank, for instance '3' if the shape is '3x2x4';
+ + count: the number of elements, for instance '2x4';
  + data_type: the data type, for instance 'float32';
  + format: the file format ({ff})
 
@@ -384,7 +372,7 @@ is '3x2x4' and file format is 'raw'.
 
 This allows to specify the same filename as input and output, and still have
 the output on separate files. For instance,
-  -i a_{shape}.{format} -Oi -s 8x10 -If raw -Of text -Oc '%.4e'
+  -i a_{{shape}}.{{format}} -Oi -s 8x10 -If raw -Of text -Oc '%.4e'
 will read 'a_8x10.raw' and write 'a_8x10.text'.
 """.format(ff='|'.join(Cubist.FILE_FORMATS)))
         sys.exit(0)
