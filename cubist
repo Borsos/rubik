@@ -348,14 +348,14 @@ expressions, and write the result.
     if args.help_filename:
         log.PRINT("""\
 [Input filenames]
-For each input filename, a variable _i<N>_ is generated referring to the cube
-read from this file; _N_ is the ordinal of the input filename.
+For each input filename, a variable 'i<N>' is generated referring to the cube
+read from this file; 'N' is the ordinal of the input filename.
 
-For instance, _i0_ refers to the cube read from the first file, _i1_ to the cube
+For instance, 'i0' refers to the cube read from the first file, 'i1' to the cube
 read from the second file, and so on.
 
 To be precise, that the extract expression (--extract/-x) is applied just after
-the cube has been read, so _i0_ is the subcube extracted from the cube read from
+the cube has been read, so 'i0' is the subcube extracted from the cube read from
 the first file.
 
 These variables referring to the read cubes can be used inside the generic
@@ -368,7 +368,7 @@ variable name before the filename, separated by '=': so, the option
 will associate the read cube to the variable a.
 
 [Output filename]
-Also the output filename has a variable name (by default _o0_); but it is never
+Also the output filename has a variable name (by default 'o0'); but it is never
  used.
 
 [Filename interpolation]
