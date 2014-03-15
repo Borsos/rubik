@@ -221,6 +221,9 @@ class Cubist(object):
         return cube
 
     def write(self, cube):
+        if not isinstance(cube, np.ndarray):
+            raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        self._check_result_is_ndarray(cube)
         if not self.output_filenames:
             return
         for name, output_filename in self.output_filenames.items():
@@ -281,6 +284,9 @@ class Cubist(object):
         log.PRINT(cube)
 
     def stats(self, cube):
+        if not isinstance(cube, np.ndarray):
+            raise CubistError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        self._check_result_is_ndarray(cube)
         cube_sum = cube.sum()
         cube_ave = None
         cobe_count = 0
