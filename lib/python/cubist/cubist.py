@@ -49,6 +49,8 @@ class Cubist(object):
             logger,
             input_filenames,
             input_formats,
+            output_filenames,
+            output_formats,
             selections,
             shapes,
             input_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
@@ -79,6 +81,9 @@ class Cubist(object):
         self.input_formats = input_formats
         self.shapes = shapes
         self.selections = selections
+
+        self.output_filenames = output_filenames
+        self.output_formats = output_formats
 
     def _set_dtype(self, data_type):
         self.data_type = data_type
@@ -209,7 +214,16 @@ class Cubist(object):
         self.register_input_cube(input_varname, input_filename, cube)
         return cube
 
-    def write(self, cube, output_format, output_filename):
+    def write(self, cube):
+        if not self.output_filenames:
+            return
+        for name, output_filename in self.output_filenames.items():
+            output_format = self.output_formats.get(name)
+            if output_format is None:
+                output_format = self.DEFAULT_FILE_FORMAT
+            self._write(cube, output_format, output_filename)
+        
+    def _write(self, cube, output_format, output_filename):
         assert isinstance(output_filename, OutputFilename)
         output_filename = output_filename.filename
         numpy_function = None
