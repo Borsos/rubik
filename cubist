@@ -13,6 +13,7 @@ from cubist import data_types
 from cubist.shape import Shape
 from cubist.cubist import Cubist
 from cubist.errors import CubistError
+from cubist.argdict import ArgDict
 from cubist.variable import VariableDefinition
 from cubist.filename import InputFilename, OutputFilename
 from cubist.selection import Selection
@@ -27,9 +28,14 @@ def _create_cubist(logger, args):
     #logger.debug("# shape is     {0}".format(shape))
     #logger.debug("# selection is {0}".format(selection))
     #logger.debug("# data_type is {0}".format(args.data_type))
+    print args.input_filenames
     cubist = Cubist(
             data_type=args.data_type,
             logger=logger,
+            input_filenames=args.input_filenames,
+            input_formats=args.input_formats,
+            shapes=args.shapes,
+            selections=args.selections,
             input_csv_separator=getattr(args, 'input_csv_separator', None),
             output_csv_separator=getattr(args, 'output_csv_separator', None),
             input_text_delimiter=getattr(args, 'input_text_delimiter', None),
@@ -41,33 +47,17 @@ def _create_cubist(logger, args):
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None))
     return cubist
 
-def _read_and_extract(cubist, logger, args, input_filename, selection):
-    if args.shape is None:
-        raise CubistError("--shape/-s is mandatory when input files are provided")
-    cube = cubist.read(
-            shape=args.shape,
-            input_format=args.input_format,
-            input_filename=input_filename,
-            selection=selection)
-    return cube
-
 def _read(cubist, logger, args):
-    selection = getattr(args, 'selection', None)
     expression = getattr(args, 'expression', None)
+    cubist.read()
     if expression:
-        for input_filename in args.input_filenames:
-            _read_and_extract(cubist, logger, args, input_filename, selection)
         cube = cubist.evaluate_expression(expression=expression)
     else:
-        if len(args.input_filenames) > 1:
-            raise CubistError("too many input filenames")
-        elif len(args.input_filenames) == 0:
+        if args.input_filenames is None or len(args.input_filenames) == 0:
             raise CubistError("no input filenames")
-        input_filename = args.input_filenames[0]
-        cube = _read_and_extract(cubist, logger, args, input_filename, selection)
-    #clip_arg = getattr(args, 'clip', None)
-    #if clip_arg is not None:
-    #    cube = cubist.clip(cube=cube, clip=clip_arg)
+        elif len(args.input_filenames) == 0:
+            raise CubistError("too many input filenames")
+        cube = cubist.last_cube()
     return cube
 
 def main_print(logger, args):
@@ -133,6 +123,11 @@ expressions, and write the result.
 """
     epilog = ""
     
+    argdict_input_filenames = ArgDict(InputFilename)
+    argdict_input_formats = ArgDict(InputFilename, default=Cubist.DEFAULT_FILE_FORMAT)
+    argdict_shapes = ArgDict(Shape)
+    argdict_selections = ArgDict(Selection, default=None)
+
     common_parser = argparse.ArgumentParser(
         add_help=False
     )
@@ -174,22 +169,22 @@ expressions, and write the result.
 
     parser.add_argument("--shape", "-s",
         metavar="[D0[:D1[...]]]",
-        type=Shape,
-        required=False,
+        dest="shapes",
+        type=argdict_shapes.store_function(),
+        default=argdict_shapes,
         help="shape of the input filename")
 
     parser.add_argument("--extract", "-x",
         metavar="X",
-        dest="selection",
-        type=Selection,
-        required=False,
+        dest="selections",
+        type=argdict_selections.store_function(),
+        default=argdict_selections,
         help="subcube selection")
 
     parser.add_argument("--expression", "-e",
         metavar="E",
         dest="expression",
         type=str,
-        required=False,
         help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (add --help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
 
     #parser.add_argument("--clip", "-c",
@@ -199,10 +194,12 @@ expressions, and write the result.
     #    help="clipping")
 
     input_formatting = parser.add_argument_group('input formatting')
+
     input_formatting.add_argument("--input-format", "-If",
-        dest="input_format",
+        dest="input_formats",
         choices=Cubist.FILE_FORMATS,
-        default=Cubist.DEFAULT_FILE_FORMAT,
+        type=argdict_input_formats.store_function(),
+        default=argdict_input_formats,
         help="input file format")
 
     input_formatting.add_argument("--input-csv-separator", "-Is",
@@ -271,9 +268,8 @@ expressions, and write the result.
     input_group.add_argument("--input-filename", "-i",
         metavar='I',
         dest="input_filenames",
-        type=InputFilename,
-        action="append",
-        default=[],
+        type=argdict_input_filenames.store_function(),
+        default=argdict_input_filenames,
         help="input filename (add --help-filename/-hf flag for an explanation about filenames)")
 
     output_group = parser.add_argument_group("output options")

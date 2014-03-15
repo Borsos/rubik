@@ -17,6 +17,7 @@
 
 import os
 import numpy as np
+from collections import OrderedDict
 
 from . import data_types
 from .application import log
@@ -46,6 +47,10 @@ class Cubist(object):
     def __init__(self,
             data_type,
             logger,
+            input_filenames,
+            input_formats,
+            selections,
+            shapes,
             input_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
             output_csv_separator=FILE_FORMAT_CSV_SEPARATOR,
             input_text_delimiter=FILE_FORMAT_TEXT_DELIMITER,
@@ -66,7 +71,14 @@ class Cubist(object):
         self.input_text_converter = input_text_converter
         self.output_text_converter = output_text_converter
         self.accept_bigger_raw_files = accept_bigger_raw_files
-        self.input_cubes = {}
+
+        self._last_cube = None
+        self.input_cubes = OrderedDict()
+
+        self.input_filenames = input_filenames
+        self.input_formats = input_formats
+        self.shapes = shapes
+        self.selections = selections
 
     def _set_dtype(self, data_type):
         self.data_type = data_type
@@ -103,7 +115,24 @@ class Cubist(object):
     def register_input_cube(self, input_varname, input_filename, cube):
         self.input_cubes[input_varname] = cube
 
-    def read(self, shape, input_format, input_filename, selection=None):
+    def last_cube(self):
+        return self._last_cube
+
+    def read(self):
+        self._last_cube = None
+        if not self.input_filenames:
+            return
+        for name, input_filename in self.input_filenames.items():
+            shape = self.shapes.get(name)
+            if shape is None:
+                raise CubistError("missing shape for filename {0}".format(input_filename))
+            input_format = self.input_formats.get(name)
+            if input_format is None:
+                input_format = self.DEFAULT_FILE_FORMAT
+            selection = self.selections.get(name)
+            self._last_cube = self._read(shape, input_format, input_filename, selection)
+
+    def _read(self, shape, input_format, input_filename, selection=None):
         assert isinstance(input_filename, InputFilename)
         assert (selection is None) or isinstance(selection, Selection)
         input_varname = input_filename.varname
