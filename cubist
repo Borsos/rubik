@@ -24,16 +24,14 @@ else:
     PY3 = True
 
 def _create_cubist(logger, args):
-    #logger.debug("# origins are  {0}".format(origins))
-    #logger.debug("# shape is     {0}".format(shape))
-    #logger.debug("# selection is {0}".format(selection))
-    #logger.debug("# data_type is {0}".format(args.data_type))
     cubist = Cubist(
-            data_type=args.data_type,
+            dtype=args.dtype,
             logger=logger,
             input_filenames=args.input_filenames,
+            input_dtypes=args.input_dtypes,
             input_formats=args.input_formats,
             output_filenames=args.output_filenames,
+            output_dtypes=args.output_dtypes,
             output_formats=args.output_formats,
             shapes=args.shapes,
             selections=args.selections,
@@ -97,7 +95,8 @@ expressions, and write the result.
     epilog = ""
     
     argdict_input_filenames = ArgDict(InputFilename)
-    argdict_input_formats = ArgDict(str, default=Cubist.DEFAULT_FILE_FORMAT)
+    argdict_input_dtypes = ArgDict(str, default=None)
+    argdict_input_formats = ArgDict(data_types.get_dtype, default=Cubist.DEFAULT_FILE_FORMAT)
     argdict_input_csv_separators = ArgDict(str, default=Cubist.FILE_FORMAT_CSV_SEPARATOR)
     argdict_input_text_delimiters = ArgDict(str, default=Cubist.FILE_FORMAT_TEXT_DELIMITER)
     argdict_input_text_newlines = ArgDict(str, default=Cubist.FILE_FORMAT_TEXT_NEWLINE)
@@ -106,6 +105,7 @@ expressions, and write the result.
     argdict_selections = ArgDict(Selection, default=None)
 
     argdict_output_filenames = ArgDict(OutputFilename)
+    argdict_output_dtypes = ArgDict(data_types.get_dtype, default=None)
     argdict_output_formats = ArgDict(str, default=Cubist.DEFAULT_FILE_FORMAT)
     argdict_output_csv_separators = ArgDict(str, default=Cubist.FILE_FORMAT_CSV_SEPARATOR)
     argdict_output_text_delimiters = ArgDict(str, default=Cubist.FILE_FORMAT_TEXT_DELIMITER)
@@ -122,7 +122,7 @@ expressions, and write the result.
         default=0,
         help="set verbose level")
 
-    common_parser.add_argument("--trace-errors", "-t",
+    common_parser.add_argument("--trace-errors", "-E",
         dest="trace_errors",
         action="store_true",
         default=False,
@@ -139,12 +139,12 @@ expressions, and write the result.
         function=main_write,
     )
     
-    parser.add_argument("--data-type", "--dtype", "-d",
+    parser.add_argument("--dtype", "-t",
         metavar="D",
-        dest="data_type",
-        choices=data_types.DATA_TYPES.keys(),
+        dest="dtype",
+        type=data_types.get_dtype,
         default=data_types.DEFAULT_DATA_TYPE,
-        help="data type name (add --help-data-types/-hd flag to show all available data types)")
+        help="data type name (--help-data-types/-hd flag to show all available data types)")
 
     parser.add_argument("--accept-bigger-raw-files", "-a",
         action="store_true",
@@ -169,7 +169,7 @@ expressions, and write the result.
         metavar="E",
         dest="expression",
         type=str,
-        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (add --help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
+        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (--help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
 
     #parser.add_argument("--clip", "-c",
     #    metavar="MIN[:MAX]",
@@ -178,6 +178,13 @@ expressions, and write the result.
     #    help="clipping")
 
     input_formatting = parser.add_argument_group('input formatting')
+
+    input_formatting.add_argument("--input-dtype", "-It",
+        metavar="D",
+        dest="input_dtypes",
+        type=argdict_input_dtypes.store_function(),
+        default=argdict_input_dtypes,
+        help="input data type name (--help-data-types/-hd flag to show all available data types)")
 
     input_formatting.add_argument("--input-format", "-If",
         dest="input_formats",
@@ -215,6 +222,13 @@ expressions, and write the result.
         help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
 
     output_formatting = parser.add_argument_group("output formatting")
+    output_formatting.add_argument("--output-dtype", "-Ot",
+        metavar="D",
+        dest="output_dtypes",
+        type=argdict_output_dtypes.store_function(),
+        default=argdict_output_dtypes,
+        help="output data type name (--help-data-types/-hd flag to show all available data types)")
+
     output_formatting.add_argument("--output-format", "-Of",
         dest="output_formats",
         #choices=Cubist.FILE_FORMATS,
@@ -263,7 +277,7 @@ expressions, and write the result.
         dest="input_filenames",
         type=argdict_input_filenames.store_function(),
         default=argdict_input_filenames,
-        help="input filename (add --help-filename/-hf flag for an explanation about filenames)")
+        help="input filename (--help-filename/-hf flag for an explanation about filenames)")
 
     output_group = parser.add_argument_group("output options")
 
@@ -277,7 +291,7 @@ expressions, and write the result.
         dest="output_filenames",
         type=argdict_output_filenames.store_function(),
         default=argdict_output_filenames,
-        help="output filename (add --help-filename/-hf flag for an explanation about filenames)")
+        help="output filename (--help-filename/-hf flag for an explanation about filenames)")
 
     output_group.add_argument('--print', '-P',
         dest="print_cube",
@@ -292,11 +306,11 @@ expressions, and write the result.
         help="print statistics about the result cube")
 
     help_group = parser.add_argument_group("help options")
-    help_group.add_argument("--help-data-types", "-hd",
-        dest="help_data_types",
+    help_group.add_argument("--help-dypes", "-ht",
+        dest="help_dtypes",
         action="store_true",
         default=False,
-        help="show available data types")
+        help="show available dtypes")
 
     help_group.add_argument("--help-cubist-numpy", "-hc",
         dest="help_cubist_numpy",
@@ -310,11 +324,15 @@ expressions, and write the result.
         default=False,
         help="show available keywords for filename interpolation")
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except Exception as err:
+        sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
+        sys.exit(1)
 
-    if args.help_data_types:
-        for data_type_name, data_type_description in data_types.DATA_TYPES.items():
-            log.PRINT("{n:16s} {d}".format(n=data_type_name, d=data_type_description))
+    if args.help_dtypes:
+        for dtype_name, dtype_description in data_types.DATA_TYPES.items():
+            log.PRINT("{n:16s} {d}".format(n=dtype_name, d=dtype_description))
         sys.exit(0)
 
     if args.help_cubist_numpy:
@@ -353,7 +371,7 @@ Filenames are interpolated; the following keywords are substituted:
  + shape: the cube shape, for instance '3x2x4';
  + rank: the cube shape rank, for instance '3' if the shape is '3x2x4';
  + count: the number of elements, for instance '2x4';
- + data_type: the data type, for instance 'float32';
+ + dtype: the data type, for instance 'float32';
  + format: the file format ({ff})
 
 For instance, 'a_{{shape}}.{{format}}' is converted to 'a_3x2x4.raw' if shape

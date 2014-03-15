@@ -19,6 +19,8 @@ import collections
 
 import numpy as np
 
+from .errors import CubistError
+
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
 	("int_",	"Default integer type (same as C long; normally either int64 or int32)"),
@@ -44,4 +46,7 @@ DATA_TYPES = collections.OrderedDict((
 DEFAULT_DATA_TYPE = "float32"
 
 def get_dtype(data_type):
-    return getattr(np, data_type)
+    try:
+        return getattr(np, data_type)
+    except Exception as err:
+        raise CubistError("invalid dtype {0!r}: {1}: {2}".format(data_type, err.__class__.__name__, err))

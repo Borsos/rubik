@@ -45,11 +45,13 @@ class Cubist(object):
     FILE_FORMAT_TEXT_NEWLINE = None
     FILE_FORMAT_TEXT_CONVERTER = None
     def __init__(self,
-            data_type,
+            dtype,
             logger,
             input_filenames,
             input_formats,
+            input_dtypes,
             output_filenames,
+            output_dtypes,
             output_formats,
             selections,
             shapes,
@@ -62,7 +64,7 @@ class Cubist(object):
             input_text_converters,
             output_text_converters,
             accept_bigger_raw_files=False):
-        self._set_dtype(data_type)
+        self._set_dtype(dtype)
         self.logger = logger
         self.input_csv_separators = input_csv_separators
         self.output_csv_separators = output_csv_separators
@@ -79,29 +81,26 @@ class Cubist(object):
 
         self.input_filenames = input_filenames
         self.input_formats = input_formats
+        self.input_dtypes = input_dtypes
         self.shapes = shapes
         self.selections = selections
 
         self.output_filenames = output_filenames
+        self.output_dtypes = output_dtypes
         self.output_formats = output_formats
 
-    def _set_dtype(self, data_type):
-        self.data_type = data_type
-        self.dtype = data_types.get_dtype(data_type)
+    def _set_dtype(self, dtype):
+        self.dtype = dtype
         cubist_numpy.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
-        for f in 'finfo', 'iinfo':
-            try:
-                dtinfo = np.finfo(self.dtype)
-            except ValueError:
-                dtinfo = None
-        if dtinfo is None:
-            self.dtype_min = self.dtype_max = None
-        else:
-            self.dtype_min = dtinfo.min
-            self.dtype_max = dtinfo.max
+        self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
 
-    def format_filename(self, filename, shape, file_format):
+    def get_dtype_bytes(self, dtype):
+        if not dtype in self._cache_dtype_bytes:
+            self._cache_dtype_bytes[dtype] = dtype().itemsize
+        return self._cache_dtype_bytes[dtype]
+
+    def format_filename(self, filename, shape, file_format, file_dtype):
         count = 0
         if shape:
             count = 1
@@ -114,7 +113,7 @@ class Cubist(object):
             rank=len(shape),
             count=count,
             format=file_format,
-            data_type=self.data_type,
+            dtype=file_dtype.__name__,
         )
 
     def register_input_cube(self, input_varname, input_filename, cube):
@@ -137,6 +136,10 @@ class Cubist(object):
         input_format = self.input_formats.get(name)
         if input_format is None:
             input_format = self.DEFAULT_FILE_FORMAT
+        input_dtype = self.input_dtypes.get(name)
+        if input_dtype is None:
+            input_dtype = self.dtype
+        input_dtype_bytes = self.get_dtype_bytes(input_dtype)
         selection = self.selections.get(name)
         assert isinstance(input_filename, InputFilename)
         assert (selection is None) or isinstance(selection, Selection)
@@ -149,7 +152,7 @@ class Cubist(object):
         numpy_function_nargs = {}
         numpy_function_pargs = []
         if input_format == self.FILE_FORMAT_RAW:
-            num_bytes = shape.count() * self.dtype_bytes
+            num_bytes = shape.count() * input_dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
             # read only expected elements (number of elements already checked)
             numpy_function = np.fromfile
@@ -174,15 +177,15 @@ class Cubist(object):
                 numpy_function_nargs['fmt'] = text_convert
         else:
             raise CubistError("invalid file format {0!r}".format(input_format))
-        input_filename = self.format_filename(input_filename, shape.shape(), input_format)
-        input_filename = self._check_input_filename(shape, input_format, input_filename)
+        input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
+        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
         self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
             c=expected_input_count,
-            t=self.data_type,
+            t=input_dtype.__name__,
             b=msg_bytes,
             f=input_format,
             i=input_filename))
-        array = numpy_function(input_filename, dtype=self.dtype, *numpy_function_pargs, **numpy_function_nargs)
+        array = numpy_function(input_filename, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
         input_count = array.size
         if array.size != expected_input_count:
             if input_count < expected_input_count:
@@ -227,14 +230,20 @@ class Cubist(object):
         output_format = self.output_formats.get(name)
         if output_format is None:
             output_format = self.DEFAULT_FILE_FORMAT
+        output_dtype = self.output_dtypes.get(name)
+        if output_dtype is None:
+            output_dtype = self.dtype
+        output_dtype_bytes = self.get_dtype_bytes(output_dtype)
+        if cube.dtype != output_dtype:
+            cube = cube.astype(output_dtype)
         assert isinstance(output_filename, OutputFilename)
         output_filename = output_filename.filename
         numpy_function = None
         numpy_function_pargs = []
         numpy_function_nargs = {}
-        output_filename = self.format_filename(output_filename, cube.shape, output_format)
+        output_filename = self.format_filename(output_filename, cube.shape, output_format, output_dtype)
         if output_format == self.FILE_FORMAT_RAW:
-            num_bytes = cube.size * self.dtype_bytes
+            num_bytes = cube.size * output_dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
             numpy_function = cube.tofile
             numpy_function_pargs.append(output_filename)
@@ -261,7 +270,7 @@ class Cubist(object):
             raise CubistError("invalid file format {0!r}".format(output_format))
         self.logger.info("writing {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
             c=cube.size,
-            t=self.data_type,
+            t=output_dtype.__name__,
             b=msg_bytes,
             f=output_format,
             o=output_filename))
@@ -344,14 +353,14 @@ ave           = {ave}
         cube = cube.reshape(shape.shape())
         return cube
 
-    def _check_input_filename(self, shape, input_format, input_filename):
+    def _check_input_filename(self, shape, input_format, input_filename, input_dtype):
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         if not os.path.isfile(input_filename):
             raise CubistError("missing input file {0}".format(input_filename))
         if input_format == self.FILE_FORMAT_RAW:
             expected_input_count = shape.count()
-            expected_input_bytes = expected_input_count * self.dtype_bytes
+            expected_input_bytes = expected_input_count * self.get_dtype_bytes(input_dtype)
             input_stat_result = os.stat(input_filename)
             input_bytes = input_stat_result.st_size
             if input_bytes < expected_input_bytes:
@@ -400,17 +409,7 @@ ave           = {ave}
             result = eval(expression, globals_d, locals_d)
         except Exception as e:
             raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(e).__name__, e))
-        if result.dtype != self.dtype:
-            result = result.astype(self.dtype)
+        #if result.dtype != self.dtype:
+        #    result = result.astype(self.dtype)
         return result
         
-    def clip(self, cube, clip):
-        assert isinstance(clip, Clip)
-        cmin = clip.min()
-        if cmin is None:
-            cmin = self.dtype_min
-        cmax = clip.max()
-        if cmax is None:
-            cmax = self.dtype_max
-        np.clip(cube, cmin, cmax, cube)
-        return cube
