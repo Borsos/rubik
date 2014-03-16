@@ -74,5 +74,14 @@ class Pick(object):
         else:
             return str(self._value)
 
+    def get_indices(self, dim):
+        if isinstance(self._value, slice):
+            return self._value.indices(dim)
+        else:
+            if 0 <= self._value < dim:
+                return self._value, self._value + 1, 1
+            else:
+                return self._value, self._value, 1
+
     def __repr__(self):
         return repr(self._value)

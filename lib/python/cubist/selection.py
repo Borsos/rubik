@@ -18,6 +18,7 @@
 import re
 
 from .pick import Pick
+from .shape import Shape
 from .values import Values
 
 class Selection(Values):
@@ -31,3 +32,20 @@ class Selection(Values):
     @classmethod
     def _item_from_string(cls, item):
         return Pick(item)
+
+    def get_counts(self, shape):
+        if isinstance(shape, Shape):
+            shape = shape.shape()
+        assert len(shape) == self.rank()
+        if self.rank() == 0:
+            count = 0
+            sub_count = 0
+        else:
+            count = 1
+            sub_count = 1
+            for pick, dim in zip(self._values, shape):
+                count *= dim
+                if isinstance(pick, slice):
+                    start, stop, step = pick.indices(dim)
+                    sub_count *= (stop - start) / step
+        return count, sub_count

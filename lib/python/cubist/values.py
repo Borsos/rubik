@@ -41,6 +41,9 @@ class Values(object):
     def rank(self):
         return len(self._values)
 
+    def split_first(self):
+        return self._values[0], self.__class__(self._values[1:])
+
     @classmethod
     def _item_from_string(cls, value):
         return int(value)
@@ -53,6 +56,9 @@ class Values(object):
                 values.append(cls._item_from_string(item))
         return values
             
+    def __len__(self):
+        return len(self._values)
+
     def __str__(self):
         return str("x".join(str(i) for i in self._values))
 

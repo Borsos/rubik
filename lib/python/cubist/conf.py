@@ -21,6 +21,16 @@ import numpy as np
 
 from .errors import CubistError
 
+FILE_FORMAT_RAW = 'raw'
+FILE_FORMAT_CSV = 'csv'
+FILE_FORMAT_TEXT = 'text'
+FILE_FORMATS = (FILE_FORMAT_RAW, FILE_FORMAT_CSV, FILE_FORMAT_TEXT)
+DEFAULT_FILE_FORMAT = FILE_FORMATS[0]
+FILE_FORMAT_CSV_SEPARATOR = ','
+FILE_FORMAT_TEXT_DELIMITER = None
+FILE_FORMAT_TEXT_NEWLINE = None
+FILE_FORMAT_TEXT_CONVERTER = None
+
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
 	("int_",	"Default integer type (same as C long; normally either int64 or int32)"),

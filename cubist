@@ -8,7 +8,7 @@ import random
 import numpy as np
 
 from cubist.application import log
-from cubist import data_types
+from cubist import conf
 #from cubist.clip import Clip
 from cubist.shape import Shape
 from cubist.cubist import Cubist
@@ -95,22 +95,22 @@ expressions, and write the result.
     epilog = ""
     
     argdict_input_filenames = InputArgDict(InputFilename)
-    argdict_input_dtypes = InputArgDict(data_types.get_dtype, default=None)
-    argdict_input_formats = InputArgDict(str, default=Cubist.DEFAULT_FILE_FORMAT)
-    argdict_input_csv_separators = InputArgDict(str, default=Cubist.FILE_FORMAT_CSV_SEPARATOR)
-    argdict_input_text_delimiters = InputArgDict(str, default=Cubist.FILE_FORMAT_TEXT_DELIMITER)
-    argdict_input_text_newlines = InputArgDict(str, default=Cubist.FILE_FORMAT_TEXT_NEWLINE)
-    argdict_input_text_converters = InputArgDict(str, default=Cubist.FILE_FORMAT_TEXT_CONVERTER)
+    argdict_input_dtypes = InputArgDict(conf.get_dtype, default=None)
+    argdict_input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
+    argdict_input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
+    argdict_input_text_delimiters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
+    argdict_input_text_newlines = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
+    argdict_input_text_converters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_CONVERTER)
     argdict_shapes = InputArgDict(Shape)
     argdict_selections = InputArgDict(Selection, default=None)
 
     argdict_output_filenames = OutputArgDict(OutputFilename)
-    argdict_output_dtypes = OutputArgDict(data_types.get_dtype, default=None)
-    argdict_output_formats = OutputArgDict(str, default=Cubist.DEFAULT_FILE_FORMAT)
-    argdict_output_csv_separators = OutputArgDict(str, default=Cubist.FILE_FORMAT_CSV_SEPARATOR)
-    argdict_output_text_delimiters = OutputArgDict(str, default=Cubist.FILE_FORMAT_TEXT_DELIMITER)
-    argdict_output_text_newlines = OutputArgDict(str, default=Cubist.FILE_FORMAT_TEXT_NEWLINE)
-    argdict_output_text_converters = OutputArgDict(str, default=Cubist.FILE_FORMAT_TEXT_CONVERTER)
+    argdict_output_dtypes = OutputArgDict(conf.get_dtype, default=None)
+    argdict_output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
+    argdict_output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
+    argdict_output_text_delimiters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
+    argdict_output_text_newlines = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
+    argdict_output_text_converters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_CONVERTER)
 
     common_parser = argparse.ArgumentParser(
         add_help=False
@@ -142,8 +142,8 @@ expressions, and write the result.
     parser.add_argument("--dtype", "-t",
         metavar="D",
         dest="dtype",
-        type=data_types.get_dtype,
-        default=data_types.DEFAULT_DATA_TYPE,
+        type=conf.get_dtype,
+        default=conf.DEFAULT_DATA_TYPE,
         help="data type name (--help-data-types/-hd flag to show all available data types)")
 
     parser.add_argument("--accept-bigger-raw-files", "-a",
@@ -188,7 +188,6 @@ expressions, and write the result.
 
     input_formatting.add_argument("--input-format", "-If",
         dest="input_formats",
-        #choices=Cubist.FILE_FORMATS,
         type=argdict_input_formats.store_function(),
         default=argdict_input_formats,
         help="input file format")
@@ -198,28 +197,28 @@ expressions, and write the result.
         dest="input_csv_separators",
         type=argdict_input_csv_separators.store_function(),
         default=argdict_input_csv_separators,
-        help="separator to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_CSV))
+        help="separator to be used with '{0}' input file format".format(conf.FILE_FORMAT_CSV))
 
     input_formatting.add_argument("--input-text-delimiter", "-Id",
         metavar='D',
         dest="input_text_delimiters",
         type=argdict_input_text_delimiters.store_function(),
         default=argdict_input_text_delimiters,
-        help="delimiter to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_TEXT))
+        help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
 
     input_formatting.add_argument("--input-text-newline", "-In",
         metavar='N',
         dest="input_text_newlines",
         type=argdict_input_text_newlines.store_function(),
         default=argdict_input_text_newlines,
-        help="newline to be used with '{0}' input file format".format(Cubist.FILE_FORMAT_TEXT))
+        help="newline to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
 
     input_formatting.add_argument("--input-text-converter", "-Ic",
         metavar='C',
         dest="input_text_converters",
         type=argdict_input_text_converters.store_function(),
         default=argdict_input_text_converters,
-        help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
+        help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
     output_formatting = parser.add_argument_group("output formatting")
     output_formatting.add_argument("--output-dtype", "-Ot",
@@ -231,7 +230,6 @@ expressions, and write the result.
 
     output_formatting.add_argument("--output-format", "-Of",
         dest="output_formats",
-        #choices=Cubist.FILE_FORMATS,
         type=argdict_output_formats.store_function(),
         default=argdict_output_formats,
         help="output file format")
@@ -241,28 +239,28 @@ expressions, and write the result.
         dest="output_csv_separators",
         type=argdict_output_csv_separators.store_function(),
         default=argdict_output_csv_separators,
-        help="separator to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_CSV))
+        help="separator to be used with '{0}' output file format".format(conf.FILE_FORMAT_CSV))
 
     output_formatting.add_argument("--output-text-delimiter", "-Od",
         metavar='D',
         dest="output_text_delimiters",
         type=argdict_output_text_delimiters.store_function(),
         default=argdict_output_text_delimiters,
-        help="delimiter to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
+        help="delimiter to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
     output_formatting.add_argument("--output-text-newline", "-On",
         metavar='N',
         dest="output_text_newlines",
         type=argdict_output_text_newlines.store_function(),
         default=argdict_output_text_newlines,
-        help="newline to be used with '{0}' output file format".format(Cubist.FILE_FORMAT_TEXT))
+        help="newline to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
     output_formatting.add_argument("--output-text-converter", "-Oc",
         metavar='C',
         dest="output_text_converters",
         type=argdict_output_text_converters.store_function(),
         default=argdict_output_text_converters,
-        help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(Cubist.FILE_FORMAT_TEXT))
+        help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
     parser.add_argument("--add-var", "-V",
         metavar="N=V",
@@ -331,7 +329,7 @@ expressions, and write the result.
         sys.exit(1)
 
     if args.help_dtypes:
-        for dtype_name, dtype_description in data_types.DATA_TYPES.items():
+        for dtype_name, dtype_description in conf.DATA_TYPES.items():
             log.PRINT("{n:16s} {d}".format(n=dtype_name, d=dtype_description))
         sys.exit(0)
 
@@ -381,7 +379,7 @@ This allows to specify the same filename as input and output, and still have
 the output on separate files. For instance,
   -i a_{{shape}}.{{format}} -Oi -s 8x10 -If raw -Of text -Oc '%.4e'
 will read 'a_8x10.raw' and write 'a_8x10.text'.
-""".format(ff='|'.join(Cubist.FILE_FORMATS)))
+""".format(ff='|'.join(conf.FILE_FORMATS)))
         sys.exit(0)
 
     logger = log.set_logger(args.verbose_level)
