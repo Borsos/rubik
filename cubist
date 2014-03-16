@@ -9,7 +9,6 @@ import numpy as np
 
 from cubist.application import log
 from cubist import conf
-#from cubist.clip import Clip
 from cubist.shape import Shape
 from cubist.cubist import Cubist
 from cubist.errors import CubistError
@@ -109,24 +108,7 @@ expressions, and write the result.
     argdict_output_text_newlines = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
     argdict_output_text_converters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_CONVERTER)
 
-    common_parser = argparse.ArgumentParser(
-        add_help=False
-    )
-
-    common_parser.add_argument("--verbose", "-v",
-        dest="verbose_level",
-        action="count",
-        default=0,
-        help="set verbose level")
-
-    common_parser.add_argument("--trace-errors", "-E",
-        dest="trace_errors",
-        action="store_true",
-        default=False,
-        help="show error traceback")
-
     parser = argparse.ArgumentParser(
-        parents=[common_parser],
         description=description,
         epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -136,130 +118,53 @@ expressions, and write the result.
         function=main_write,
     )
     
-    parser.add_argument("--dtype", "-t",
-        metavar="D",
-        dest="dtype",
-        type=conf.get_dtype,
-        default=conf.DEFAULT_DATA_TYPE,
-        help="data type name (--help-data-types/-hd flag to show all available data types)")
+    global_group = parser.add_argument_group("global options")
 
-    parser.add_argument("--accept-bigger-raw-files", "-a",
+    global_group.add_argument("--verbose", "-v",
+        dest="verbose_level",
+        action="count",
+        default=0,
+        help="set verbose level")
+
+    global_group.add_argument("--trace-errors", "-E",
+        dest="trace_errors",
         action="store_true",
         default=False,
-        help="if an input raw file is bigger than expected, simply issue a warning message")
+        help="show error traceback")
 
-    parser.add_argument("--shape", "-s",
-        metavar="[D0[:D1[...]]]",
-        dest="shapes",
-        type=argdict_shapes.store_function(),
-        default=argdict_shapes,
-        help="shape of the input filename")
-
-    parser.add_argument("--extract", "-x",
-        metavar="X",
-        dest="extractors",
-        type=argdict_extractors.store_function(),
-        default=argdict_extractors,
-        help="subcube extractor")
-
-    parser.add_argument("--expression", "-e",
-        metavar="E",
-        dest="expression",
-        type=str,
-        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (--help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
-
-    #parser.add_argument("--clip", "-c",
-    #    metavar="MIN[:MAX]",
-    #    dest="clip",
-    #    type=Clip,
-    #    help="clipping")
-
-    input_formatting = parser.add_argument_group('input formatting')
-
-    input_formatting.add_argument("--safe",
+    global_group.add_argument("--safe",
         dest="read_mode",
         action="store_const",
         const=conf.READ_MODE_SAFE,
         default=conf.DEFAULT_READ_MODE,
         help="safe read mode")
 
-    input_formatting.add_argument("--optimized",
+    global_group.add_argument("--optimized",
         dest="read_mode",
         action="store_const",
         const=conf.READ_MODE_OPTIMIZED,
         default=conf.DEFAULT_READ_MODE,
         help="safe read mode")
 
-    input_formatting.add_argument("--input-dtype", "-It",
+    global_group.add_argument("--dtype", "-t",
         metavar="D",
-        dest="input_dtypes",
-        type=argdict_input_dtypes.store_function(),
-        default=argdict_input_dtypes,
-        help="input data type name (--help-data-types/-hd flag to show all available data types)")
+        dest="dtype",
+        type=conf.get_dtype,
+        default=conf.DEFAULT_DATA_TYPE,
+        help="data type name (--help-data-types/-hd flag to show all available data types)")
 
-    input_formatting.add_argument("--input-format", "-If",
-        dest="input_formats",
-        type=argdict_input_formats.store_function(),
-        default=argdict_input_formats,
-        help="input file format")
+    global_group.add_argument("--accept-bigger-raw-files", "-a",
+        action="store_true",
+        default=False,
+        help="if an input raw file is bigger than expected, simply issue a warning message")
 
-    input_formatting.add_argument("--input-csv-separator", "-Is",
-        metavar='S',
-        dest="input_csv_separators",
-        type=argdict_input_csv_separators.store_function(),
-        default=argdict_input_csv_separators,
-        help="separator to be used with '{0}' input file format".format(conf.FILE_FORMAT_CSV))
+    global_group.add_argument("--expression", "-e",
+        metavar="E",
+        dest="expression",
+        type=str,
+        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (--help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
 
-    input_formatting.add_argument("--input-text-delimiter", "-Id",
-        metavar='D',
-        dest="input_text_delimiters",
-        type=argdict_input_text_delimiters.store_function(),
-        default=argdict_input_text_delimiters,
-        help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
-
-    output_formatting = parser.add_argument_group("output formatting")
-    output_formatting.add_argument("--output-dtype", "-Ot",
-        metavar="D",
-        dest="output_dtypes",
-        type=argdict_output_dtypes.store_function(),
-        default=argdict_output_dtypes,
-        help="output data type name (--help-data-types/-hd flag to show all available data types)")
-
-    output_formatting.add_argument("--output-format", "-Of",
-        dest="output_formats",
-        type=argdict_output_formats.store_function(),
-        default=argdict_output_formats,
-        help="output file format")
-
-    output_formatting.add_argument("--output-csv-separator", "-Os",
-        metavar='S',
-        dest="output_csv_separators",
-        type=argdict_output_csv_separators.store_function(),
-        default=argdict_output_csv_separators,
-        help="separator to be used with '{0}' output file format".format(conf.FILE_FORMAT_CSV))
-
-    output_formatting.add_argument("--output-text-delimiter", "-Od",
-        metavar='D',
-        dest="output_text_delimiters",
-        type=argdict_output_text_delimiters.store_function(),
-        default=argdict_output_text_delimiters,
-        help="delimiter to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
-
-    output_formatting.add_argument("--output-text-newline", "-On",
-        metavar='N',
-        dest="output_text_newlines",
-        type=argdict_output_text_newlines.store_function(),
-        default=argdict_output_text_newlines,
-        help="newline to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
-
-    output_formatting.add_argument("--output-text-converter", "-Oc",
-        metavar='C',
-        dest="output_text_converters",
-        type=argdict_output_text_converters.store_function(),
-        default=argdict_output_text_converters,
-        help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
-
-    parser.add_argument("--add-var", "-V",
+    global_group.add_argument("--add-var", "-V",
         metavar="N=V",
         action="append",
         type=VariableDefinition,
@@ -267,6 +172,7 @@ expressions, and write the result.
         help="add a variable definition")
 
     input_group = parser.add_argument_group("input options")
+
     input_group.add_argument("--input-filename", "-i",
         metavar='I',
         dest="input_filenames",
@@ -274,8 +180,48 @@ expressions, and write the result.
         default=argdict_input_filenames,
         help="input filename (--help-filename/-hf flag for an explanation about filenames)")
 
-    output_group = parser.add_argument_group("output options")
+    input_group.add_argument("--shape", "-s",
+        metavar="[D0[:D1[...]]]",
+        dest="shapes",
+        type=argdict_shapes.store_function(),
+        default=argdict_shapes,
+        help="shape of the input filename")
 
+    input_group.add_argument("--extract", "-x",
+        metavar="X",
+        dest="extractors",
+        type=argdict_extractors.store_function(),
+        default=argdict_extractors,
+        help="subcube extractor")
+
+    input_group.add_argument("--input-dtype", "-It",
+        metavar="D",
+        dest="input_dtypes",
+        type=argdict_input_dtypes.store_function(),
+        default=argdict_input_dtypes,
+        help="input data type name (--help-data-types/-hd flag to show all available data types)")
+
+    input_group.add_argument("--input-format", "-If",
+        dest="input_formats",
+        type=argdict_input_formats.store_function(),
+        default=argdict_input_formats,
+        help="input file format")
+
+    input_group.add_argument("--input-csv-separator", "-Is",
+        metavar='S',
+        dest="input_csv_separators",
+        type=argdict_input_csv_separators.store_function(),
+        default=argdict_input_csv_separators,
+        help="separator to be used with '{0}' input file format".format(conf.FILE_FORMAT_CSV))
+
+    input_group.add_argument("--input-text-delimiter", "-Id",
+        metavar='D',
+        dest="input_text_delimiters",
+        type=argdict_input_text_delimiters.store_function(),
+        default=argdict_input_text_delimiters,
+        help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
+
+    output_group = parser.add_argument_group("output options")
     write_output_filename_group = output_group.add_mutually_exclusive_group()
     write_output_filename_group.add_argument("--in-place", "-Oi",
         action="store_true",
@@ -299,6 +245,49 @@ expressions, and write the result.
         action="store_true",
         default=False,
         help="print statistics about the result cube")
+
+    output_group.add_argument("--output-dtype", "-Ot",
+        metavar="D",
+        dest="output_dtypes",
+        type=argdict_output_dtypes.store_function(),
+        default=argdict_output_dtypes,
+        help="output data type name (--help-data-types/-hd flag to show all available data types)")
+
+    output_group.add_argument("--output-format", "-Of",
+        dest="output_formats",
+        type=argdict_output_formats.store_function(),
+        default=argdict_output_formats,
+        help="output file format")
+
+    output_group.add_argument("--output-csv-separator", "-Os",
+        metavar='S',
+        dest="output_csv_separators",
+        type=argdict_output_csv_separators.store_function(),
+        default=argdict_output_csv_separators,
+        help="separator to be used with '{0}' output file format".format(conf.FILE_FORMAT_CSV))
+
+    output_group.add_argument("--output-text-delimiter", "-Od",
+        metavar='D',
+        dest="output_text_delimiters",
+        type=argdict_output_text_delimiters.store_function(),
+        default=argdict_output_text_delimiters,
+        help="delimiter to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
+
+    output_group.add_argument("--output-text-newline", "-On",
+        metavar='N',
+        dest="output_text_newlines",
+        type=argdict_output_text_newlines.store_function(),
+        default=argdict_output_text_newlines,
+        help="newline to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
+
+    output_group.add_argument("--output-text-converter", "-Oc",
+        metavar='C',
+        dest="output_text_converters",
+        type=argdict_output_text_converters.store_function(),
+        default=argdict_output_text_converters,
+        help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
+
+
 
     help_group = parser.add_argument_group("help options")
     help_group.add_argument("--help-dypes", "-ht",
