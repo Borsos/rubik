@@ -17,21 +17,21 @@
 
 import re
 
-from .pick import Pick
+from .index_picker import IndexPicker
 from .shape import Shape
 from .values import Values
 
-class Selection(Values):
+class Extractor(Values):
 
     def rank(self):
         return len(self._values)
 
-    def picks(self):
-        return tuple(pick.value() for pick in self._values)
+    def index_pickers(self):
+        return tuple(index_picker.value() for index_picker in self._values)
 
     @classmethod
     def _item_from_string(cls, item):
-        return Pick(item)
+        return IndexPicker(item)
 
     def get_counts(self, shape):
         if isinstance(shape, Shape):
@@ -43,9 +43,9 @@ class Selection(Values):
         else:
             count = 1
             sub_count = 1
-            for pick, dim in zip(self._values, shape):
+            for index_picker, dim in zip(self._values, shape):
                 count *= dim
-                if isinstance(pick, slice):
-                    start, stop, step = pick.indices(dim)
+                if isinstance(index_picker, slice):
+                    start, stop, step = index_picker.indices(dim)
                     sub_count *= (stop - start) / step
         return count, sub_count

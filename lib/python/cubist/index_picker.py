@@ -15,9 +15,9 @@
 # limitations under the License.
 #
 
-class Pick(object):
+class IndexPicker(object):
     def __init__(self, init):
-        if isinstance(init, Pick):
+        if isinstance(init, IndexPicker):
             self._value = init._value
         elif isinstance(init, (int, slice)):
             self._value = init

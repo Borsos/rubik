@@ -25,7 +25,7 @@ from .clip import Clip
 from .shape import Shape
 from .filename import InputFilename, OutputFilename
 from .variable import VariableDefinition
-from .selection import Selection
+from .extractor import Extractor
 from . import conf
 from . import cubist_numpy
 
@@ -39,7 +39,7 @@ class Cubist(object):
             output_filenames,
             output_dtypes,
             output_formats,
-            selections,
+            extractors,
             shapes,
             input_csv_separators,
             output_csv_separators,
@@ -74,7 +74,7 @@ class Cubist(object):
         self.input_formats = input_formats
         self.input_dtypes = input_dtypes
         self.shapes = shapes
-        self.selections = selections
+        self.extractors = extractors
 
         self.output_filenames = output_filenames
         self.output_dtypes = output_dtypes
@@ -134,9 +134,9 @@ class Cubist(object):
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        selection = self.selections.get(input_label)
+        extractor = self.extractors.get(input_label)
         assert isinstance(input_filename, InputFilename)
-        assert (selection is None) or isinstance(selection, Selection)
+        assert (extractor is None) or isinstance(extractor, Extractor)
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
@@ -202,8 +202,8 @@ class Cubist(object):
                     s=shape,
                     sc=shape.count(),
             ))
-        if selection:
-            cube = self.extract(cube, selection)
+        if extractor:
+            cube = self.extract(cube, extractor)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
@@ -219,9 +219,9 @@ class Cubist(object):
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        selection = self.selections.get(input_label)
+        extractor = self.extractors.get(input_label)
         assert isinstance(input_filename, InputFilename)
-        assert (selection is None) or isinstance(selection, Selection)
+        assert (extractor is None) or isinstance(extractor, Extractor)
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
@@ -250,7 +250,7 @@ class Cubist(object):
             b=msg_bytes,
             f=input_format,
             i=input_filename))
-        cube = numpy_function(input_format, input_filename, shape=shape, selection=selection, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
+        cube = numpy_function(input_format, input_filename, shape=shape, extractor=extractor, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
@@ -403,17 +403,17 @@ ave           = {ave}
                     raise CubistError(message)
         return input_filename
 
-    def extract(self, cube, selection):
-        assert isinstance(selection, Selection)
-        if selection.rank() != len(cube.shape):
-            raise CubistError("invalid selection {selection} for shape {shape}: rank {rselection} does not match {rshape}".format(
-                selection=selection,
-                rselection=selection.rank(),
+    def extract(self, cube, extractor):
+        assert isinstance(extractor, Extractor)
+        if extractor.rank() != len(cube.shape):
+            raise CubistError("invalid extractor {extractor} for shape {shape}: rank {rextractor} does not match {rshape}".format(
+                extractor=extractor,
+                rextractor=extractor.rank(),
                 shape=cube.shape,
                 rshape=len(cube.shape),
             ))
-        self.logger.info("extracting '{0}'...".format(selection))
-        subcube = cube[selection.picks()]
+        self.logger.info("extracting '{0}'...".format(extractor))
+        subcube = cube[extractor.index_pickers()]
         return subcube
  
     def evaluate_expression(self, expression):
