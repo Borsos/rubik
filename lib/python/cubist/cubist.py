@@ -390,8 +390,8 @@ ave           = {ave}
             raise CubistError("invalid selection {selection} for shape {shape}: rank {rselection} does not match {rshape}".format(
                 selection=selection,
                 rselection=selection.rank(),
-                shape=shape,
-                rshape=shape.rank(),
+                shape=cube.shape,
+                rshape=len(cube.shape),
             ))
         self.logger.info("extracting '{0}'...".format(selection))
         subcube = cube[selection.picks()]

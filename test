@@ -131,6 +131,10 @@ prex "cubist -i a_{shape}.{format} -s 8x30x10 -i a_{shape}.{format} -s 8x10 -e '
 check_file_exists_and_has_size out1_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal out0_${X}x${Y}.raw out1_${X}x${Y}.raw
 
+prex "cubist -i a_{shape}.{format} -s 8x30x10 -x i0=:x5x: -i a_{shape}.{format} -s 8x10 -e 'i0 - i1' -o out2_{shape}.{format}"
+check_file_exists_and_has_size out2_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
+check_files_are_equal out0_${X}x${Y}.raw out2_${X}x${Y}.raw
+
 ## --- different dtypes ---
 prex "cubist -i f_{shape}.{dtype}.{format} -It float16 -o tmp_f_{shape}.{dtype}.{format} -Ot float64 -s 8x10"
 check_file_exists_and_has_size tmp_f_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_float64} ))
