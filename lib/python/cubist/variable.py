@@ -34,7 +34,7 @@ class VariableDefinition(object):
 
     @classmethod
     def register(cls, instance):
-        cls.__variables__[instance._name] = instance._value
+        cls.__variables__[instance._name] = instance
 
     def name(self):
         return self._name
@@ -51,17 +51,26 @@ class VariableDefinition(object):
                 t=type(value).__name__,
                 o=init))
         else:
-            name, value_s = l
-            try:
-                value = eval(value_s, cls.__variables__.copy(), {})
-            except Exception as err:
-                raise ValueError("variable {n}: cannot converto {s!r} to a valid python object: {et}: {e}".format(
-                    n=name,
-                    s=value_s,
-                    et=err.__class__.__name__,
-                    e=err))
+            name, value = l
             return name, value
 
+    def evaluate(self, globals_d=None, locals_d=None):
+        if globals_d is None:
+            globals_d = {}
+        if locals_d is None:
+            l_d = {}
+        else:
+            l_d = locals_d.copy()
+        l_d.update(self.__variables__)
+        try:
+            value = eval(self._value, globals_d, l_d)
+        except Exception as err:
+            raise ValueError("variable {n}: cannot converto {s!r} to a valid python object: {et}: {e}".format(
+                n=self._name,
+                s=self._value,
+                et=err.__class__.__name__,
+                e=err))
+        self._value = value
     def __str__(self):
         return "{0}={1!r}".format(self._name, self._value)
 

@@ -116,8 +116,8 @@ class Cubist(object):
             dtype=file_dtype.__name__,
         )
 
-    def register_input_cube(self, input_varname, input_filename, cube):
-        self.input_cubes[input_varname] = cube
+    def register_input_cube(self, input_label, input_filename, cube):
+        self.input_cubes[input_label] = cube
 
     def last_cube(self):
         return self._last_cube
@@ -126,24 +126,23 @@ class Cubist(object):
         self._last_cube = None
         if not self.input_filenames:
             return
-        for name, input_filename in self.input_filenames.items():
-            self._last_cube = self._read(name, input_filename)
+        for input_label, input_filename in self.input_filenames.items():
+            self._last_cube = self._read(input_label, input_filename)
 
-    def _read(self, name, input_filename):
-        shape = self.shapes.get(name)
+    def _read(self, input_label, input_filename):
+        shape = self.shapes.get(input_label)
         if shape is None:
             raise CubistError("missing shape for filename {0}".format(input_filename))
-        input_format = self.input_formats.get(name)
+        input_format = self.input_formats.get(input_label)
         if input_format is None:
             input_format = self.DEFAULT_FILE_FORMAT
-        input_dtype = self.input_dtypes.get(name)
+        input_dtype = self.input_dtypes.get(input_label)
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        selection = self.selections.get(name)
+        selection = self.selections.get(input_label)
         assert isinstance(input_filename, InputFilename)
         assert (selection is None) or isinstance(selection, Selection)
-        input_varname = input_filename.varname
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
@@ -161,14 +160,14 @@ class Cubist(object):
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.fromfile
-            numpy_function_nargs['sep'] = self.input_csv_separators.get(name)
+            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label)
         elif input_format == self.FILE_FORMAT_TEXT:
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.loadtxt
-            text_delimiter = self.input_text_delimiters.get(name)
-            text_newline = self.input_text_newlines.get(name)
-            text_converter = self.input_text_converters.get(name)
+            text_delimiter = self.input_text_delimiters.get(input_label)
+            text_newline = self.input_text_newlines.get(input_label)
+            text_converter = self.input_text_converters.get(input_label)
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
             if text_newline is not None:
@@ -217,7 +216,7 @@ class Cubist(object):
             ))
         if selection:
             cube = self.extract(cube, selection)
-        self.register_input_cube(input_varname, input_filename, cube)
+        self.register_input_cube(input_label, input_filename, cube)
         return cube
 
     def write(self, cube):
@@ -225,14 +224,14 @@ class Cubist(object):
             raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         if not self.output_filenames:
             return
-        for name, output_filename in self.output_filenames.items():
-            self._write(cube, name, output_filename)
+        for output_label, output_filename in self.output_filenames.items():
+            self._write(cube, output_label, output_filename)
         
-    def _write(self, cube, name, output_filename):
-        output_format = self.output_formats.get(name)
+    def _write(self, cube, output_label, output_filename):
+        output_format = self.output_formats.get(output_label)
         if output_format is None:
             output_format = self.DEFAULT_FILE_FORMAT
-        output_dtype = self.output_dtypes.get(name)
+        output_dtype = self.output_dtypes.get(output_label)
         if output_dtype is None:
             output_dtype = self.dtype
         output_dtype_bytes = self.get_dtype_bytes(output_dtype)
@@ -252,16 +251,16 @@ class Cubist(object):
         elif output_format == self.FILE_FORMAT_CSV:
             msg_bytes = ''
             numpy_function = cube.tofile
-            numpy_function_nargs['sep'] = self.output_csv_separators.get(name)
+            numpy_function_nargs['sep'] = self.output_csv_separators.get(output_label)
             numpy_function_pargs.append(output_filename)
         elif output_format == self.FILE_FORMAT_TEXT:
             msg_bytes = ''
             numpy_function = np.savetxt
             numpy_function_pargs.append(output_filename)
             numpy_function_pargs.append(cube)
-            text_delimiter = self.output_text_delimiters.get(name)
-            text_newline = self.output_text_newlines.get(name)
-            text_converter = self.output_text_converters.get(name)
+            text_delimiter = self.output_text_delimiters.get(output_label)
+            text_newline = self.output_text_newlines.get(output_label)
+            text_converter = self.output_text_converters.get(output_label)
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
             if text_newline is not None:
@@ -407,7 +406,9 @@ ave           = {ave}
         }
         globals_d.update(self.input_cubes)
         locals_d = {}
-        locals_d.update(VariableDefinition.__variables__)
+        for var_name, var_instance in VariableDefinition.__variables__.items():
+            var_instance.evaluate(globals_d)
+            locals_d[var_name] = var_instance.value()
         self.logger.info("evaluating expression {0!r}...".format(expression))
         try:
             result = eval(expression, globals_d, locals_d)

@@ -23,10 +23,13 @@ from .errors import CubistError
 
 class ArgDict(OrderedDict):
     __re_name_split__ = re.compile("^([a-zA-Z]+\w*)\=(.*)")
-    def __init__(self, factory, formatter="i{ordinal}", default=None):
+    __formatter__ = "o{ordinal}"
+    def __init__(self, factory, formatter=None, default=None):
         OrderedDict.__init__(self)
         self._default = default
         self._factory = factory
+        if formatter is None:
+            formatter = self.__formatter__
         self._formatter = formatter
 
     def add(self, value):
@@ -62,3 +65,8 @@ class ArgDict(OrderedDict):
             name = None
         return name, value
 
+class InputArgDict(ArgDict):
+    __formatter__ = 'i{ordinal}'
+
+class OutputArgDict(ArgDict):
+    __formatter__ = 'o{ordinal}'
