@@ -241,3 +241,7 @@ typeset -i _y=2
 typeset -i _z=4
 test_prex "cubist -e 'cnp.linear_cube(($_x, $_y, $_z))' -o a_{shape[0]}_{shape[1]}_{shape[2]}.{format}"
 check_file_exists_and_has_size a_${_x}_${_y}_${_z}.raw $(( $_x * $_y * $_z * ${bytes_float32} ))
+
+## --- merge ---
+test_prex "cubist -i a=a_{shape}.{format} -i b=b_{shape}.{format} -i c=c_{shape}.{format} -s 8x10 -o res_{shape}.{format} -e 'np.array([a, b, c])'"
+check_file_exists_and_has_size res_3x${X}x${Y}.raw $(( 3 * $X * $Y * $bytes_float32 ))
