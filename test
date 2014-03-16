@@ -234,3 +234,10 @@ check_file_exists_and_has_size out60_${_y}.raw $(( $_y * ${bytes_float32} ))
 test_prex "cubist -e 'np.loadtxt(\"a_8x10.text\", dtype=np.float32).reshape((8,10))[4, 2:]' -o out61_{shape}.{format}"
 check_file_exists_and_has_size out61_${_y}.raw $(( $_y * ${bytes_float32} ))
 check_files_are_equal out60_${_y}.raw out61_${_y}.raw
+
+## --- filenames ---
+typeset -i _x=3
+typeset -i _y=2
+typeset -i _z=4
+test_prex "cubist -e 'cnp.linear_cube(($_x, $_y, $_z))' -o a_{shape[0]}_{shape[1]}_{shape[2]}.{format}"
+check_file_exists_and_has_size a_${_x}_${_y}_${_z}.raw $(( $_x * $_y * $_z * ${bytes_float32} ))
