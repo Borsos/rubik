@@ -65,3 +65,5 @@ class Values(object):
     def __repr__(self):
         return "{c}({s!r})".format(c=self.__class__.__name__, s=self._values)
 
+    def __getitem__(self, index):
+        return self._values[index]

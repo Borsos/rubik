@@ -99,8 +99,10 @@ class Cubist(object):
                 count *= i
         else:
             count = 0
+        if not isinstance(shape, Shape):
+            shape = Shape(shape)
         return filename.format(
-            shape="x".join(str(i) for i in shape),
+            shape=shape, #"x".join(str(i) for i in shape),
             rank=len(shape),
             count=count,
             format=file_format,
