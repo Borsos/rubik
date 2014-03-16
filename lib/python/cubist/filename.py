@@ -37,10 +37,10 @@ class Filename(object):
         return self._filename
 
     def __str__(self):
-        return "{0}={1}".format(self._varname, self._filename)
+        return self._filename
 
     def __repr__(self):
-        return "{0}(varname={1!r}, filename={2!r})".format(self.__class__.__name__, self._varname, self._filename)
+        return "{0}(filename={1!r})".format(self.__class__.__name__, self._filename)
 
     @classmethod
     def _from_string(cls, value):

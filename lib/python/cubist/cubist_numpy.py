@@ -141,6 +141,23 @@ class ExtractCsvReader(ExtractRawCsvReader):
     def __init__(self, dtype, shape, selection, sep):
         ExtractRawCsvReader.__init__(self, dtype, shape, selection, sep=sep)
     
+class ExtractTextReader(ExtractReader):
+    def __init__(self, dtype, shape, selection, delimiter):
+        ExtractReader.__init__(self, dtype, shape, selection)
+        self.delimiter = delimiter
+
+    def read(self, input_file):
+        # reading a subcube is not allowed
+        return self.read_data(input_file, self.shape, self.selection)
+
+    def read_data(self, input_file, shape, selection=None):
+        cube = np.loadtxt(input_file, dtype=self.dtype, delimiter=self.delimiter).reshape(shape.shape())
+        #print cube.shape, cube.size
+        if selection is not None:
+            cube = cube[selection.picks()]
+            #print cube.shape, cube.size
+        return cube
+
 def fromfile_generic(ftype, f, dtype, shape, selection=None, **n_args):
     """fromfile_generic(ftype, f, dtype, shape, selection=None) -> read a cube from raw file f with given shape and selection
     ftype can be 'raw', 'text', 'csv'
@@ -158,7 +175,7 @@ def fromfile_generic(ftype, f, dtype, shape, selection=None, **n_args):
             ereader_class = ExtractCsvReader
         else:
             raise CubistError("invalid file type {0}".format(ftype))
-        ereader = ereader_class(dtype=dtype, shape=shape, selection=selection)
+        ereader = ereader_class(dtype=dtype, shape=shape, selection=selection, **n_args)
         return ereader.read(f)
 
 def fromfile_raw(f, dtype, shape, selection=None):
@@ -168,13 +185,11 @@ def fromfile_raw(f, dtype, shape, selection=None):
     return fromfile_generic(conf.FILE_FORMAT_RAW, f, dtype, shape, selection)
 
 def fromfile_text(f, dtype, shape, selection=None,
-        delimiter=conf.FILE_FORMAT_TEXT_DELIMITER,
-        newline=conf.FILE_FORMAT_TEXT_NEWLINE,
-        converter=conf.FILE_FORMAT_TEXT_CONVERTER):
-    """fromfile_text(f, dtype, shape, selection=None, delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER, newline=conf.FILE_FORMAT_TEXT_NEWLINE, converter=conf.FILE_FORMAT_TEXT_CONVERTER)) -> read a cube from text file f with given shape and selection
+        delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
+    """fromfile_text(f, dtype, shape, selection=None, delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER) -> read a cube from text file f with given shape and selection
     f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_TEXT, f, dtype, shape, selection)
+    return fromfile_generic(conf.FILE_FORMAT_TEXT, f, dtype, shape, selection, delimiter=delimiter)
 
 def fromfile_csv(f, dtype, shape, selection=None, sep=conf.FILE_FORMAT_CSV_SEPARATOR):
     """fromfile_raw(f, dtype, shape, selection=None, sep=conf.FILE_FORMAT_CSV_SEPARATOR) -> read a cube from raw file f with given shape and selection

@@ -39,9 +39,7 @@ def _create_cubist(logger, args):
             output_csv_separators=args.output_csv_separators,
             input_text_delimiters=args.input_text_delimiters,
             output_text_delimiters=args.output_text_delimiters,
-            input_text_newlines=args.input_text_newlines,
             output_text_newlines=args.output_text_newlines,
-            input_text_converters=args.input_text_converters,
             output_text_converters=args.output_text_converters,
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None))
     return cubist
@@ -99,8 +97,6 @@ expressions, and write the result.
     argdict_input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
     argdict_input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
     argdict_input_text_delimiters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
-    argdict_input_text_newlines = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
-    argdict_input_text_converters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_CONVERTER)
     argdict_shapes = InputArgDict(Shape)
     argdict_selections = InputArgDict(Selection, default=None)
 
@@ -205,20 +201,6 @@ expressions, and write the result.
         type=argdict_input_text_delimiters.store_function(),
         default=argdict_input_text_delimiters,
         help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
-
-    input_formatting.add_argument("--input-text-newline", "-In",
-        metavar='N',
-        dest="input_text_newlines",
-        type=argdict_input_text_newlines.store_function(),
-        default=argdict_input_text_newlines,
-        help="newline to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
-
-    input_formatting.add_argument("--input-text-converter", "-Ic",
-        metavar='C',
-        dest="input_text_converters",
-        type=argdict_input_text_converters.store_function(),
-        default=argdict_input_text_converters,
-        help="converter to be used with '{0}' input file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
     output_formatting = parser.add_argument_group("output formatting")
     output_formatting.add_argument("--output-dtype", "-Ot",

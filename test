@@ -104,6 +104,18 @@ typeset -i bytes_float64=8
 prex "cubist ${CUBIST_OPTIONS} -o a_{shape}.{format} -e 'cnp.linear_cube(($X, $Y))'"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
+prex "cubist ${CUBIST_OPTIONS} -o a_{shape}.{format} -e 'cnp.linear_cube(($X, $Y))' -Of text"
+check_file_exists a_${X}x${Y}.text
+prex "cubist ${CUBIST_OPTIONS} -i a_{shape}.{format} -s "${X}x${Y}" -o tmp_{shape}.text2{format} -If text -Of raw"
+check_file_exists tmp_${X}x${Y}.text2raw
+check_files_are_equal a_${X}x${Y}.raw tmp_${X}x${Y}.text2raw
+
+prex "cubist ${CUBIST_OPTIONS} -o a_{shape}.{format} -e 'cnp.linear_cube(($X, $Y))' -Of csv"
+check_file_exists a_${X}x${Y}.csv
+prex "cubist ${CUBIST_OPTIONS} -i a_{shape}.{format} -s "${X}x${Y}" -o tmp_{shape}.csv2{format} -If csv -Of raw"
+check_file_exists tmp_${X}x${Y}.csv2raw
+check_files_are_equal a_${X}x${Y}.raw tmp_${X}x${Y}.csv2raw
+
 prex "cubist ${CUBIST_OPTIONS} -o b_{shape}.{format} -e 'cnp.linear_cube((${X}, ${Y}))'"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
@@ -162,9 +174,27 @@ check_files_are_equal r0_${X}x${Y}.raw r1_${X}x${Y}.raw
 
 ## --- cubist_numpy ---
 typeset -i _x=$(( $X - 2 ))
+
+# raw
 prex "cubist -e 'cnp.fromfile_raw(\"a_8x10.raw\", dtype=np.float32, shape=\"8x10\", selection=\"2:x4\")' -o out10_{shape}.{format}"
 check_file_exists_and_has_size out10_${_x}.raw $(( $_x * ${bytes_float32} ))
 
 prex "cubist -e 'np.fromfile(\"a_8x10.raw\", dtype=np.float32).reshape((8,10))[2:, 4]' -o out11_{shape}.{format}"
 check_file_exists_and_has_size out11_${_x}.raw $(( $_x * ${bytes_float32} ))
 check_files_are_equal out10_${_x}.raw out11_${_x}.raw
+
+# csv
+prex "cubist -e 'cnp.fromfile_csv(\"a_8x10.csv\", dtype=np.float32, shape=\"8x10\", selection=\"2:x4\")' -o out20_{shape}.{format}"
+check_file_exists_and_has_size out20_${_x}.raw $(( $_x * ${bytes_float32} ))
+
+prex "cubist -e 'np.fromfile(\"a_8x10.csv\", dtype=np.float32, sep=\",\").reshape((8,10))[2:, 4]' -o out21_{shape}.{format}"
+check_file_exists_and_has_size out21_${_x}.raw $(( $_x * ${bytes_float32} ))
+check_files_are_equal out20_${_x}.raw out21_${_x}.raw
+
+# text
+prex "cubist -e 'cnp.fromfile_text(\"a_8x10.text\", dtype=np.float32, shape=\"8x10\", selection=\"2:x4\")' -o out30_{shape}.{format}"
+check_file_exists_and_has_size out30_${_x}.raw $(( $_x * ${bytes_float32} ))
+
+prex "cubist -e 'np.loadtxt(\"a_8x10.text\", dtype=np.float32).reshape((8,10))[2:, 4]' -o out31_{shape}.{format}"
+check_file_exists_and_has_size out31_${_x}.raw $(( $_x * ${bytes_float32} ))
+check_files_are_equal out30_${_x}.raw out31_${_x}.raw
