@@ -34,7 +34,7 @@ FILE_FORMAT_TEXT_CONVERTER = None
 READ_MODE_SAFE = 'safe'
 READ_MODE_OPTIMIZED = 'optimized'
 READ_MODES = (READ_MODE_SAFE, READ_MODE_OPTIMIZED)
-DEFAULT_READ_MODE = READ_MODE_SAFE
+DEFAULT_READ_MODE = READ_MODE_OPTIMIZED
 
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),

@@ -123,7 +123,7 @@ class Cubist(object):
             self._last_cube = self._read(input_label, input_filename)
 
     def _read_safe(self, input_label, input_filename):
-        self.logger.info("executing safe read...")
+        self.logger.debug("executing safe read...")
         shape = self.shapes.get(input_label)
         if shape is None:
             raise CubistError("missing shape for filename {0}".format(input_filename))
@@ -208,7 +208,7 @@ class Cubist(object):
         return cube
 
     def _read_optimized(self, input_label, input_filename):
-        self.logger.info("executing optimized read...")
+        self.logger.debug("executing optimized read...")
         shape = self.shapes.get(input_label)
         if shape is None:
             raise CubistError("missing shape for filename {0}".format(input_filename))
