@@ -59,10 +59,10 @@ class Cubist(object):
         self.output_text_converters = output_text_converters
         self.accept_bigger_raw_files = accept_bigger_raw_files
         self.read_mode = read_mode
-        if read_mode == "safe":
+        if read_mode == conf.READ_MODE_SAFE:
             self._read = self._read_safe
-        elif self.read_mode == "opt":
-            self._read = self._read_opt
+        elif self.read_mode == conf.READ_MODE_OPTIMIZED:
+            self._read = self._read_optimized
         else:
             raise CubistError("invalid read mode {0!r}".format(read_mode))
 
@@ -205,7 +205,7 @@ class Cubist(object):
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
-    def _read_opt(self, input_label, input_filename):
+    def _read_optimized(self, input_label, input_filename):
         self.logger.info("executing optimized read...")
         shape = self.shapes.get(input_label)
         if shape is None:

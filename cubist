@@ -176,11 +176,19 @@ expressions, and write the result.
 
     input_formatting = parser.add_argument_group('input formatting')
 
-    input_formatting.add_argument("--read-mode", "-R",
-        metavar="R",
-        choices=conf.READ_MODES,
+    input_formatting.add_argument("--safe",
+        dest="read_mode",
+        action="store_const",
+        const=conf.READ_MODE_SAFE,
         default=conf.DEFAULT_READ_MODE,
-        help="read mode ({0})".format("|".join(repr(rm) for rm in conf.READ_MODES)))
+        help="safe read mode")
+
+    input_formatting.add_argument("--optimized",
+        dest="read_mode",
+        action="store_const",
+        const=conf.READ_MODE_OPTIMIZED,
+        default=conf.DEFAULT_READ_MODE,
+        help="safe read mode")
 
     input_formatting.add_argument("--input-dtype", "-It",
         metavar="D",
