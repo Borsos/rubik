@@ -47,7 +47,8 @@ class Cubist(object):
             output_text_delimiters,
             output_text_newlines,
             output_text_converters,
-            accept_bigger_raw_files=False):
+            accept_bigger_raw_files=False,
+            read_mode=conf.DEFAULT_READ_MODE):
         self._set_dtype(dtype)
         self.logger = logger
         self.input_csv_separators = input_csv_separators
@@ -57,6 +58,14 @@ class Cubist(object):
         self.output_text_newlines = output_text_newlines
         self.output_text_converters = output_text_converters
         self.accept_bigger_raw_files = accept_bigger_raw_files
+        self.read_mode = read_mode
+        if read_mode == "safe":
+            self._read = self._read_safe
+        elif self.read_mode == "opt":
+            self._read = self._read_opt
+        else:
+            raise CubistError("invalid read mode {0!r}".format(read_mode))
+
 
         self._last_cube = None
         self.input_cubes = OrderedDict()
@@ -111,7 +120,8 @@ class Cubist(object):
         for input_label, input_filename in self.input_filenames.items():
             self._last_cube = self._read(input_label, input_filename)
 
-    def _read(self, input_label, input_filename):
+    def _read_safe(self, input_label, input_filename):
+        self.logger.info("executing safe read...")
         shape = self.shapes.get(input_label)
         if shape is None:
             raise CubistError("missing shape for filename {0}".format(input_filename))
@@ -192,6 +202,53 @@ class Cubist(object):
             ))
         if selection:
             cube = self.extract(cube, selection)
+        self.register_input_cube(input_label, input_filename, cube)
+        return cube
+
+    def _read_opt(self, input_label, input_filename):
+        self.logger.info("executing optimized read...")
+        shape = self.shapes.get(input_label)
+        if shape is None:
+            raise CubistError("missing shape for filename {0}".format(input_filename))
+        input_format = self.input_formats.get(input_label)
+        if input_format is None:
+            input_format = conf.DEFAULT_FILE_FORMAT
+        input_dtype = self.input_dtypes.get(input_label)
+        if input_dtype is None:
+            input_dtype = self.dtype
+        input_dtype_bytes = self.get_dtype_bytes(input_dtype)
+        selection = self.selections.get(input_label)
+        assert isinstance(input_filename, InputFilename)
+        assert (selection is None) or isinstance(selection, Selection)
+        input_filename = input_filename.filename
+        if not isinstance(shape, Shape):
+            shape = Shape(shape)
+        expected_input_count = shape.count()
+        numpy_function = cubist_numpy.fromfile_generic
+        numpy_function_nargs = {}
+        numpy_function_pargs = []
+        if input_format == conf.FILE_FORMAT_RAW:
+            num_bytes = shape.count() * input_dtype_bytes
+            msg_bytes = "({b} bytes) ".format(b=num_bytes)
+        elif input_format == conf.FILE_FORMAT_CSV:
+            msg_bytes = ''
+            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label)
+        elif input_format == conf.FILE_FORMAT_TEXT:
+            msg_bytes = ''
+            text_delimiter = self.input_text_delimiters.get(input_label)
+            if text_delimiter is not None:
+                numpy_function_nargs['delimiter'] = text_delimiter
+        else:
+            raise CubistError("invalid file format {0!r}".format(input_format))
+        input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
+        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
+        self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
+            c=expected_input_count,
+            t=input_dtype.__name__,
+            b=msg_bytes,
+            f=input_format,
+            i=input_filename))
+        cube = numpy_function(input_format, input_filename, shape=shape, selection=selection, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 

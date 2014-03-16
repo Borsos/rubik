@@ -41,7 +41,8 @@ def _create_cubist(logger, args):
             output_text_delimiters=args.output_text_delimiters,
             output_text_newlines=args.output_text_newlines,
             output_text_converters=args.output_text_converters,
-            accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None))
+            accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
+            read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE))
     return cubist
 
 def _read(cubist, logger, args):
@@ -174,6 +175,12 @@ expressions, and write the result.
     #    help="clipping")
 
     input_formatting = parser.add_argument_group('input formatting')
+
+    input_formatting.add_argument("--read-mode", "-R",
+        metavar="R",
+        choices=conf.READ_MODES,
+        default=conf.DEFAULT_READ_MODE,
+        help="read mode ({0})".format("|".join(repr(rm) for rm in conf.READ_MODES)))
 
     input_formatting.add_argument("--input-dtype", "-It",
         metavar="D",

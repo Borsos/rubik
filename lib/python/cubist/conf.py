@@ -31,6 +31,11 @@ FILE_FORMAT_TEXT_DELIMITER = None
 FILE_FORMAT_TEXT_NEWLINE = None
 FILE_FORMAT_TEXT_CONVERTER = None
 
+READ_MODE_SAFE = 'safe'
+READ_MODE_OPT = 'opt'
+READ_MODES = (READ_MODE_SAFE, READ_MODE_OPT)
+DEFAULT_READ_MODE = READ_MODE_SAFE
+
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
 	("int_",	"Default integer type (same as C long; normally either int64 or int32)"),

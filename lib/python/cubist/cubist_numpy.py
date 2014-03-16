@@ -92,21 +92,39 @@ class ExtractReader(object):
         assert isinstance(shape, Shape)
         assert isinstance(selection, Selection)
         if selection is None or len(shape) <= 1:
+            return self.read_data(input_file, shape, selection)
+        else:
             count, sub_count = selection.get_counts(shape)
             if sub_count < count:
                 dim0, subshape = shape.split_first()
                 pick0, subselection = selection.split_first()
-                start, stop, step = pick0.get_indices(dim0)
-                prev_index = 0
-                subcubes = []
-                for curr_index in range(start, stop, step):
-                    self.skip_data(input_file, curr_index - prev_index, subshape)
-                    subcubes.append(self._read(input_file, subshape, subselection))
-                return np.vstack(subcubes)
+                pick0_value = pick0.value()
+                if isinstance(pick0_value, slice):
+                    start, stop, step = pick0_value.indices(dim0)
+                    prev_index = 0
+                    subcubes = []
+                    is_array = False
+                    for curr_index in range(start, stop, step):
+                        self.skip_data(input_file, curr_index - prev_index, subshape)
+                        subcube = self._read(input_file, subshape, subselection)
+                        if isinstance(subcube, np.ndarray):
+                            is_array = True
+                        subcubes.append(subcube)
+                        prev_index = curr_index + 1
+                    # skipping remaining elements:
+                    self.skip_data(input_file, dim0 - prev_index, subshape)
+                    if is_array:
+                        return np.array(subcubes)
+                    else:
+                        return np.array(subcubes)
+                else:
+                    if pick0_value > 0:
+                        self.skip_data(input_file, pick0_value, subshape)
+                    cube = self._read(input_file, subshape, subselection)
+                    self.skip_data(input_file, dim0 - pick0_value - 1, subshape)
+                    return cube
             else:
                 return self.read_data(input_file, shape, selection)
-        else:
-            return self.read_data(input_file, shape, selection)
 
     def read_data(self, input_file, shape, selection=None):
         raise NotImplementedError()
@@ -122,10 +140,8 @@ class ExtractRawCsvReader(ExtractReader):
 
     def read_data(self, input_file, shape, selection=None):
         cube = np.fromfile(input_file, dtype=self.dtype, count=shape.count(), sep=self.sep).reshape(shape.shape())
-        #print cube.shape, cube.size
         if selection is not None:
             cube = cube[selection.picks()]
-            #print cube.shape, cube.size
         return cube
 
 class ExtractRawReader(ExtractRawCsvReader):
@@ -133,16 +149,17 @@ class ExtractRawReader(ExtractRawCsvReader):
         ExtractRawCsvReader.__init__(self, dtype, shape, selection, sep='')
     
     def skip_data(self, input_file, num_indices, shape):
-        if num_indices:
+        if num_indices > 0:
             skip_bytes = num_indices * shape.count() * self.dtype_bytes
+            #print "skipping {0} indices, {1} elements, {2} bytes".format(num_indices, num_indices * shape.count(), skip_bytes)
             input_file.seek(skip_bytes, 1)
 
 class ExtractCsvReader(ExtractRawCsvReader):
-    def __init__(self, dtype, shape, selection, sep):
+    def __init__(self, dtype, shape, selection, sep=conf.FILE_FORMAT_CSV_SEPARATOR):
         ExtractRawCsvReader.__init__(self, dtype, shape, selection, sep=sep)
     
 class ExtractTextReader(ExtractReader):
-    def __init__(self, dtype, shape, selection, delimiter):
+    def __init__(self, dtype, shape, selection, delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
         ExtractReader.__init__(self, dtype, shape, selection)
         self.delimiter = delimiter
 
@@ -152,10 +169,8 @@ class ExtractTextReader(ExtractReader):
 
     def read_data(self, input_file, shape, selection=None):
         cube = np.loadtxt(input_file, dtype=self.dtype, delimiter=self.delimiter).reshape(shape.shape())
-        #print cube.shape, cube.size
         if selection is not None:
             cube = cube[selection.picks()]
-            #print cube.shape, cube.size
         return cube
 
 def fromfile_generic(ftype, f, dtype, shape, selection=None, **n_args):
