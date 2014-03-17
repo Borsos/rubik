@@ -17,9 +17,10 @@
 
 import re
 
-from .index_picker import IndexPicker
 from .shape import Shape
+from .errors import CubistError
 from .values import Values
+from .index_picker import IndexPicker
 
 class Extractor(Values):
 
@@ -36,7 +37,8 @@ class Extractor(Values):
     def get_counts(self, shape):
         if isinstance(shape, Shape):
             shape = shape.shape()
-        assert len(shape) == self.rank()
+        if len(shape) != self.rank():
+            raise CubistError("invalid shape {0} for extactor {1}: rank {2} != {3}".format(shape, self, len(shape), self.rank()))
         if self.rank() == 0:
             count = 0
             sub_count = 0

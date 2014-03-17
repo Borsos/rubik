@@ -21,7 +21,7 @@ import numpy as np
 
 from .errors import CubistError
 
-VERSION = "1.0.7"
+VERSION = "1.0.8"
 
 FILE_FORMAT_RAW = 'raw'
 FILE_FORMAT_CSV = 'csv'

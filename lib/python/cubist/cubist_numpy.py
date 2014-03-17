@@ -16,7 +16,8 @@
 #
 
 __all__ = ['linear_cube', 'random_cube', 'fill_cube',
-           'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv']
+           'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
+           'num_not_equals', 'num_equals', 'not_equals', 'equals']
 
 import numpy as np
 
@@ -69,6 +70,29 @@ def fill_cube(shape, value=0.0):
         cube = np.empty(count, dtype=DEFAULT_DTYPE)
         cube.fill(value)
     return cube.reshape(shape)
+
+def num_not_equals(cube_0, cube_1, tolerance=0.0):
+    """num_not_equals(cube_0, cube_1, tolerance=0.0) -> the number of elements that are != within the given tolerance
+    """
+    c = np.count_nonzero(np.abs(cube_0 - cube_1) > tolerance)
+    return c
+
+def num_equals(cube_0, cube_1, tolerance=0.0):
+    """num__equals(cube_0, cube_1, tolerance=0.0) -> the number of elements that are == within the given tolerance
+    """
+    c = np.count_nonzero(np.abs(cube_0 - cube_1) <= tolerance)
+    return c
+
+def not_equals(cube_0, cube_1, tolerance=0.0):
+    """not_equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1 within the given tolerance
+    """
+    return num_not_equals(cube_0, cube_1, tolerance) != 0
+
+
+def equals(cube_0, cube_1, tolerance=0.0):
+    """equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1 within the given tolerance
+    """
+    return num_equals(cube_0, cube_1, tolerance) != 0
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor):
