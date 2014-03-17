@@ -2,7 +2,9 @@
 
 ## creating
 typeset -i X=8
+X_INDICES=$(get_indices $X)
 typeset -i Y=10
+Y_INDICES=$(get_indices $Y)
 typeset -i H=30
 typeset -i bytes_float16=2
 typeset -i bytes_float32=4
@@ -141,3 +143,21 @@ check_file_exists_and_has_size a_${_x}_${_y}_${_z}.raw $(( $_x * $_y * $_z * ${b
 ## --- merge ---
 test_prex "cubist -i a=a_{shape}.{format} -i b=b_{shape}.{format} -i c=c_{shape}.{format} -s 8x10 -o res_{shape}.{format} -e 'np.array([a, b, c])'"
 check_file_exists_and_has_size res_3x${X}x${Y}.raw $(( 3 * $X * $Y * $bytes_float32 ))
+
+## --- loop ---
+test_prex "cubist -i a_{shape}.{format} -s 8x10 -o r0_x{d0}_{shape}.{format} --loop 0"
+for _x in $X_INDICES ; do
+    check_file_exists_and_has_size r0_x${_x}_${Y}.raw $(( $Y * $bytes_float32 ))
+done
+
+test_prex "cubist -i a_{shape}.{format} -s 8x10 -o r1_y{d1}_{shape}.{format} --loop 1"
+for _y in $Y_INDICES ; do
+    check_file_exists_and_has_size r1_y${_y}_${X}.raw $(( $X * $bytes_float32 ))
+done
+
+test_prex "cubist -i a_{shape}.{format} -s 8x10 -o r01_x{d0}_y{d1}.{format} --loop 0 --loop 1"
+for _x in $X_INDICES ; do
+    for _y in $Y_INDICES ; do
+        check_file_exists_and_has_size r01_x${_x}_y${_y}.raw $(( $bytes_float32 ))
+    done
+done

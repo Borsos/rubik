@@ -17,6 +17,7 @@
 
 import os
 import numpy as np
+import itertools
 from collections import OrderedDict
 
 from .application import log
@@ -48,7 +49,9 @@ class Cubist(object):
             output_text_newlines,
             output_text_converters,
             accept_bigger_raw_files=False,
-            read_mode=conf.DEFAULT_READ_MODE):
+            read_mode=conf.DEFAULT_READ_MODE,
+            loop_dimensions=None,
+            clobber=conf.DEFAULT_CLOBBER):
         self._set_dtype(dtype)
         self.logger = logger
         self.input_csv_separators = input_csv_separators
@@ -65,7 +68,11 @@ class Cubist(object):
             self._read = self._read_optimized
         else:
             raise CubistError("invalid read mode {0!r}".format(read_mode))
+        self.clobber = clobber
 
+        if loop_dimensions is None:
+            loop_dimensions = ()
+        self.loop_dimensions = loop_dimensions
 
         self._last_cube = None
         self.input_cubes = OrderedDict()
@@ -80,6 +87,9 @@ class Cubist(object):
         self.output_dtypes = output_dtypes
         self.output_formats = output_formats
 
+        self._used_input_filenames = set()
+        self._used_output_filenames = set()
+
     def _set_dtype(self, dtype):
         self.dtype = dtype
         cubist_numpy.set_default_dtype(self.dtype)
@@ -91,7 +101,9 @@ class Cubist(object):
             self._cache_dtype_bytes[dtype] = dtype().itemsize
         return self._cache_dtype_bytes[dtype]
 
-    def format_filename(self, filename, shape, file_format, file_dtype):
+    def format_filename(self, filename, shape, file_format, file_dtype, dlabels=None):
+        if dlabels is None:
+            dlabels = {}
         count = 0
         if shape:
             count = 1
@@ -107,6 +119,7 @@ class Cubist(object):
             count=count,
             format=file_format,
             dtype=file_dtype.__name__,
+            **dlabels
         )
 
     def register_input_cube(self, input_label, input_filename, cube):
@@ -254,15 +267,38 @@ class Cubist(object):
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
+    def loop_over_dimensions(self, cube):
+        if self.loop_dimensions:
+            l = []
+            for dimension in self.loop_dimensions:
+                if 0 <= dimension < cube.shape:
+                    l.append([(dimension, i) for i in range(cube.shape[dimension])])
+            get_all = slice(None, None, None)
+            for d_indices in itertools.product(*l):
+                dd = dict(d_indices)
+                ex = []
+                for d in range(len(cube.shape)):
+                    ex.append(dd.get(d, get_all))
+                dlabels = OrderedDict(('d{0}'.format(i), j) for i, j in d_indices)
+                #print dlabels, ex
+                subcube = cube[tuple(ex)]
+                yield subcube, dlabels
+        else:
+            yield cube, None
+        
     def write(self, cube):
         if not isinstance(cube, np.ndarray):
             raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         if not self.output_filenames:
             return
+        for subcube, dlabels in self.loop_over_dimensions(cube):
+            self._write_cube(subcube, dlabels)
+
+    def _write_cube(self, cube, dlabels=None):
         for output_label, output_filename in self.output_filenames.items():
-            self._write(cube, output_label, output_filename)
+            self._write(cube, output_label, output_filename, dlabels=dlabels)
         
-    def _write(self, cube, output_label, output_filename):
+    def _write(self, cube, output_label, output_filename, dlabels=None):
         output_format = self.output_formats.get(output_label)
         if output_format is None:
             output_format = conf.DEFAULT_FILE_FORMAT
@@ -277,7 +313,8 @@ class Cubist(object):
         numpy_function = None
         numpy_function_pargs = []
         numpy_function_nargs = {}
-        output_filename = self.format_filename(output_filename, cube.shape, output_format, output_dtype)
+        output_filename = self.format_filename(output_filename, cube.shape, output_format, output_dtype, dlabels=dlabels)
+        self._check_output_filename(output_filename)
         if output_format == conf.FILE_FORMAT_RAW:
             num_bytes = cube.size * output_dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
@@ -312,11 +349,22 @@ class Cubist(object):
             o=output_filename))
         numpy_function(*numpy_function_pargs, **numpy_function_nargs)
 
+    def _log_dlabels(self, dlabels):
+        if dlabels:
+            dlabels_message = "## " + ', '.join("{0}={1}".format(dlabel, dvalue) for dlabel, dvalue in dlabels.items())
+            log.PRINT(dlabels_message)
 
     def print_cube(self, cube):
-        log.PRINT(cube)
+        for subcube, dlabels in self.loop_over_dimensions(cube):
+            self._log_dlabels(dlabels)
+            log.PRINT(subcube, dlabels)
 
     def stats(self, cube):
+        for subcube, dlabels in self.loop_over_dimensions(cube):
+            self._log_dlabels(dlabels)
+            self.stats_cube(subcube)
+
+    def stats_cube(self, cube):
         if not isinstance(cube, np.ndarray):
             raise CubistError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cube_sum = cube.sum()
@@ -375,7 +423,18 @@ ave           = {ave}
         )
         log.PRINT(stat)
 
+    def _check_output_filename(self, output_filename):
+        if (not self.clobber) and os.path.exists(output_filename):
+            raise CubistError("output file {0!r} already exists".format(output_filename))
+        if output_filename in self._used_output_filenames:
+            self.logger.warning("warning: output filename {0!r} already written".format(output_filename))
+        self._used_output_filenames.add(output_filename)
+
     def _check_input_filename(self, shape, input_format, input_filename, input_dtype):
+        if input_filename in self._used_input_filenames:
+            self.logger.warning("warning: input filename {0!r} already read".format(input_filename))
+        self._used_input_filenames.add(input_filename)
+
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         if not os.path.isfile(input_filename):

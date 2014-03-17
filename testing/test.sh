@@ -31,6 +31,17 @@ function die {
     exit $_exitcode
 }
 
+function get_indices {
+    typeset -i _num=$1
+    typeset    _indices=" "
+    typeset -i _i=0
+    while [[ $_i -lt $_num ]] ; do
+        _indices="$_indices$_i "
+        _i=$(( $_i + 1 ))
+    done
+    echo "$_indices"
+}
+
 function check_file_exists {
     typeset _filename="$1"
     if [[ -f "$_filename" ]] ; then

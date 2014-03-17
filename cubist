@@ -41,7 +41,9 @@ def _create_cubist(logger, args):
             output_text_newlines=args.output_text_newlines,
             output_text_converters=args.output_text_converters,
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
-            read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE))
+            read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
+            loop_dimensions=args.loop_dimensions,
+            clobber=args.clobber)
     return cubist
 
 def _read(cubist, logger, args):
@@ -154,9 +156,19 @@ expressions, and write the result.
         help="data type name (--help-data-types/-hd flag to show all available data types)")
 
     global_group.add_argument("--accept-bigger-raw-files", "-a",
-        action="store_true",
+        action="store_false",
         default=False,
         help="if an input raw file is bigger than expected, simply issue a warning message")
+
+    global_group.add_argument("--clobber",
+        action="store_true",
+        default=conf.DEFAULT_CLOBBER,
+        help="overwrite existing output files")
+
+    global_group.add_argument("--no-clobber",
+        action="store_false",
+        default=conf.DEFAULT_CLOBBER,
+        help="do not overwrite existing output files")
 
     global_group.add_argument("--expression", "-e",
         metavar="E",
@@ -245,6 +257,14 @@ expressions, and write the result.
         action="store_true",
         default=False,
         help="print statistics about the result cube")
+
+    output_group.add_argument("--loop", "-L",
+        metavar="D",
+        dest="loop_dimensions",
+        type=int,
+        action="append",
+        default=[],
+        help="loop on dimension D")
 
     output_group.add_argument("--output-dtype", "-Ot",
         metavar="D",

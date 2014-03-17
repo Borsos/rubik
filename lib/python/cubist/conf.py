@@ -36,6 +36,8 @@ READ_MODE_OPTIMIZED = 'optimized'
 READ_MODES = (READ_MODE_SAFE, READ_MODE_OPTIMIZED)
 DEFAULT_READ_MODE = READ_MODE_OPTIMIZED
 
+DEFAULT_CLOBBER = True
+
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
 	("int_",	"Default integer type (same as C long; normally either int64 or int32)"),
