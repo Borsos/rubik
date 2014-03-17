@@ -51,7 +51,9 @@ class Cubist(object):
             accept_bigger_raw_files=False,
             read_mode=conf.DEFAULT_READ_MODE,
             loop_dimensions=None,
-            clobber=conf.DEFAULT_CLOBBER):
+            clobber=conf.DEFAULT_CLOBBER,
+            print_cube=False,
+            print_stats=False):
         self._set_dtype(dtype)
         self.logger = logger
         self.input_csv_separators = input_csv_separators
@@ -68,7 +70,11 @@ class Cubist(object):
             self._read = self._read_optimized
         else:
             raise CubistError("invalid read mode {0!r}".format(read_mode))
+
         self.clobber = clobber
+
+        self.print_cube = print_cube
+        self.print_stats = print_stats
 
         if loop_dimensions is None:
             loop_dimensions = ()
@@ -286,15 +292,32 @@ class Cubist(object):
         else:
             yield cube, None
         
+    def output(self, cube):
+        useless_run = True
+        for subcube, dlabels in self.loop_over_dimensions(cube):
+            if self.print_cube or self.print_stats:
+                self._log_dlabels(dlabels)
+            if self.print_cube:
+                self._print_cube(cube=subcube)
+                useless_run = False
+            if self.print_stats:
+                self._print_stats(cube=subcube)
+                useless_run = False
+            if self.output_filenames:
+                useless_run = False
+                self._write_cube(cube=subcube)
+        if useless_run:
+            self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
+    
     def write(self, cube):
-        if not isinstance(cube, np.ndarray):
-            raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         if not self.output_filenames:
             return
         for subcube, dlabels in self.loop_over_dimensions(cube):
             self._write_cube(subcube, dlabels)
 
     def _write_cube(self, cube, dlabels=None):
+        if not isinstance(cube, np.ndarray):
+            raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         for output_label, output_filename in self.output_filenames.items():
             self._write(cube, output_label, output_filename, dlabels=dlabels)
         
@@ -354,15 +377,11 @@ class Cubist(object):
             dlabels_message = "## " + ', '.join("{0}={1}".format(dlabel, dvalue) for dlabel, dvalue in dlabels.items())
             log.PRINT(dlabels_message)
 
-    def print_cube(self, cube):
-        for subcube, dlabels in self.loop_over_dimensions(cube):
-            self._log_dlabels(dlabels)
-            log.PRINT(subcube, dlabels)
+    def _print_cube(self, cube):
+        log.PRINT(cube)
 
-    def stats(self, cube):
-        for subcube, dlabels in self.loop_over_dimensions(cube):
-            self._log_dlabels(dlabels)
-            self.stats_cube(subcube)
+    def _print_stats(self, cube):
+        self.stats_cube(cube)
 
     def stats_cube(self, cube):
         if not isinstance(cube, np.ndarray):

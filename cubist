@@ -43,7 +43,9 @@ def _create_cubist(logger, args):
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
             read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
             loop_dimensions=args.loop_dimensions,
-            clobber=args.clobber)
+            clobber=args.clobber,
+            print_cube=args.print_cube,
+            print_stats=args.print_stats)
     return cubist
 
 def _read(cubist, logger, args):
@@ -70,18 +72,7 @@ def main_write(logger, args):
                 args.output_filenames.add(input_filename.filename())
     #print "I", InputFilename.__filenames__
     #print "O", OutputFilename.__filenames__
-    useless_run = True
-    if args.print_cube:
-        cubist.print_cube(cube=cube)
-        useless_run = False
-    if args.print_stats:
-        cubist.stats(cube=cube)
-        useless_run = False
-    if args.output_filenames:
-        useless_run = False
-        cubist.write(cube=cube)
-    if useless_run:
-        logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
+    cubist.output(cube=cube)
     return 0
 
 def main():
