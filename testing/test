@@ -1,0 +1,70 @@
+#!/bin/bash
+
+TESTING_DIR=$(dirname $0)
+TESTING_DIR=$( cd $TESTING_DIR && pwd )
+
+TEMPROOT="$PWD/tmp_test_cubist.$$"
+TEMPDIR=""
+EMPTY=" "
+TESTS="$EMPTY"
+CUBIST_OPTIONS=""
+while [[ ${#@} -ne 0 ]] ; do
+    option="$1"
+    shift 1
+    case "$option" in
+        --tmpdir|-t)
+            TEMPDIR="$1"
+            shift 1
+            ;;
+        --test|-T)
+            TESTS="${TESTS}$1 "
+            shift 1
+            ;;
+        --pass)
+            CUBIST_OPTIONS="${CUBIST_OPTIONS}'$1' "
+            shift 1
+            ;;
+        --help|-h)
+            print_help
+            ;;
+        *)
+            CUBIST_OPTIONS="${CUBIST_OPTIONS}'$option' "
+            echo "WRN: passing option '$option' to cubist"
+            #exit 1
+            ;;
+    esac
+done
+
+if [[ "$TEMPDIR" == "" ]] ; then
+    unset TEMPDIR
+    while [[ -d ${TEMPDIR:=${TEMPROOT}.$RANDOM} ]] ; do
+        unset TEMPDIR
+    done
+fi
+
+if [[ "$TESTS" == "$EMPTY" ]] ; then
+    TESTS=" std "
+fi
+
+## Loading library
+source $TESTING_DIR/test.sh
+
+## setup
+echo "== TEMPDIR=$TEMPDIR"
+
+mkdir -p $TEMPDIR
+
+prex "rm -rf ${TEMPDIR:-undefined}/*"
+cd $TEMPDIR
+
+## Tests
+for test_name in $TESTS ; do
+    set_test_name ${test_name}
+    test_sh="$TESTING_DIR/tests-${test_name}.sh"
+    if [[ ! -f "$test_sh" ]] ; then
+        echo "ERR: missing test '${test_name}': no such file '${test_sh}'" 1>&2
+        exit 1
+    fi
+    source "$test_sh"
+done
+

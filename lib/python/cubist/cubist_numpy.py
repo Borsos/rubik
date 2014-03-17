@@ -103,20 +103,14 @@ class ExtractReader(object):
                     start, stop, step = index_picker0_value.indices(dim0)
                     prev_index = 0
                     subcubes = []
-                    is_array = False
                     for curr_index in range(start, stop, step):
                         self.skip_data(input_file, curr_index - prev_index, subshape)
                         subcube = self._read(input_file, subshape, subextractor)
-                        if isinstance(subcube, np.ndarray):
-                            is_array = True
                         subcubes.append(subcube)
                         prev_index = curr_index + 1
                     # skipping remaining elements:
                     self.skip_data(input_file, dim0 - prev_index, subshape)
-                    if is_array:
-                        return np.array(subcubes)
-                    else:
-                        return np.array(subcubes)
+                    return np.array(subcubes)
                 else:
                     if index_picker0_value > 0:
                         self.skip_data(input_file, index_picker0_value, subshape)
