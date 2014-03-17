@@ -42,6 +42,22 @@ check_file_exists_and_has_size f_${X}x${Y}.float16.raw $(( $X * $Y * ${bytes_flo
 test_prex "cubist -o g_{shape}.{dtype}.{format} -t float64 -e 'cnp.linear_cube((8, 10))'"
 check_file_exists_and_has_size g_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_float64} ))
 
+typeset -i D0=6
+typeset -i D1=10
+typeset -i D2=5
+typeset -i D3=9
+typeset -i D4=4
+typeset -i D5=12
+typeset D6_SHAPE=${D0}x${D1}x${D2}x${D3}x${D4}x${D5}
+typeset -i D0f=3
+typeset -i D2f=0
+typeset -i D4f=1
+typeset -i D5f=8
+typeset D6_EXTRACTOR=${D0f}x:x${D2f}x:x${D4f}x${D5f}
+typeset D2_SHAPE=${D1}x${D3}
+test_prex "cubist -o d{rank}_{shape}.{format} -e 'cnp.linear_cube(($D0, $D1, $D2, $D3, $D4, $D5))'"
+check_file_exists_and_has_size d6_${D6_SHAPE}.raw $(( $D0 * $D1 * $D2 * $D3 * $D4 * $D5 * ${bytes_float32} ))
+
 ## checks
 test_prex "cubist -i a_{shape}.{format} -i b_{shape}.{format} -s 8x10 -o u_{shape}.{format} -e 'i0 - i1'"
 check_file_exists_and_has_size u_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
@@ -161,3 +177,8 @@ for _x in $X_INDICES ; do
         check_file_exists_and_has_size r01_x${_x}_y${_y}.raw $(( $bytes_float32 ))
     done
 done
+
+## --- multi-dimensional cube ---
+test_prex "cubist -i d{rank}_{shape}.{format} -s $D6_SHAPE -x $D6_EXTRACTOR -o d{rank}_d0=${D0f}_d2=${D2f}_d4=${D4f}_d5=${D5f}_{shape}.{format}"
+check_file_exists_and_has_size d2_d0=${D0f}_d2=${D2f}_d4=${D4f}_d5=${D5f}_${D2_SHAPE}.raw $(( $D1 * $D3 * $bytes_float32 ))
+
