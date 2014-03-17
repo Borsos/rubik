@@ -169,14 +169,14 @@ expressions, and write the result.
         metavar="E",
         dest="expression",
         type=str,
-        help="expression to evaluate; you can use the 'numpy' module (also available as 'np') and the 'cubist_numpy' module (also available as 'cnp') (--help-cubist-numpy/-hc flag to show the content of the 'cubist_numpy' module)")
+        help="expression to evaluate (--help-expression/-he for more information)")
 
     global_group.add_argument("--add-var", "-V",
         metavar="N=V",
         action="append",
         type=VariableDefinition,
         default=[],
-        help="add a variable definition")
+        help="add a variable definition (--help-user-defined-variables/-hV for more information)")
 
     input_group = parser.add_argument_group("input options")
 
@@ -199,7 +199,7 @@ expressions, and write the result.
         dest="extractors",
         type=argdict_extractors.store_function(),
         default=argdict_extractors,
-        help="subcube extractor")
+        help="subcube extractor (--help-extractor/-he for more information)")
 
     input_group.add_argument("--input-dtype", "-It",
         metavar="D",
@@ -253,13 +253,13 @@ expressions, and write the result.
         default=False,
         help="print statistics about the result cube")
 
-    output_group.add_argument("--loop", "-L",
+    output_group.add_argument("--loop", "-l",
         metavar="D",
         dest="loop_dimensions",
         type=int,
         action="append",
         default=[],
-        help="loop on dimension D")
+        help="loop on dimension D (--help-loop/-hl for more information)")
 
     output_group.add_argument("--output-dtype", "-Ot",
         metavar="D",
@@ -305,11 +305,35 @@ expressions, and write the result.
 
 
     help_group = parser.add_argument_group("help options")
-    help_group.add_argument("--help-dypes", "-ht",
+    help_group.add_argument("--help-dtypes", "-ht",
         dest="help_dtypes",
         action="store_true",
         default=False,
         help="show available dtypes")
+
+    help_group.add_argument("--help-expression", "-he",
+        dest="help_expression",
+        action="store_true",
+        default=False,
+        help="show help about generic numpy expressions")
+
+    help_group.add_argument("--help-extractor", "-hx",
+        dest="help_extractor",
+        action="store_true",
+        default=False,
+        help="show help about extractors")
+
+    help_group.add_argument("--help-user-defined-variables", "-hV",
+        dest="help_user_defined_variables",
+        action="store_true",
+        default=False,
+        help="show help about user defined variables")
+
+    help_group.add_argument("--help-numpy", "-hn",
+        dest="help_numpy",
+        action="store_true",
+        default=False,
+        help="show content of the numpy module")
 
     help_group.add_argument("--help-cubist-numpy", "-hc",
         dest="help_cubist_numpy",
@@ -317,11 +341,17 @@ expressions, and write the result.
         default=False,
         help="show content of the cubist_numpy module")
 
-    help_group.add_argument("--help-filename", "-hf",
-        dest="help_filename",
+    help_group.add_argument("--help-filenames", "-hf",
+        dest="help_filenames",
         action="store_true",
         default=False,
         help="show available keywords for filename interpolation")
+
+    help_group.add_argument("--help-loop", "-hl",
+        dest="help_loop",
+        action="store_true",
+        default=False,
+        help="help about loop over dimension")
 
     try:
         args = parser.parse_args()
@@ -330,6 +360,11 @@ expressions, and write the result.
         sys.exit(1)
 
     if args.help_dtypes:
+        log.PRINT("""\
+Available dtypes
+================
+This is the list of the available numpy dtypes:
+""")
         for dtype_name, dtype_description in conf.DATA_TYPES.items():
             log.PRINT("{n:16s} {d}".format(n=dtype_name, d=dtype_description))
         sys.exit(0)
@@ -339,39 +374,145 @@ expressions, and write the result.
         help(cubist_numpy)
         sys.exit(0)
 
-    if args.help_filename:
+    if args.help_numpy:
+        help(np)
+        sys.exit(0)
+
+    if args.help_expression:
         log.PRINT("""\
-[Input filenames]
-For each input filename, a variable 'i<N>' is generated referring to the cube
+Generic numpy expressions
+=========================
+The --expression/-e options allows to pass a generic numpy expression to be
+evaluated. The input cubes are available through the labels referring to them.
+
+From the expression you can access:
+* the numpy module, as 'numpy' or 'np';
+* the cubist_numpy module, as 'cubist_numpy' or 'cnp';
+* all the used defined variables.
+
+The cubist_numpy module provides some numpy-based functions to operate with
+cubes; see --help-cubist-numpy.
+""")
+        sys.exit(0)
+
+    if args.help_extractor:
+        log.PRINT("""\
+Extractors
+==========
+An extractor can be associated to each input file to read only a portion of that
+file. Due to memory opimization, only the portion is read, so there is no need
+to temporarily store the entire file. This means that if you want to read only a
+subcube from a huge file, you will use memory only for the subcube.
+
+Extractors are lists of index selectors separated by 'x' or ','.
+
+Each input file can have a specific extractor. The shape and the extractor must
+have the same rank.
+
+Each index selector can be:
+* a python slice [start:]stop[:step], for instance
+  - ':' -> select all indices
+  - '1:' -> select all indices but the first
+  - ':-3' -> select all indices but the last three
+  - '::2' -> select from the first to the last indices with stride 2
+* an integer number; in this case, only the corresponding index is selected on
+  that dimension, and the dimension is skipped in the output.
+
+For instance, if the shape is '8x1000x30':
+* '-x :x0x:' will extract the subcube '8x30' corresponding to the plane with 0
+  on the second dimension
+* '-x 3:x8:10x:5' will extract a subcube '5x2x5' (remember that, in a python
+  slice, the start is always included and the stop is always excluded.
+""")
+        sys.exit(0)
+
+    if args.help_user_defined_variables:
+        log.PRINT("""\
+User defined variables
+======================
+User defined variables can be used in generic numpy expressions. For instance:
+  -V alpha=1.5 -V beta=-0.5 -e 'alpha * i0 + beta * i1'
+is equivalent to 
+  -e '1.5 * i0 - 0.5 * i1'
+Also input cubes and previusly defined variables can be used:
+  -V a=10 -V b='a + 5' -V c='i0 * b'
+will set
+  * a = 10
+  * b = 15
+  * c = i0 * 15 ('i0' is the first cube)
+""")
+        sys.exit(0)
+
+    if args.help_loop:
+        log.PRINT("""\
+Looping over dimensions
+=======================
+Suppose you have a _8x4x10_ cube, and you want to write _4_ _8x10_ cubes, one
+for each index in the second dimension. The command is:
+
+$ cubist -i a_{shape}.{format} -s 8x4x10 --loop 1 -o s_{shape}.{d1}.{format} -v
+reading 320 'float32' elements (1280 bytes) from 'raw' file 'a_8x4x10.raw'...
+writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.0.raw'...
+writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.1.raw'...
+writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.2.raw'...
+writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.3.raw'...
+$
+
+A loop over the four values for the second index is done when the output is
+written; the 3-D cube is slices across the second dimension, and each plane
+is saved to a different file.
+
+The 'd1' key has been added to the available keys for the output filename
+interpolation.
+
+""")
+        sys.exit(0)
+
+    if args.help_filenames:
+        log.PRINT("""\
+Input filenames
+===============
+For each input filename, a label 'i<N>' is generated referring to the cube
 read from this file; 'N' is the ordinal of the input filename.
 
 For instance, 'i0' refers to the cube read from the first file, 'i1' to the cube
 read from the second file, and so on.
 
-To be precise, that the extract expression (--extract/-x) is applied just after
-the cube has been read, so 'i0' is the subcube extracted from the cube read from
-the first file.
+These labels can be used to
+* set specific parameters for each input file, like:
+  - the format
+  - the dtype
+  - the shape
+  - an extractor
+  for instance, '-s i0=8x10' sets the shape for the first input cube only;
+* refer to the corresponding cube in a generic numpy expression; in this case,
+  'i0' refers to the cube read from the first input filename, after the
+  extractor has been applied (indeed extractors are applied just during the
+  file loading).
 
-These variables referring to the read cubes can be used inside the generic
-expressions (--expression/-e); for instance, "-e 'i0 - i1'" to subtract the
-second cube from the first.
+You can change the name of the label referring to a cube; simply put the
+label before the filename, separated by '=': so, the option '-i a=a_8x10.raw'
+will associate the read cube to the label 'a'; then, '-x a=:2x2:' sets an 
+extractor for the file 'a_8x10.raw' only, and '-e "2.5 * a"' multiplies
+the cube extracted from 'a_8x10.raw' by 2.5.
 
-You can change the name of the variable referring to a cube; simply put the
-variable name before the filename, separated by '=': so, the option
-  -i a=a_8x10.raw
-will associate the read cube to the variable 'a'.
+Output filenames
+================
+Also the output filenames have a label (by default 'o0'); the label can be used
+to set specific parameters on the output file, for instance the format. It
+cannot be used in the generic numpy expression.
 
-[Output filename]
-Also the output filename has a variable name (by default 'o0'); but it is never
- used.
+For instance, '-o x=x_8x10.raw --output-dtype x=float64' applies the dtype
+'float64' to the output file 'x_8x10.raw'.
 
-[Filename interpolation]
+Filename interpolation
+======================
 Filenames are interpolated; the following keywords are substituted:
- + shape: the cube shape, for instance '3x2x4';
- + rank: the cube shape rank, for instance '3' if the shape is '3x2x4';
- + count: the number of elements, for instance '2x4';
- + dtype: the data type, for instance 'float32';
- + format: the file format ({ff})
+* shape: the cube shape, for instance '3x2x4';
+* rank: the cube shape rank, for instance '3' if the shape is '3x2x4';
+* count: the number of elements, for instance '2x4';
+* dtype: the data type, for instance 'float32';
+* format: the file format ({ff})
 
 For instance, 'a_{{shape}}.{{format}}' is converted to 'a_3x2x4.raw' if shape
 is '3x2x4' and file format is 'raw'.
@@ -380,6 +521,20 @@ This allows to specify the same filename as input and output, and still have
 the output on separate files. For instance,
   -i a_{{shape}}.{{format}} -Oi -s 8x10 -If raw -Of text -Oc '%.4e'
 will read 'a_8x10.raw' and write 'a_8x10.text'.
+
+File formats
+============
+Three file formats are available:
+* 'raw' is the default, for binary files; they are not portable across different
+  platforms;
+* 'text' is for text files; they have sub-options:
+  - delimiter (usually a space) separating values in a row;
+  - newline (usually '\\n') separating rows;
+  - converter (for instance '%.18e') is the format specifier for values.
+  for input files only the 'delimiter' can be set;
+* 'csv' is for text files consisting of values separated by a separator; you can
+  set
+  - separator (by default ',') the separator between values.
 """.format(ff='|'.join(conf.FILE_FORMATS)))
         sys.exit(0)
 
