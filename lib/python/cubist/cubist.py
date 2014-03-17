@@ -305,7 +305,7 @@ class Cubist(object):
                 useless_run = False
             if self.output_filenames:
                 useless_run = False
-                self._write_cube(cube=subcube)
+                self._write_cube(cube=subcube, dlabels=dlabels)
         if useless_run:
             self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
     
@@ -316,8 +316,8 @@ class Cubist(object):
             self._write_cube(subcube, dlabels)
 
     def _write_cube(self, cube, dlabels=None):
-        if not isinstance(cube, np.ndarray):
-            raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        #if not isinstance(cube, np.ndarray):
+        #    raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         for output_label, output_filename in self.output_filenames.items():
             self._write(cube, output_label, output_filename, dlabels=dlabels)
         
