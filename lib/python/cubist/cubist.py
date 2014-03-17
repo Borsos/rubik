@@ -504,7 +504,7 @@ ave           = {ave}
         globals_d.update(self.input_cubes)
         locals_d = {}
         for var_name, var_instance in VariableDefinition.__variables__.items():
-            var_instance.evaluate(globals_d)
+            var_instance.evaluate(globals_d, locals_d)
             locals_d[var_name] = var_instance.value()
         self.logger.info("evaluating expression {0!r}...".format(expression))
         try:

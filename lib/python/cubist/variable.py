@@ -58,12 +58,9 @@ class VariableDefinition(object):
         if globals_d is None:
             globals_d = {}
         if locals_d is None:
-            l_d = {}
-        else:
-            l_d = locals_d.copy()
-        l_d.update(self.__variables__)
+            locals_d = {}
         try:
-            value = eval(self._value, globals_d, l_d)
+            value = eval(self._value, globals_d, locals_d)
         except Exception as err:
             raise ValueError("variable {n}: cannot converto {s!r} to a valid python object: {et}: {e}".format(
                 n=self._name,
@@ -71,6 +68,7 @@ class VariableDefinition(object):
                 et=err.__class__.__name__,
                 e=err))
         self._value = value
+
     def __str__(self):
         return "{0}={1!r}".format(self._name, self._value)
 
