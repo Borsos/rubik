@@ -16,15 +16,21 @@
 
 from distutils.core import setup
 import os
+import sys
 
 scripts = [
 	'cubist',
 ]
 
+dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
+py_dirname = os.path.join(dirname, "lib", "python")
+sys.path.insert(0, py_dirname)
+
+from cubist import conf
 
 setup(
     name = "cubist",
-    version = "1.0.2",
+    version = conf.VERSION,
     requires = [],
     description = "Tool to read/write N-dimensional cubes",
     author = "Simone Campagna",
