@@ -111,7 +111,10 @@ expressions, and write the result.
         function=main_write,
     )
     
-    global_group = parser.add_argument_group("global options")
+    global_group = parser.add_argument_group(
+        "global options",
+        description="""\
+Global options""")
 
     global_group.add_argument("--verbose", "-v",
         dest="verbose_level",
@@ -178,7 +181,11 @@ expressions, and write the result.
         default=[],
         help="add a variable definition (--help-user-defined-variables/-hV for more information)")
 
-    input_group = parser.add_argument_group("input options")
+    input_group = parser.add_argument_group(
+        "input options",
+        description="""\
+Options related to input files. All these options can be labeled;
+see --help-labeled-options for more information.""")
 
     input_group.add_argument("--input-filename", "-i",
         metavar='I',
@@ -228,7 +235,12 @@ expressions, and write the result.
         default=argdict_input_text_delimiters,
         help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
 
-    output_group = parser.add_argument_group("output options")
+    output_group = parser.add_argument_group(
+        "output options",
+        description="""\
+Options related to output files. All these options can be labeled;
+see --help-labeled-options for more information.""")
+
     write_output_filename_group = output_group.add_mutually_exclusive_group()
     write_output_filename_group.add_argument("--in-place", "-Oi",
         action="store_true",
@@ -304,12 +316,22 @@ expressions, and write the result.
 
 
 
-    help_group = parser.add_argument_group("help options")
+    help_group = parser.add_argument_group(
+        "help options",
+        description="""\
+Options to show help on specific topics """)
+
     help_group.add_argument("--help-dtypes", "-ht",
         dest="help_dtypes",
         action="store_true",
         default=False,
         help="show available dtypes")
+
+    help_group.add_argument("--help-labeled-options", "-ho",
+        dest="help_labeled_options",
+        action="store_true",
+        default=False,
+        help="show help about labeled options")
 
     help_group.add_argument("--help-expression", "-he",
         dest="help_expression",
@@ -358,6 +380,44 @@ expressions, and write the result.
     except Exception as err:
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
         sys.exit(1)
+
+    if args.help_labeled_options:
+        log.PRINT("""\
+Labeled options
+===============
+--------------------------------------------------------------------------------
+Labeled options are options whose value can be preceded by a label assignment.
+
+There are two kind of labeled options:
+* input labeled options, referring to input files, and
+* output labeled options, referring to output files.
+
+For instance, '--shape/-s' is an input labeled option. It can be used:
+* unlabeled: '--shape 8x10'
+* labeled: '--shape i0=8x10'
+
+When used unlabeled, the shape will apply to all the input filenames that do not
+have a labeled shape option.
+On the other hand, when used labeled, it applies only to the input filename that
+has the same label.
+If multiple unlabeled --shape/-s options are passed, they are applied to the
+corresponding input files: the first unlabeled option to the first input file,
+the second unlabeled option to the second file, and so on.
+
+For instance:
+
+* 'cubist -i a.raw -i b.raw -c i.raw -s 8x10 ...': the shape 8x10 is assigned to
+  all the input files.
+* 'cubist -i a.raw -i b.raw -c i.raw -s 8x10 -s i1=8x20x10 ...': the shape 8x10
+  is assigned to 'a.raw' and 'c.raw', since 'b.raw' has a labeled shape option, so
+  its shape is 8x20x10;
+* 'cubist -i a.raw -i b.raw -c i.raw -s 8x10 -s 8x20x10 ...': in this case,
+  - 'a.raw' has shape 8x10;
+  - 'b.raw' and 'c.raw' have shape 8x20x10.
+
+The same applies to output labeled options.
+""")
+        sys.exit(0)
 
     if args.help_dtypes:
         log.PRINT("""\
@@ -489,6 +549,9 @@ These labels can be used to
   'i0' refers to the cube read from the first input filename, after the
   extractor has been applied (indeed extractors are applied just during the
   file loading).
+
+See --help-labeled-options/-ho for more information about options referring to
+labeled files.
 
 You can change the name of the label referring to a cube; simply put the
 label before the filename, separated by '=': so, the option '-i a=a_8x10.raw'
