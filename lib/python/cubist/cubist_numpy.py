@@ -17,8 +17,8 @@
 
 __all__ = ['linear_cube', 'random_cube', 'fill_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
-           'cube_not_equals', 'num_not_equals', 'not_equals',
-           'cube_equals', 'num_equals', 'equals']
+           'not_equals_cube', 'not_equals_num', 'not_equals',
+           'equals_cube', 'equals_num', 'equals']
 
 import numpy as np
 
@@ -73,46 +73,46 @@ def fill_cube(shape, value=0.0):
         cube.fill(value)
     return cube.reshape(shape.shape())
 
-def cube_not_equals(cube_0, cube_1, tolerance=0.0):
-    """cube_not_equals(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
+def not_equals_cube(cube_0, cube_1, tolerance=0.0):
+    """not_equals_cube(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
            cube_0 != cube_1 within the given tolerance, 0.0 elsewhere
     """
     c = (np.abs(cube_0 - cube_1) > tolerance).astype(cube_0.dtype)
     return c
 
-def num_not_equals(cube_0, cube_1, tolerance=0.0):
-    """num_not_equals(cube_0, cube_1, tolerance=0.0) -> the number of elements
+def not_equals_num(cube_0, cube_1, tolerance=0.0):
+    """not_equals_num(cube_0, cube_1, tolerance=0.0) -> the number of elements
            that are != within the given tolerance
     """
-    c = np.count_nonzero(cube_not_equals(cube_0, cube_1, tolerance))
+    c = np.count_nonzero(not_equals_cube(cube_0, cube_1, tolerance))
     return c
 
-def cube_equals(cube_0, cube_1, tolerance=0.0):
-    """cube_not_equals(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
+def equals_cube(cube_0, cube_1, tolerance=0.0):
+    """not_equals_cube(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
            cube_0 == cube_1 within the given tolerance, 0.0 elsewhere
     """
     c = (np.abs(cube_0 - cube_1) <= tolerance).astype(cube_0.dtype)
     return c
 
-def num_equals(cube_0, cube_1, tolerance=0.0):
+def equals_num(cube_0, cube_1, tolerance=0.0):
     """num__equals(cube_0, cube_1, tolerance=0.0) -> the number of elements
            that are == within the given tolerance
     """
-    c = np.count_nonzero(cube_equals(cube_0, cube_1, tolerance))
+    c = np.count_nonzero(equals_cube(cube_0, cube_1, tolerance))
     return c
 
 def not_equals(cube_0, cube_1, tolerance=0.0):
     """not_equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1
            within the given tolerance, False otherwise
     """
-    return num_not_equals(cube_0, cube_1, tolerance) != 0
+    return not_equals_num(cube_0, cube_1, tolerance) != 0
 
 
 def equals(cube_0, cube_1, tolerance=0.0):
     """equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1
            within the given tolerance, False otherwise
     """
-    return num_equals(cube_0, cube_1, tolerance) != 0
+    return equals_num(cube_0, cube_1, tolerance) != 0
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_count):
