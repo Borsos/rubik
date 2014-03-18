@@ -1,38 +1,78 @@
 #!/bin/bash
 
+PROGNAME=$(basename $0)
 TESTING_DIR=$(dirname $0)
 TESTING_DIR=$( cd $TESTING_DIR && pwd )
 
+## Loading library
+source $TESTING_DIR/test.sh
+
 TEMPROOT="$PWD/tmp_test_cubist.$$"
 TEMPDIR=""
-EMPTY=" "
 TESTS="$EMPTY"
-CUBIST_OPTIONS=""
+
+
+function print_help {
+    echo "Usage: ${PROGNAME} [options] [-- [cubist options]]"
+    cat << EOFHLP
+[options]
+    --tmpdir, -t TEMPDIR        set tmp dir to TEMPDIR
+    --list-tests, -l            list available tests
+    --test, -t TEST             execute test TEST
+    --pass OPTION               pass OPTION to cubist
+    --help, -h                  show this help
+EOFHLP
+}
+
+END_OF_OPTIONS=false
 while [[ ${#@} -ne 0 ]] ; do
     option="$1"
     shift 1
-    case "$option" in
-        --tmpdir|-t)
-            TEMPDIR="$1"
-            shift 1
-            ;;
-        --test|-T)
-            TESTS="${TESTS}$1 "
-            shift 1
-            ;;
-        --pass)
-            CUBIST_OPTIONS="${CUBIST_OPTIONS}'$1' "
-            shift 1
-            ;;
-        --help|-h)
-            print_help
-            ;;
-        *)
-            CUBIST_OPTIONS="${CUBIST_OPTIONS}'$option' "
-            echo "WRN: passing option '$option' to cubist"
-            #exit 1
-            ;;
-    esac
+    if $END_OF_OPTIONS ; then
+        add_cubist_option "'$option'"
+    else
+        case "$option" in
+            --)
+                END_OF_OPTIONS=true
+                ;;
+            --tmpdir|-t)
+                TEMPDIR="$1"
+                shift 1
+                ;;
+            --list-tests|-l)
+                for test in $AVAILABLE_TESTS ; do
+                    echo "  o $test"
+                done
+                exit 0
+                ;;
+            --test|-T)
+                typeset pattern="$1"
+                typeset -i matches=0
+                for _test in get_matching_tests "$pattern" ; do
+                    TESTS="${TESTS}${_test} "
+                    matches=$(( $matches + 1 ))
+                done
+                if [[ $matches == 0 ]] ; then
+                    echo "ERR: ${pattern} does not match any available test" 1>&2
+                    exit 1
+                fi
+                shift 1
+                ;;
+            --pass)
+                add_cubist_option "'$1'"
+                shift 1
+                ;;
+            --help|-h)
+                print_help
+                exit 0
+                ;;
+            *)
+                echo "WRN: passing option '$option' to cubist"
+                add_cubist_option "'$option'"
+                #exit 1
+                ;;
+        esac
+    fi
 done
 
 if [[ "$TEMPDIR" == "" ]] ; then
@@ -43,11 +83,8 @@ if [[ "$TEMPDIR" == "" ]] ; then
 fi
 
 if [[ "$TESTS" == "$EMPTY" ]] ; then
-    TESTS=" std "
+    TESTS="$AVAILABLE_TESTS"
 fi
-
-## Loading library
-source $TESTING_DIR/test.sh
 
 ## setup
 echo "== TEMPDIR=$TEMPDIR"
@@ -60,7 +97,7 @@ cd $TEMPDIR
 ## Tests
 for test_name in $TESTS ; do
     set_test_name ${test_name}
-    test_sh="$TESTING_DIR/tests-${test_name}.sh"
+    test_sh=$(get_test_file $test_name)
     if [[ ! -f "$test_sh" ]] ; then
         echo "ERR: missing test '${test_name}': no such file '${test_sh}'" 1>&2
         exit 1

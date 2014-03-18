@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EMPTY=" "
+
 function prex {
     typeset    _command="$1"
     typeset -i _returncode
@@ -7,6 +9,33 @@ function prex {
     eval "$_command" ; _returncode=$?
     echo "<<< $_command [${_returncode}]" 1>&2
     return $_returncode
+}
+
+function get_matching_tests {
+    typeset _pattern="$1"
+    typeset _tests=" "
+    typeset _test
+    typeset _filename
+    for _filename in $(get_test_file "$_pattern") ; do
+        _test=$(basename "$_filename" | sed 's/\.sh$//g')
+        _tests="$_tests$_test "
+    done
+    echo "$_tests"
+}
+
+function get_test_file {
+    typeset _test="$1"
+    echo "$TESTING_DIR/tests/${_test}.sh"
+}
+
+AVAILABLE_TESTS=$EMPTY
+for _test in $( get_matching_tests '*' ) ; do
+    AVAILABLE_TESTS="$AVAILABLE_TESTS$_test "
+done
+
+CUBIST_OPTIONS=" "
+function add_cubist_option {
+    CUBIST_OPTIONS="$CUBIST_OPTIONS$1 "
 }
 
 TEST_NAME="undefined"
