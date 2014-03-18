@@ -15,9 +15,12 @@
 # limitations under the License.
 #
 
+import os
+import shlex
 import collections
 
 import numpy as np
+
 
 from .errors import CubistError
 from .units import Memory
@@ -45,6 +48,8 @@ DEFAULT_OPTIMIZED_MIN_COUNT = 100000
 
 DEFAULT_CLOBBER = True
 
+CUBIST_OPTIONS = shlex.split(os.environ.get('CUBIST_OPTIONS', ''))
+    
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
 	("int_",	"Default integer type (same as C long; normally either int64 or int32)"),

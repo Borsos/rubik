@@ -398,8 +398,9 @@ Options to show help on specific topics """)
         default=False,
         help="help about splitting dimensions")
 
+    args = conf.CUBIST_OPTIONS + sys.argv[1:]
     try:
-        args = parser.parse_args()
+        args = parser.parse_args(args)
     except Exception as err:
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
         sys.exit(1)
