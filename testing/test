@@ -48,7 +48,7 @@ while [[ ${#@} -ne 0 ]] ; do
             --test|-T)
                 typeset pattern="$1"
                 typeset -i matches=0
-                for _test in get_matching_tests "$pattern" ; do
+                for _test in $(get_matching_tests "$pattern") ; do
                     TESTS="${TESTS}${_test} "
                     matches=$(( $matches + 1 ))
                 done

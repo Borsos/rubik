@@ -8,17 +8,49 @@ Y_INDICES=$(get_indices $Y)
 typeset -i Z=30
 Z_INDICES=$(get_indices $Z)
 typeset -i XYZ=$(( $X * $Y * $Z ))
+typeset -i H=501
+H_INDICES=$(get_indices $H)
+typeset -i XYHZ=$(( $XYZ * $H ))
 
 typeset -i bytes_float16=2
 typeset -i bytes_float32=4
 typeset -i bytes_float64=8
 
+typeset CONST_VALUE=7.0
+
 typeset -i RANDOM_SEED=100
+
 add_cubist_option "--random-seed $RANDOM_SEED"
 
-test_prex "cubist -e 'cnp.random_cube(\"10x20x30\")' -o r_10x20x30.raw"
-check_file_exists_and_has_size r_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
+test_prex "cubist -e 'cnp.random_cube(\"${X}x${Y}x${Z}\")' -o im_${X}x${Y}x${Z}.raw"
+check_file_exists_and_has_size im_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
 
-test_prex "cubist -e 'cnp.random_cube(\"10x20x30\")' -o rtmp_{shape}.{format}"
+test_prex "cubist -e 'cnp.random_cube(\"${X}x${Y}x${Z}\")' -o rtmp_{shape}.{format}"
 check_file_exists_and_has_size rtmp_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
-check_files_are_equal r_${X}x${Y}x${Z}.raw rtmp_${X}x${Y}x${Z}.raw
+check_files_are_equal im_${X}x${Y}x${Z}.raw rtmp_${X}x${Y}x${Z}.raw
+
+test_prex "cubist -e 'cnp.fill_cube(\"${X}x${Y}x${Z}\", value=$CONST_VALUE)' -o c_{shape}.{format}"
+check_file_exists_and_has_size c_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
+
+test_prex "cubist -i c_{shape}.{format} -s ${X}x${Y}x${Z} -e 'np.sum(i0) - ( $X * $Y * $Z * $CONST_VALUE )' -P" > c.out
+check_file_exists_and_has_content c.out 0.0
+
+test_prex "cubist -e 'cnp.linear_cube(\"${X}x${Y}x${Z}\", start=2.0)' -o l_{shape}.{format}"
+check_file_exists_and_has_size l_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
+
+test_prex "cubist -e 'np.array([[[k for z in range(${Z})] for j in range(${Y})] for k in range(${X})])' -o cp_{shape}.{format}"
+check_file_exists_and_has_size cp_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
+
+test_prex "cubist -e 'cnp.random_cube(\"${X}x${Y}x${H}x${Z}\")' -o og_{shape}.{format}"
+check_file_exists_and_has_size og_${X}x${Y}x${H}x${Z}.raw $(( $XYHZ * ${bytes_float32} ))
+
+Hstart=201
+Hincr=10
+Hnum=11
+Hstop=$(( $Hstart + ( $Hincr * $H_num ) + 1 ))
+test_prex "cubist -i og_{shape}.{format} -s ${X}x${Y}x${H}x${Z} -x :x:x${Hstart}:${Hstop}:${Hincr}x: -o og_h{d2}_{shape}.{format} --split 2"
+typeset -i i=0
+while [[ $i -lt $Hnum ]] ; do
+    check_file_exists_and_has_size og_h${i}_${X}x${Y}x${Z}.raw $(( $XYZ * $bytes_float32 ))
+    i=$(( $i + 1 ))
+done

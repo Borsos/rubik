@@ -91,11 +91,29 @@ function check_file_has_size {
     fi
 }
 
+function check_file_has_content {
+    typeset _filename="$1"
+    typeset _filecontent="$2"
+    typeset _content=$(cat "$_filename" 2>&1)
+    if [[ $_filecontent == "$_content" ]] ; then
+        echo ".... OK, $_filename has content <${_filecontent}>"
+    else
+        die "file $_filename has content <${_content}> != expected content <${_filecontent}>"
+    fi
+}
+
 function check_file_exists_and_has_size {
     typeset _filename="$1"
     typeset _filesize="$2"
     check_file_exists "$_filename"
     check_file_has_size "$_filename" "$_filesize"
+}
+
+function check_file_exists_and_has_content {
+    typeset _filename="$1"
+    typeset _filecontent="$2"
+    check_file_exists "$_filename"
+    check_file_has_content "$_filename" "$_filecontent"
 }
 
 function check_files_are_equal {
