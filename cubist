@@ -24,7 +24,6 @@ else:
     PY3 = True
 
 def _create_cubist(logger, args):
-    #print args.memory_limit, args.memory_limit.get_bytes()
     cubist = Cubist(
             dtype=args.dtype,
             logger=logger,
@@ -44,7 +43,7 @@ def _create_cubist(logger, args):
             output_text_converters=args.output_text_converters,
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
             read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
-            optimized_min_count=args.optimized_min_count,
+            optimized_min_size=args.optimized_min_size,
             memory_limit=args.memory_limit,
             split_dimensions=args.split_dimensions,
             clobber=args.clobber,
@@ -150,12 +149,12 @@ Global options""")
         default=conf.DEFAULT_READ_MODE,
         help="safe read mode")
 
-    global_group.add_argument("--optimized-min-count",
-        metavar="C",
-        dest="optimized_min_count",
-        type=int,
-        default=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
-        help="switch from optimized to safe read mode when reading less than C elements (a huge value is equivalent to --safe)")
+    global_group.add_argument("--optimized-min-size",
+        metavar="S",
+        dest="optimized_min_size",
+        type=Memory,
+        default=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
+        help="switch from optimized to safe read mode when reading less than C bytes (a huge value is equivalent to --safe)")
 
     global_group.add_argument("--memory-limit", "-m",
         metavar="L[units]",
