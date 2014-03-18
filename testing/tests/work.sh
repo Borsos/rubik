@@ -32,7 +32,7 @@ check_files_are_equal im_${X}x${Y}x${Z}.raw rtmp_${X}x${Y}x${Z}.raw
 test_prex "cubist -e 'cnp.fill_cube(\"${X}x${Y}x${Z}\", value=$CONST_VALUE)' -o c_{shape}.{format}"
 check_file_exists_and_has_size c_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
 
-test_prex "cubist -i c_{shape}.{format} -s ${X}x${Y}x${Z} -e 'np.sum(i0) - ( $X * $Y * $Z * $CONST_VALUE )' -P" > c.out
+test_prex "cubist -i c_{shape}.{format} -s ${X}x${Y}x${Z} -e 'np.sum(i0) - ( $X * $Y * $Z * $CONST_VALUE )' -P > c.out"
 check_file_exists_and_has_content c.out 0.0
 
 test_prex "cubist -e 'cnp.linear_cube(\"${X}x${Y}x${Z}\", start=2.0)' -o l_{shape}.{format}"

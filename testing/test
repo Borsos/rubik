@@ -107,8 +107,13 @@ for test_name in $TESTS ; do
 ### TEST $test_name
 ###
 EOFCAT
-    {
-        source "$test_sh" || exit $?
-    } 2>&1 | tee "${test_name}.log"
+    source "$test_sh" 
 done
+
+if [[ $ERRORS -gt 0 ]] ; then
+    echo "ERR: $ERRORS errors" 1>&2
+else
+    echo "Ok, 0 errors"
+fi
+exit $ERRORS
 

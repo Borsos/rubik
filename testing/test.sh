@@ -39,24 +39,31 @@ function add_cubist_option {
 }
 
 TEST_NAME="undefined"
+typeset -i TEST_INDEX=0
 function set_test_name {
     TEST_NAME="$1"
+    TEST_INDEX=0
 }
 
-typeset -i INDEX=0
 function test_prex {
     typeset    _command="$1 $ADD_CUBIST_OPTIONS"
-    echo "$_command" > ${TEST_NAME}.command.${INDEX}
-    INDEX=$(( $INDEX + 1 ))
+    echo "$_command" > ${TEST_NAME}.${TEST_INDEX}.command
+    TEST_INDEX=$(( $TEST_INDEX + 1 ))
     typeset -i _returncode
-    prex "$_command" ; _returncode=$?
+    prex "$_command" 1> ${TEST_NAME}.${TEST_INDEX}.eo 2>&1 ; _returncode=$?
     return $_returncode
+}
+
+typeset -i ERRORS=0
+function set_error {
+    ERRORS=$(( $ERRORS + 1 ))
 }
 
 function die {
     typeset    _message="$1"
     typeset -i _exitcode=${2:-1}
     echo "ERR: $_message [exiting ${_exitcode}]" 1>&2
+    set_error
     exit $_exitcode
 }
 
