@@ -44,10 +44,12 @@ check_file_exists_and_has_size cp_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32}
 test_prex "cubist -e 'cnp.random_cube(\"${X}x${Y}x${H}x${Z}\")' -o og_{shape}.{format}"
 check_file_exists_and_has_size og_${X}x${Y}x${H}x${Z}.raw $(( $XYHZ * ${bytes_float32} ))
 
-Hstart=201
+test_prex "cubist -i og_{shape}.{format} -s 10x20x501x30 -x :x:x250x: -o og_h250_{shape}.{format}"
+check_file_exists_and_has_size og_h250_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
+
 Hincr=10
 Hnum=11
-Hstop=$(( $Hstart + ( $Hincr * $H_num ) + 1 ))
+Hstop=$(( $Hstart + ( $Hincr * $Hnum ) + 1 ))
 test_prex "cubist -i og_{shape}.{format} -s ${X}x${Y}x${H}x${Z} -x :x:x${Hstart}:${Hstop}:${Hincr}x: -o og_h{d2}_{shape}.{format} --split 2"
 typeset -i i=0
 while [[ $i -lt $Hnum ]] ; do
