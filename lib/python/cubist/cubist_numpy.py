@@ -72,26 +72,44 @@ def fill_cube(shape, value=0.0):
         cube.fill(value)
     return cube.reshape(shape.shape())
 
-def num_not_equals(cube_0, cube_1, tolerance=0.0):
-    """num_not_equals(cube_0, cube_1, tolerance=0.0) -> the number of elements that are != within the given tolerance
+def cube_not_equals(cube_0, cube_1, tolerance=0.0):
+    """cube_not_equals(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
+           cube_0 != cube_1 within the given tolerance, 0.0 elsewhere
     """
-    c = np.count_nonzero(np.abs(cube_0 - cube_1) > tolerance)
+    c = (np.abs(cube_0 - cube_1) > tolerance).astype(cube_0.dtype)
+    return c
+
+def num_not_equals(cube_0, cube_1, tolerance=0.0):
+    """num_not_equals(cube_0, cube_1, tolerance=0.0) -> the number of elements
+           that are != within the given tolerance
+    """
+    c = np.count_nonzero(cube_not_equals(cube_0, cube_1, tolerance))
+    return c
+
+def cube_equals(cube_0, cube_1, tolerance=0.0):
+    """cube_not_equals(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
+           cube_0 == cube_1 within the given tolerance, 0.0 elsewhere
+    """
+    c = (np.abs(cube_0 - cube_1) <= tolerance).astype(cube_0.dtype)
     return c
 
 def num_equals(cube_0, cube_1, tolerance=0.0):
-    """num__equals(cube_0, cube_1, tolerance=0.0) -> the number of elements that are == within the given tolerance
+    """num__equals(cube_0, cube_1, tolerance=0.0) -> the number of elements
+           that are == within the given tolerance
     """
-    c = np.count_nonzero(np.abs(cube_0 - cube_1) <= tolerance)
+    c = np.count_nonzero(cube_equals(cube_0, cube_1, tolerance))
     return c
 
 def not_equals(cube_0, cube_1, tolerance=0.0):
-    """not_equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1 within the given tolerance
+    """not_equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1
+           within the given tolerance, False otherwise
     """
     return num_not_equals(cube_0, cube_1, tolerance) != 0
 
 
 def equals(cube_0, cube_1, tolerance=0.0):
-    """equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1 within the given tolerance
+    """equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1
+           within the given tolerance, False otherwise
     """
     return num_equals(cube_0, cube_1, tolerance) != 0
 
