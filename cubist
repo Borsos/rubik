@@ -189,6 +189,11 @@ Global options""")
         default=[],
         help="add a variable definition (--help-user-defined-variables/-hV for more information)")
 
+    global_group.add_argument("--random-seed", "-r",
+        type=int,
+        default=None,
+        help="set the random seed")
+
     input_group = parser.add_argument_group(
         "input options",
         description="""\
@@ -611,6 +616,10 @@ Three file formats are available:
 
     logger = log.set_logger(args.verbose_level)
     
+    if args.random_seed is not None:
+        np.random.seed(args.random_seed)
+        random.seed(args.random_seed)
+
     return_code = 0
     try:
         return_code = args.function(logger, args)
