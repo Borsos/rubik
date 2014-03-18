@@ -15,8 +15,10 @@
 # limitations under the License.
 #
 
+from collections import OrderedDict
+
 class VariableDefinition(object):
-    __variables__ = {}
+    __variables__ = OrderedDict()
     def __init__(self, init):
         if isinstance(init, str):
             name, value = self._from_string(init)
