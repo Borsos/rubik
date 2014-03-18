@@ -24,7 +24,9 @@ class UnitsValue(object):
     __units__ = {}
     __default_units__ = None
     def __init__(self, init, default_units=None):
-        if isinstance(init, (int, float)):
+        if isinstance(init, self.__class__):
+            value, units = init._value, init._units
+        elif isinstance(init, (int, float)):
             value = init
             units = None
         elif isinstance(init, str):
