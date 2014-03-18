@@ -32,27 +32,25 @@ def set_default_dtype(dtype):
     global DEFAULT_DTYPE
     DEFAULT_TYPE = dtype
 
-def _shape_count(shape):
-    if shape:
-        count = 1
-        for dim in shape:
-            count *= dim
-    else:
-        count = 0
-    return count
-
 def linear_cube(shape, start=0.0, increment=1.0):
-    """linear_cube(shape, start=0.0, increment=1.0) -> create a cube with the given shape,
-       with elements in linear sequence, starting from 'start', with increment 'increment'
+    """linear_cube(shape, start=0.0, increment=1.0) -> create a cube with the
+       given shape, with elements in linear sequence, starting from 'start',
+       with increment 'increment'.
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
     """
-    count = _shape_count(shape)
-    return np.array(np.linspace(start, start + increment * (count - 1), count), dtype=DEFAULT_DTYPE).reshape(shape)
+    shape = Shape(shape)
+    count = shape.count()
+    return np.array(np.linspace(start, start + increment * (count - 1), count), dtype=DEFAULT_DTYPE).reshape(shape.shape())
 
 def random_cube(shape):
     """random_cube(shape) -> create a cube with random elements
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
     """
-    count = _shape_count(shape)
-    cube = np.random.rand(count).reshape(shape)
+    shape = Shape(shape)
+    count = shape.count()
+    cube = np.random.rand(count).reshape(shape.shape())
     if cube.dtype != DEFAULT_DTYPE:
         return cube.astype(DEFAULT_DTYPE)
     else:
@@ -60,8 +58,11 @@ def random_cube(shape):
 
 def fill_cube(shape, value=0.0):
     """fill_cube(shape, value=0.0) -> create a cube with all elements == 'value'
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
     """
-    count = _shape_count(shape)
+    shape = Shape(shape)
+    count = shape.count()
     if value == 0.0:
         cube = np.zeros(count, dtype=DEFAULT_DTYPE)
     elif value == 1.0:
@@ -69,7 +70,7 @@ def fill_cube(shape, value=0.0):
     else:
         cube = np.empty(count, dtype=DEFAULT_DTYPE)
         cube.fill(value)
-    return cube.reshape(shape)
+    return cube.reshape(shape.shape())
 
 def num_not_equals(cube_0, cube_1, tolerance=0.0):
     """num_not_equals(cube_0, cube_1, tolerance=0.0) -> the number of elements that are != within the given tolerance
