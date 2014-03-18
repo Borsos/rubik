@@ -33,9 +33,9 @@ for _test in $( get_matching_tests '*' ) ; do
     AVAILABLE_TESTS="$AVAILABLE_TESTS$_test "
 done
 
-CUBIST_OPTIONS=" "
+ADD_CUBIST_OPTIONS=" "
 function add_cubist_option {
-    CUBIST_OPTIONS="$CUBIST_OPTIONS$1 "
+    ADD_CUBIST_OPTIONS="$ADD_CUBIST_OPTIONS$1 "
 }
 
 TEST_NAME="undefined"
@@ -45,7 +45,7 @@ function set_test_name {
 
 typeset -i INDEX=0
 function test_prex {
-    typeset    _command="$1 $CUBIST_OPTIONS"
+    typeset    _command="$1 $ADD_CUBIST_OPTIONS"
     echo "$_command" > ${TEST_NAME}.command.${INDEX}
     INDEX=$(( $INDEX + 1 ))
     typeset -i _returncode
