@@ -143,17 +143,18 @@ class Cubist(object):
 
     def _read_safe(self, input_label, input_filename):
         self.logger.debug("executing safe read...")
-        shape = self.shapes.get(input_label)
+        input_ordinal = self.input_filenames.get_ordinal(input_label)
+        shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
             raise CubistError("missing shape for filename {0}".format(input_filename))
-        input_format = self.input_formats.get(input_label)
+        input_format = self.input_formats.get(input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
-        input_dtype = self.input_dtypes.get(input_label)
+        input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        extractor = self.extractors.get(input_label)
+        extractor = self.extractors.get(input_label, input_ordinal)
         assert isinstance(input_filename, InputFilename)
         assert (extractor is None) or isinstance(extractor, Extractor)
         input_filename = input_filename.filename
@@ -173,12 +174,12 @@ class Cubist(object):
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.fromfile
-            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label)
+            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label, input_ordinal)
         elif input_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.loadtxt
-            text_delimiter = self.input_text_delimiters.get(input_label)
+            text_delimiter = self.input_text_delimiters.get(input_label, input_ordinal)
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
         else:
@@ -228,17 +229,18 @@ class Cubist(object):
 
     def _read_optimized(self, input_label, input_filename):
         self.logger.debug("executing optimized read...")
-        shape = self.shapes.get(input_label)
+        input_ordinal = self.input_filenames.get_ordinal(input_label)
+        shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
             raise CubistError("missing shape for filename {0}".format(input_filename))
-        input_format = self.input_formats.get(input_label)
+        input_format = self.input_formats.get(input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
-        input_dtype = self.input_dtypes.get(input_label)
+        input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        extractor = self.extractors.get(input_label)
+        extractor = self.extractors.get(input_label, input_ordinal)
         assert isinstance(input_filename, InputFilename)
         assert (extractor is None) or isinstance(extractor, Extractor)
         input_filename = input_filename.filename
@@ -253,10 +255,10 @@ class Cubist(object):
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
         elif input_format == conf.FILE_FORMAT_CSV:
             msg_bytes = ''
-            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label)
+            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label, input_ordinal)
         elif input_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
-            text_delimiter = self.input_text_delimiters.get(input_label)
+            text_delimiter = self.input_text_delimiters.get(input_label, input_ordinal)
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
         else:
@@ -322,10 +324,11 @@ class Cubist(object):
             self._write(cube, output_label, output_filename, dlabels=dlabels)
         
     def _write(self, cube, output_label, output_filename, dlabels=None):
-        output_format = self.output_formats.get(output_label)
+        output_ordinal = self.output_filenames.get_ordinal(output_label)
+        output_format = self.output_formats.get(output_label, output_ordinal)
         if output_format is None:
             output_format = conf.DEFAULT_FILE_FORMAT
-        output_dtype = self.output_dtypes.get(output_label)
+        output_dtype = self.output_dtypes.get(output_label, output_ordinal)
         if output_dtype is None:
             output_dtype = self.dtype
         output_dtype_bytes = self.get_dtype_bytes(output_dtype)
@@ -346,16 +349,16 @@ class Cubist(object):
         elif output_format == conf.FILE_FORMAT_CSV:
             msg_bytes = ''
             numpy_function = cube.tofile
-            numpy_function_nargs['sep'] = self.output_csv_separators.get(output_label)
+            numpy_function_nargs['sep'] = self.output_csv_separators.get(output_label, output_ordinal)
             numpy_function_pargs.append(output_filename)
         elif output_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
             numpy_function = np.savetxt
             numpy_function_pargs.append(output_filename)
             numpy_function_pargs.append(cube)
-            text_delimiter = self.output_text_delimiters.get(output_label)
-            text_newline = self.output_text_newlines.get(output_label)
-            text_converter = self.output_text_converters.get(output_label)
+            text_delimiter = self.output_text_delimiters.get(output_label, output_ordinal)
+            text_newline = self.output_text_newlines.get(output_label, output_ordinal)
+            text_converter = self.output_text_converters.get(output_label, output_ordinal)
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
             if text_newline is not None:

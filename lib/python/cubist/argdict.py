@@ -22,7 +22,7 @@ from collections import OrderedDict
 from .errors import CubistError
 
 class ArgDict(OrderedDict):
-    __re_name_split__ = re.compile("^([a-zA-Z]+\w*)\=(.*)")
+    __re_label_split__ = re.compile("^([a-zA-Z]+\w*)\=(.*)")
     __formatter__ = "o{ordinal}"
     def __init__(self, factory, formatter=None, default=None):
         OrderedDict.__init__(self)
@@ -31,21 +31,32 @@ class ArgDict(OrderedDict):
         if formatter is None:
             formatter = self.__formatter__
         self._formatter = formatter
+        self._automatic_labels = {}
+        self._ordinals = {}
 
     def add(self, value):
-        name, value = self.name_split(value)
+        label, value = self.label_split(value)
         value = self._factory(value)
-        if name is None:
+        ordinal = len(self)
+        if label is None:
             self._default = value
-            name = self._formatter.format(ordinal=len(self))
-        self[name] = value
+            label = self._formatter.format(ordinal=ordinal)
+            self._automatic_labels[ordinal] = label
+        self[label] = value
+        self._ordinals[label] = ordinal
         return self
         
-    def get(self, name):
-        if name in self:
-            return self[name]
+    def get_ordinal(self, label):
+        return self._ordinals.get(label, None)
+
+    def get(self, label, ordinal=None):
+        if label in self:
+            return self[label]
         else:
-            return self._default
+            automatic_label = self._automatic_labels.get(ordinal, None)
+            if automatic_label in self:
+                return self[automatic_label]
+        return self._default
 
     def store_function(self):
         def f_closure(self_, name):
@@ -57,13 +68,13 @@ class ArgDict(OrderedDict):
         return f_closure(self, self._factory.__name__)
 
     @classmethod
-    def name_split(cls, value):
-        m = cls.__re_name_split__.match(value)
+    def label_split(cls, value):
+        m = cls.__re_label_split__.match(value)
         if m:
-            name, value = m.groups()
+            label, value = m.groups()
         else:
-            name = None
-        return name, value
+            label = None
+        return label, value
 
 class InputArgDict(ArgDict):
     __formatter__ = 'i{ordinal}'
