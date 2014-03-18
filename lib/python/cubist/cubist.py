@@ -50,7 +50,7 @@ class Cubist(object):
             output_text_converters,
             accept_bigger_raw_files=False,
             read_mode=conf.DEFAULT_READ_MODE,
-            loop_dimensions=None,
+            split_dimensions=None,
             clobber=conf.DEFAULT_CLOBBER,
             print_cube=False,
             print_stats=False):
@@ -76,9 +76,9 @@ class Cubist(object):
         self.print_cube = print_cube
         self.print_stats = print_stats
 
-        if loop_dimensions is None:
-            loop_dimensions = ()
-        self.loop_dimensions = loop_dimensions
+        if split_dimensions is None:
+            split_dimensions = ()
+        self.split_dimensions = split_dimensions
 
         self._last_cube = None
         self.input_cubes = OrderedDict()
@@ -273,10 +273,10 @@ class Cubist(object):
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
-    def loop_over_dimensions(self, cube):
-        if self.loop_dimensions:
+    def split_over_dimensions(self, cube):
+        if self.split_dimensions:
             l = []
-            for dimension in self.loop_dimensions:
+            for dimension in self.split_dimensions:
                 if 0 <= dimension < cube.shape:
                     l.append([(dimension, i) for i in range(cube.shape[dimension])])
             get_all = slice(None, None, None)
@@ -294,7 +294,7 @@ class Cubist(object):
         
     def output(self, cube):
         useless_run = True
-        for subcube, dlabels in self.loop_over_dimensions(cube):
+        for subcube, dlabels in self.split_over_dimensions(cube):
             if self.print_cube or self.print_stats:
                 self._log_dlabels(dlabels)
             if self.print_cube:
@@ -312,7 +312,7 @@ class Cubist(object):
     def write(self, cube):
         if not self.output_filenames:
             return
-        for subcube, dlabels in self.loop_over_dimensions(cube):
+        for subcube, dlabels in self.split_over_dimensions(cube):
             self._write_cube(subcube, dlabels)
 
     def _write_cube(self, cube, dlabels=None):

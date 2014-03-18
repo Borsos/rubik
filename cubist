@@ -42,7 +42,7 @@ def _create_cubist(logger, args):
             output_text_converters=args.output_text_converters,
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
             read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
-            loop_dimensions=args.loop_dimensions,
+            split_dimensions=args.split_dimensions,
             clobber=args.clobber,
             print_cube=args.print_cube,
             print_stats=args.print_stats)
@@ -265,13 +265,13 @@ see --help-labeled-options for more information.""")
         default=False,
         help="print statistics about the result cube")
 
-    output_group.add_argument("--loop", "-l",
+    output_group.add_argument("--split", "-l",
         metavar="D",
-        dest="loop_dimensions",
+        dest="split_dimensions",
         type=int,
         action="append",
         default=[],
-        help="loop on dimension D (--help-loop/-hl for more information)")
+        help="split dimension D (--help-split/-hl for more information)")
 
     output_group.add_argument("--output-dtype", "-Ot",
         metavar="D",
@@ -369,11 +369,11 @@ Options to show help on specific topics """)
         default=False,
         help="show available keywords for filename interpolation")
 
-    help_group.add_argument("--help-loop", "-hl",
-        dest="help_loop",
+    help_group.add_argument("--help-split", "-hl",
+        dest="help_split",
         action="store_true",
         default=False,
-        help="help about loop over dimension")
+        help="help about splitting dimensions")
 
     try:
         args = parser.parse_args()
@@ -503,14 +503,14 @@ will set
 """)
         sys.exit(0)
 
-    if args.help_loop:
+    if args.help_split:
         log.PRINT("""\
-Looping over dimensions
-=======================
+Splitting dimensions
+====================
 Suppose you have a _8x4x10_ cube, and you want to write _4_ _8x10_ cubes, one
 for each index in the second dimension. The command is:
 
-$ cubist -i a_{shape}.{format} -s 8x4x10 --loop 1 -o s_{shape}.{d1}.{format} -v
+$ cubist -i a_{shape}.{format} -s 8x4x10 --split 1 -o s_{shape}.{d1}.{format} -v
 reading 320 'float32' elements (1280 bytes) from 'raw' file 'a_8x4x10.raw'...
 writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.0.raw'...
 writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.1.raw'...
@@ -518,9 +518,9 @@ writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.2.raw'...
 writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.3.raw'...
 $
 
-A loop over the four values for the second index is done when the output is
-written; the 3-D cube is slices across the second dimension, and each plane
-is saved to a different file.
+During the output phase, a loop over the four values for the second index is
+done; the 3-D cube is sliced across the second dimension, and each plane
+is saved into a different file.
 
 The 'd1' key has been added to the available keys for the output filename
 interpolation.
