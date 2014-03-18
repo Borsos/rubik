@@ -148,6 +148,8 @@ class Cubist(object):
             return
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
+        if shape is None:
+            raise CubistError("missing shape for filename {0}".format(input_filename))
         extractor = self.extractors.get(input_label, input_ordinal)
         if extractor is not None:
             count, sub_count = extractor.get_counts(shape)

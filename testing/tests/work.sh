@@ -56,3 +56,24 @@ while [[ $i -lt $Hnum ]] ; do
     check_file_exists_and_has_size og_h${i}_${X}x${Y}x${Z}.raw $(( $XYZ * $bytes_float32 ))
     i=$(( $i + 1 ))
 done
+
+## --- 2D ---
+typeset -i _x=8
+typeset -i _y=10
+test_prex "cubist -e 'cnp.linear_cube(\"$_x x $_y\")' -o l1_{shape}.{format}"
+check_file_exists_and_has_size l1_${_x}x${_y}.raw $(( $_x * $_y * ${bytes_float32} ))
+
+test_prex "cubist -e 'cnp.linear_cube(\"$_x x $_y\", start=1.0, increment=2.0)' -o l2_{shape}.{format}"
+check_file_exists_and_has_size l2_${_x}x${_y}.raw $(( $_x * $_y * ${bytes_float32} ))
+
+test_prex "cubist -i l1_{shape}.{format} -i l2_{shape}.{format} -s 8x10 -e 'cnp.equals_num(i0, i1)' -P > res.out"
+check_file_exists_and_has_content res.out 0
+
+test_prex "cubist -i l1_{shape}.{format} -i l2_{shape}.{format} -s 8x10 -e 'cnp.equals_num(i0, i1, tolerance=1.0)' -P > res.out"
+check_file_exists_and_has_content res.out 1
+
+test_prex "cubist -i l1_{shape}.{format} -i l2_{shape}.{format} -s 8x10 -e 'cnp.equals_num(i0, i1, tolerance=10.0)' -P > res.out"
+check_file_exists_and_has_content res.out 10
+
+test_prex "cubist -i l1_{shape}.{format} -i l2_{shape}.{format} -s 8x10 -e 'cnp.equals_num(i0, i1, tolerance=1e3)' -P > res.out"
+check_file_exists_and_has_content res.out 80
