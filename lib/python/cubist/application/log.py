@@ -19,9 +19,11 @@ import sys
 import logging
 import traceback
 
-def create_logger(logger_name, verbose_level):
+def create_logger(logger_name, verbose_level, stream=None):
+    if stream is None:
+        stream = sys.stderr
     logger = logging.getLogger(logger_name)
-    stream_handler = logging.StreamHandler()
+    stream_handler = logging.StreamHandler(stream=stream)
     log_level = logging.WARNING
     if verbose_level >= 2:
         log_level = logging.DEBUG
@@ -37,7 +39,7 @@ def create_logger(logger_name, verbose_level):
 
 LOGGER = None
 
-PRINT = create_logger('PRINT', 10).info
+PRINT = create_logger('PRINT', 10, stream=sys.stdout).info
 
 def set_logger(verbose_level):
     global LOGGER
