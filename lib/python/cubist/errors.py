@@ -17,3 +17,6 @@
 
 class CubistError(Exception):
     pass
+
+class CubistMemoryError(CubistError):
+    pass

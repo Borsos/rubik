@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from .application import log
 from .units import Memory
-from .errors import CubistError
+from .errors import CubistError, CubistMemoryError
 from .clip import Clip
 from .shape import Shape
 from .filename import InputFilename, OutputFilename
@@ -159,7 +159,7 @@ class Cubist(object):
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
         input_bytes = sub_count * input_dtype_bytes 
         if input_bytes > self.memory_limit_bytes:
-            raise CubistError("trying to read {0} bytes {1}, more than memory limit {2}".format(input_bytes, input_filename, self.memory_limit))
+            raise CubistMemoryError("trying to read {0} bytes, more than memory limit {1}".format(input_bytes, self.memory_limit))
 
     def _read(self, input_label, input_filename):
         self._check_memory_limit(input_label, input_filename)

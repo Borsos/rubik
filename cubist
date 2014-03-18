@@ -12,7 +12,7 @@ from cubist import conf
 from cubist.shape import Shape
 from cubist.units import Memory
 from cubist.cubist import Cubist
-from cubist.errors import CubistError
+from cubist.errors import CubistError, CubistMemoryError
 from cubist.argdict import InputArgDict, OutputArgDict
 from cubist.variable import VariableDefinition
 from cubist.filename import InputFilename, OutputFilename
@@ -634,6 +634,9 @@ Three file formats are available:
     return_code = 0
     try:
         return_code = args.function(logger, args)
+    except CubistMemoryError:
+        log.trace_error(args.trace_errors)
+        logger.error("error: the memory limit of {0} has been exceeded; you can try to increase the memory limit (--memory-limi/-m)".format(args.memory_limit))
     except:
         log.trace_error(args.trace_errors)
 
