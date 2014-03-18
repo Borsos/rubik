@@ -46,7 +46,7 @@ function set_test_name {
 typeset -i INDEX=0
 function test_prex {
     typeset    _command="$1 $CUBIST_OPTIONS"
-    echo "$_command" > test_command.${TEST_NAME}.${INDEX}
+    echo "$_command" > ${TEST_NAME}.command.${INDEX}
     INDEX=$(( $INDEX + 1 ))
     typeset -i _returncode
     prex "$_command" ; _returncode=$?

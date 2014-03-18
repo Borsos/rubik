@@ -10,6 +10,7 @@ import numpy as np
 from cubist.application import log
 from cubist import conf
 from cubist.shape import Shape
+from cubist.units import Memory
 from cubist.cubist import Cubist
 from cubist.errors import CubistError
 from cubist.argdict import InputArgDict, OutputArgDict
@@ -23,6 +24,7 @@ else:
     PY3 = True
 
 def _create_cubist(logger, args):
+    #print args.memory_limit, args.memory_limit.get_bytes()
     cubist = Cubist(
             dtype=args.dtype,
             logger=logger,
@@ -43,6 +45,7 @@ def _create_cubist(logger, args):
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
             read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
             optimized_min_count=args.optimized_min_count,
+            memory_limit=args.memory_limit,
             split_dimensions=args.split_dimensions,
             clobber=args.clobber,
             print_cube=args.print_cube,
@@ -56,9 +59,9 @@ def _read(cubist, logger, args):
         cube = cubist.evaluate_expression(expression=expression)
     else:
         if args.input_filenames is None or len(args.input_filenames) == 0:
-            raise CubistError("no input filenames")
+            logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
         elif len(args.input_filenames) == 0:
-            raise CubistError("too many input filenames")
+            logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
         cube = cubist.last_cube()
     return cube
 
@@ -153,6 +156,13 @@ Global options""")
         type=int,
         default=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
         help="switch from optimized to safe read mode when reading less than C elements (a huge value is equivalent to --safe)")
+
+    global_group.add_argument("--memory-limit", "-m",
+        metavar="L[units]",
+        dest="memory_limit",
+        type=Memory,
+        default=conf.DEFAULT_LIMIT_MEMORY,
+        help="when more than the given limit is needed for a single extracted cube, raise an error")
 
     global_group.add_argument("--dtype", "-t",
         metavar="D",

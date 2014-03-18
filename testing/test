@@ -102,6 +102,13 @@ for test_name in $TESTS ; do
         echo "ERR: missing test '${test_name}': no such file '${test_sh}'" 1>&2
         exit 1
     fi
-    source "$test_sh"
+    cat <<EOFCAT
+###
+### TEST $test_name
+###
+EOFCAT
+    {
+        source "$test_sh"
+    } 2>&1 | tee "${test_name}.log"
 done
 

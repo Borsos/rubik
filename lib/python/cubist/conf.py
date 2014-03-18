@@ -20,6 +20,7 @@ import collections
 import numpy as np
 
 from .errors import CubistError
+from .units import Memory
 
 VERSION = "1.0.11"
 
@@ -32,6 +33,8 @@ FILE_FORMAT_CSV_SEPARATOR = ','
 FILE_FORMAT_TEXT_DELIMITER = None
 FILE_FORMAT_TEXT_NEWLINE = None
 FILE_FORMAT_TEXT_CONVERTER = None
+
+DEFAULT_LIMIT_MEMORY = "1gb"
 
 READ_MODE_SAFE = 'safe'
 READ_MODE_OPTIMIZED = 'optimized'

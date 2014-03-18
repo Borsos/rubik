@@ -21,6 +21,7 @@ import itertools
 from collections import OrderedDict
 
 from .application import log
+from .units import Memory
 from .errors import CubistError
 from .clip import Clip
 from .shape import Shape
@@ -51,6 +52,7 @@ class Cubist(object):
             accept_bigger_raw_files=False,
             read_mode=conf.DEFAULT_READ_MODE,
             optimized_min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
+            memory_limit=conf.DEFAULT_LIMIT_MEMORY,
             split_dimensions=None,
             clobber=conf.DEFAULT_CLOBBER,
             print_cube=False,
@@ -64,15 +66,12 @@ class Cubist(object):
         self.output_text_newlines = output_text_newlines
         self.output_text_converters = output_text_converters
         self.accept_bigger_raw_files = accept_bigger_raw_files
+
         self.read_mode = read_mode
-        if read_mode == conf.READ_MODE_SAFE:
-            self._read = self._read_safe
-        elif self.read_mode == conf.READ_MODE_OPTIMIZED:
-            self._read = self._read_optimized
-        else:
-            raise CubistError("invalid read mode {0!r}".format(read_mode))
 
         self.optimized_min_count = optimized_min_count
+        self.memory_limit = memory_limit
+        self.memory_limit_bytes = memory_limit.get_bytes()
 
         self.clobber = clobber
 
@@ -143,6 +142,33 @@ class Cubist(object):
             return
         for input_label, input_filename in self.input_filenames.items():
             self._last_cube = self._read(input_label, input_filename)
+
+    def _check_memory_limit(self, input_label, input_filename):
+        if self.memory_limit_bytes <= 0:
+            return
+        input_ordinal = self.input_filenames.get_ordinal(input_label)
+        shape = self.shapes.get(input_label, input_ordinal)
+        extractor = self.extractors.get(input_label, input_ordinal)
+        if extractor is not None:
+            count, sub_count = extractor.get_counts(shape)
+        else:
+            sub_count = shape.count()
+        input_dtype = self.input_dtypes.get(input_label, input_ordinal)
+        if input_dtype is None:
+            input_dtype = self.dtype
+        input_dtype_bytes = self.get_dtype_bytes(input_dtype)
+        input_bytes = sub_count * input_dtype_bytes 
+        if input_bytes > self.memory_limit_bytes:
+            raise CubistError("trying to read {0} bytes {1}, more than memory limit {2}".format(input_bytes, input_filename, self.memory_limit))
+
+    def _read(self, input_label, input_filename):
+        self._check_memory_limit(input_label, input_filename)
+        if self.read_mode == conf.READ_MODE_SAFE:
+            return self._read_safe(input_label, input_filename)
+        elif self.read_mode == conf.READ_MODE_OPTIMIZED:
+            return self._read_optimized(input_label, input_filename)
+        else:
+            raise CubistError("invalid read mode {0!r}".format(self.read_mode))
 
     def _read_safe(self, input_label, input_filename):
         self.logger.debug("executing safe read...")
