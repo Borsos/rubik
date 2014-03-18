@@ -42,6 +42,7 @@ def _create_cubist(logger, args):
             output_text_converters=args.output_text_converters,
             accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
             read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
+            optimized_min_count=args.optimized_min_count,
             split_dimensions=args.split_dimensions,
             clobber=args.clobber,
             print_cube=args.print_cube,
@@ -145,6 +146,13 @@ Global options""")
         const=conf.READ_MODE_OPTIMIZED,
         default=conf.DEFAULT_READ_MODE,
         help="safe read mode")
+
+    global_group.add_argument("--optimized-min-count",
+        metavar="C",
+        dest="optimized_min_count",
+        type=int,
+        default=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
+        help="switch from optimized to safe read mode when reading less than C elements (a huge value is equivalent to --safe)")
 
     global_group.add_argument("--dtype", "-t",
         metavar="D",

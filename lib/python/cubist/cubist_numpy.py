@@ -114,7 +114,7 @@ def equals(cube_0, cube_1, tolerance=0.0):
     return num_equals(cube_0, cube_1, tolerance) != 0
 
 class ExtractReader(object):
-    def __init__(self, dtype, shape, extractor):
+    def __init__(self, dtype, shape, extractor, min_count):
         self.dtype = dtype
         self.dtype_bytes = dtype().itemsize
         if not isinstance(shape, Shape):
@@ -124,6 +124,7 @@ class ExtractReader(object):
             if not isinstance(extractor, Extractor):
                 extractor = Extractor(extractor)
         self.extractor = extractor
+        self.min_count = min_count
 
     def read(self, input_file):
         if self.extractor is None:
@@ -138,7 +139,9 @@ class ExtractReader(object):
             return self.read_data(input_file, shape, extractor)
         else:
             count, sub_count = extractor.get_counts(shape)
-            if sub_count < count:
+            #print "count={c}, sub_count={sc}, self.min_count={mc}, extractor={e}, shape={s}".format(c=count, sc=sub_count, mc=self.min_count, e=extractor, s=shape)
+            if sub_count < count and count > self.min_count:
+                #print 'reading optimized {sc} from {c}'.format(sc=sub_count, c=count)
                 dim0, subshape = shape.split_first()
                 index_picker0, subextractor = extractor.split_first()
                 index_picker0_value = index_picker0.value()
@@ -161,6 +164,7 @@ class ExtractReader(object):
                     self.skip_data(input_file, dim0 - index_picker0_value - 1, subshape)
                     return cube
             else:
+                #print 'reading safe {sc} from {c}'.format(sc=sub_count, c=count)
                 return self.read_data(input_file, shape, extractor)
 
     def read_data(self, input_file, shape, extractor=None):
@@ -171,8 +175,8 @@ class ExtractReader(object):
             self.read_data(input_file, shape, None)
 
 class ExtractRawCsvReader(ExtractReader):
-    def __init__(self, dtype, shape, extractor, sep):
-        ExtractReader.__init__(self, dtype, shape, extractor)
+    def __init__(self, dtype, shape, extractor, min_count, sep):
+        ExtractReader.__init__(self, dtype, shape, extractor=extractor, min_count=min_count)
         self.sep = sep
 
     def read_data(self, input_file, shape, extractor=None):
@@ -182,8 +186,8 @@ class ExtractRawCsvReader(ExtractReader):
         return cube
 
 class ExtractRawReader(ExtractRawCsvReader):
-    def __init__(self, dtype, shape, extractor):
-        ExtractRawCsvReader.__init__(self, dtype, shape, extractor, sep='')
+    def __init__(self, dtype, shape, extractor, min_count):
+        ExtractRawCsvReader.__init__(self, dtype, shape, extractor=extractor, min_count=min_count, sep='')
     
     def skip_data(self, input_file, num_indices, shape):
         if num_indices > 0:
@@ -192,12 +196,12 @@ class ExtractRawReader(ExtractRawCsvReader):
             input_file.seek(skip_bytes, 1)
 
 class ExtractCsvReader(ExtractRawCsvReader):
-    def __init__(self, dtype, shape, extractor, sep=conf.FILE_FORMAT_CSV_SEPARATOR):
-        ExtractRawCsvReader.__init__(self, dtype, shape, extractor, sep=sep)
+    def __init__(self, dtype, shape, extractor, min_count, sep=conf.FILE_FORMAT_CSV_SEPARATOR):
+        ExtractRawCsvReader.__init__(self, dtype, shape, extractor=extractor, min_count=min_count, sep=sep)
     
 class ExtractTextReader(ExtractReader):
-    def __init__(self, dtype, shape, extractor, delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
-        ExtractReader.__init__(self, dtype, shape, extractor)
+    def __init__(self, dtype, shape, extractor, min_count, delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
+        ExtractReader.__init__(self, dtype, shape, extractor=extractor, min_count=min_count)
         self.delimiter = delimiter
 
     def read(self, input_file):
@@ -210,14 +214,17 @@ class ExtractTextReader(ExtractReader):
             cube = cube[extractor.index_pickers()]
         return cube
 
-def fromfile_generic(ftype, f, dtype, shape, extractor=None, **n_args):
-    """fromfile_generic(ftype, f, dtype, shape, extractor=None) -> read a cube from raw file f with given shape and extractor
+def fromfile_generic(ftype, f, dtype, shape, extractor=None, min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT, **n_args):
+    """fromfile_generic(ftype, f, dtype, shape,
+           extractor=None, min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT) ->
+       read a cube from raw file f with given shape and extractor
     ftype can be 'raw', 'text', 'csv'
     f can be a  str or a file object
+    when reading less than min_count elements, switch to the safe algorithm
     """
     if isinstance(f, str):
         with open(f, 'rb') as f_in:
-            return fromfile_generic(ftype, f_in, dtype, shape, extractor, **n_args)
+            return fromfile_generic(ftype, f_in, dtype, shape, extractor=extractor, min_count=min_count, **n_args)
     else:
         if ftype == conf.FILE_FORMAT_RAW:
             ereader_class = ExtractRawReader
@@ -227,24 +234,30 @@ def fromfile_generic(ftype, f, dtype, shape, extractor=None, **n_args):
             ereader_class = ExtractCsvReader
         else:
             raise CubistError("invalid file type {0}".format(ftype))
-        ereader = ereader_class(dtype=dtype, shape=shape, extractor=extractor, **n_args)
+        ereader = ereader_class(dtype=dtype, shape=shape, extractor=extractor, min_count=min_count, **n_args)
         return ereader.read(f)
 
-def fromfile_raw(f, dtype, shape, extractor=None):
-    """fromfile_raw(f, dtype, shape, extractor=None) -> read a cube from raw file f with given shape and extractor
+def fromfile_raw(f, dtype, shape, extractor=None,
+        min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT):
+    """fromfile_raw(f, dtype, shape,
+           extractor=None, min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT) ->
+               read a cube from raw file f with given shape and extractor
     f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_RAW, f, dtype, shape, extractor)
+    return fromfile_generic(conf.FILE_FORMAT_RAW, f, dtype, shape, extractor=extractor, min_count=min_count)
 
-def fromfile_text(f, dtype, shape, extractor=None,
+def fromfile_text(f, dtype, shape, extractor=None, 
+        min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
         delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
-    """fromfile_text(f, dtype, shape, extractor=None, delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER) -> read a cube from text file f with given shape and extractor
+    """fromfile_text(f, dtype, shape, extractor=None, min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT, delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER) -> read a cube from text file f with given shape and extractor
     f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_TEXT, f, dtype, shape, extractor, delimiter=delimiter)
+    return fromfile_generic(conf.FILE_FORMAT_TEXT, f, dtype, shape, extractor=extractor, min_count=min_count, delimiter=delimiter)
 
-def fromfile_csv(f, dtype, shape, extractor=None, sep=conf.FILE_FORMAT_CSV_SEPARATOR):
-    """fromfile_raw(f, dtype, shape, extractor=None, sep=conf.FILE_FORMAT_CSV_SEPARATOR) -> read a cube from raw file f with given shape and extractor
+def fromfile_csv(f, dtype, shape, extractor=None,
+        min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
+        sep=conf.FILE_FORMAT_CSV_SEPARATOR):
+    """fromfile_raw(f, dtype, shape, extractor=None, min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT, sep=conf.FILE_FORMAT_CSV_SEPARATOR) -> read a cube from raw file f with given shape and extractor
     f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_CSV, f, dtype, shape, extractor, sep=sep)
+    return fromfile_generic(conf.FILE_FORMAT_CSV, f, dtype, shape, extractor=extractor, min_count=min_count, sep=sep)

@@ -50,6 +50,7 @@ class Cubist(object):
             output_text_converters,
             accept_bigger_raw_files=False,
             read_mode=conf.DEFAULT_READ_MODE,
+            optimized_min_count=conf.DEFAULT_OPTIMIZED_MIN_COUNT,
             split_dimensions=None,
             clobber=conf.DEFAULT_CLOBBER,
             print_cube=False,
@@ -70,6 +71,8 @@ class Cubist(object):
             self._read = self._read_optimized
         else:
             raise CubistError("invalid read mode {0!r}".format(read_mode))
+
+        self.optimized_min_count = optimized_min_count
 
         self.clobber = clobber
 
@@ -271,7 +274,7 @@ class Cubist(object):
             b=msg_bytes,
             f=input_format,
             i=input_filename))
-        cube = numpy_function(input_format, input_filename, shape=shape, extractor=extractor, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
+        cube = numpy_function(input_format, input_filename, shape=shape, extractor=extractor, dtype=input_dtype, min_count=self.optimized_min_count, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 

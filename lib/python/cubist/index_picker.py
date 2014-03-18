@@ -83,5 +83,8 @@ class IndexPicker(object):
             else:
                 return self._value, self._value, 1
 
+    def is_slice(self):
+        return isinstance(self._value, slice)
+
     def __repr__(self):
         return repr(self._value)

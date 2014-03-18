@@ -47,7 +47,7 @@ class Extractor(Values):
             sub_count = 1
             for index_picker, dim in zip(self._values, shape):
                 count *= dim
-                if isinstance(index_picker, slice):
-                    start, stop, step = index_picker.indices(dim)
+                if index_picker.is_slice():
+                    start, stop, step = index_picker.get_indices(dim)
                     sub_count *= (stop - start) / step
         return count, sub_count
