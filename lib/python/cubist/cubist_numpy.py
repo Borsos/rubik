@@ -23,6 +23,7 @@ __all__ = ['linear_cube', 'random_cube', 'fill_cube',
 import numpy as np
 
 from . import conf
+from .units import Memory
 from .errors import CubistError
 from .shape import Shape
 from .extractor import Extractor
@@ -126,7 +127,7 @@ class ExtractReader(object):
                 extractor = Extractor(extractor)
         self.extractor = extractor
         self.min_size = min_size
-        if isinstance(min_size, units.Memory):
+        if isinstance(min_size, Memory):
             self.min_size_bytes = min_size.get_bytes()
         else:
             self.min_size_bytes = min_size
