@@ -17,7 +17,8 @@
 
 __all__ = ['linear_cube', 'random_cube', 'fill_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
-           'num_not_equals', 'num_equals', 'not_equals', 'equals']
+           'cube_not_equals', 'num_not_equals', 'not_equals',
+           'cube_equals', 'num_equals', 'equals']
 
 import numpy as np
 
