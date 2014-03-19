@@ -35,6 +35,12 @@ def set_default_dtype(dtype):
     global DEFAULT_DTYPE
     DEFAULT_DTYPE = dtype
 
+def _as_default_dtype(cube):
+    if cube.dtype != DEFAULT_DTYPE:
+        return cube.astype(DEFAULT_DTYPE)
+    else:
+        return cube
+
 def linear_cube(shape, start=0.0, increment=1.0):
     """linear_cube(shape, start=0.0, increment=1.0) -> create a cube with the
        given shape, with elements in linear sequence, starting from 'start',
@@ -54,10 +60,7 @@ def random_cube(shape):
     shape = Shape(shape)
     count = shape.count()
     cube = np.random.rand(count).reshape(shape.shape())
-    if cube.dtype != DEFAULT_DTYPE:
-        return cube.astype(DEFAULT_DTYPE)
-    else:
-        return cube
+    return _as_default_dtype(cube)
 
 def const_cube(shape, value=0.0):
     """const_cube(shape, value=0.0) -> create a cube with all elements == 'value'
@@ -74,9 +77,7 @@ def const_cube(shape, value=0.0):
         cube = np.empty(count, dtype=DEFAULT_DTYPE)
         cube.fill(value)
     cube = cube.reshape(shape.shape())
-    if cube.dtype != DEFAULT_DTYPE:
-        cube = cube.astype(DEFAULT_DTYPE)
-    return cube
+    return _as_default_dtype(cube)
 
 def const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2):
     """const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2) ->
@@ -108,9 +109,7 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2):
         return const_cube(shape, value=start)
     else:
         cube = const_cube(shape, 0.0)
-    if cube.dtype != DEFAULT_DTYPE:
-        cube = cube.astype(DEFAULT_DTYPE)
-    return cube
+    return _as_default_dtype(cube)
         
 def not_equals_cube(cube_0, cube_1, tolerance=0.0):
     """not_equals_cube(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where

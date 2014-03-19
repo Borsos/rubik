@@ -29,7 +29,7 @@ test_prex "cubist -e 'cnp.random_cube(\"${X}x${Y}x${Z}\")' -o rtmp_{shape}.{form
 check_file_exists_and_has_size rtmp_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
 check_files_are_equal im_${X}x${Y}x${Z}.raw rtmp_${X}x${Y}x${Z}.raw
 
-test_prex "cubist -e 'cnp.fill_cube(\"${X}x${Y}x${Z}\", value=$CONST_VALUE)' -o c_{shape}.{format}"
+test_prex "cubist -e 'cnp.const_cube(\"${X}x${Y}x${Z}\", value=$CONST_VALUE)' -o c_{shape}.{format}"
 check_file_exists_and_has_size c_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
 
 test_prex "cubist -i c_{shape}.{format} -s ${X}x${Y}x${Z} -e 'np.sum(i0) - ( $X * $Y * $Z * $CONST_VALUE )' -P > c.out"
@@ -56,6 +56,9 @@ while [[ $i -lt $Hnum ]] ; do
     check_file_exists_and_has_size og_h${i}_${X}x${Y}x${Z}.raw $(( $XYZ * $bytes_float32 ))
     i=$(( $i + 1 ))
 done
+
+test_prex "cubist -e 'cnp.const_blocks_cube(\"10x20x30\")' -o cp_{shape}.{format}"
+check_file_exists_and_has_size cp_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
 
 ## --- 2D ---
 typeset -i _x=8
