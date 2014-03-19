@@ -25,7 +25,7 @@ function get_matching_tests {
 
 function get_test_file {
     typeset _test="$1"
-    echo "$TESTING_DIR/tests/${_test}.sh"
+    echo "$TESTING_DIR/TESTS/${_test}.sh"
 }
 
 AVAILABLE_TESTS=$EMPTY
