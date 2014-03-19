@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-__all__ = ['linear_cube', 'random_cube', 'fill_cube',
+__all__ = ['linear_cube', 'random_cube', 'fill_cube', 'const_plans_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals']
@@ -23,6 +23,7 @@ __all__ = ['linear_cube', 'random_cube', 'fill_cube',
 import numpy as np
 
 from . import conf
+from .py23 import lrange, irange
 from .units import Memory
 from .errors import CubistError
 from .shape import Shape
@@ -74,6 +75,29 @@ def fill_cube(shape, value=0.0):
         cube.fill(value)
     return cube.reshape(shape.shape())
 
+def const_plans_cube(shape, start=0.0, increment=1.0):
+    """const_plans_cube(shape, start=0.0, increment=1.0) -> create a cube with the
+       given shape, with all elements having the same value for the last dimension;
+       this value starts with 'start' and is incremented by 'increment'.
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
+    """
+    shape = Shape(shape)
+    shape_t = shape.shape()
+    if len(shape_t) > 2:
+        shape_a = Shape(shape_t[:-2])
+        shape_b = Shape(shape_t[-2:])
+        plan = np.array(lrange(shape_b.count())).reshape(shape_b.shape())
+        cube = np.array([plan for i in irange(shape_a.count())])
+        v = start
+        for i in irange(shape_a.count()):
+            cube[i].fill(v)
+            v += increment
+        cube = cube.reshape(shape.shape())
+    else:
+        cube = fill_cube(shape, 0.0)
+    return cube
+        
 def not_equals_cube(cube_0, cube_1, tolerance=0.0):
     """not_equals_cube(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
            cube_0 != cube_1 within the given tolerance, 0.0 elsewhere
@@ -156,7 +180,7 @@ class ExtractReader(object):
                     start, stop, step = index_picker0_value.indices(dim0)
                     prev_index = 0
                     subcubes = []
-                    for curr_index in range(start, stop, step):
+                    for curr_index in irange(start, stop, step):
                         self.skip_data(input_file, curr_index - prev_index, subshape)
                         subcube = self._read(input_file, subshape, subextractor)
                         subcubes.append(subcube)
@@ -178,7 +202,7 @@ class ExtractReader(object):
         raise NotImplementedError()
 
     def skip_data(self, input_file, num_indices, shape):
-        for i in range(num_indices):
+        for i in irange(num_indices):
             self.read_data(input_file, shape, None)
 
 class ExtractRawCsvReader(ExtractReader):

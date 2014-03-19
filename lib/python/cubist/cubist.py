@@ -21,6 +21,7 @@ import itertools
 from collections import OrderedDict
 
 from .application import log
+from .py23 import irange
 from .units import Memory
 from .errors import CubistError, CubistMemoryError
 from .clip import Clip
@@ -322,13 +323,13 @@ class Cubist(object):
         if self.split_dimensions:
             l = []
             for dimension in self.split_dimensions:
-                if 0 <= dimension < cube.shape:
-                    l.append([(dimension, i) for i in range(cube.shape[dimension])])
+                if 0 <= dimension < len(cube.shape):
+                    l.append([(dimension, i) for i in irange(cube.shape[dimension])])
             get_all = slice(None, None, None)
             for d_indices in itertools.product(*l):
                 dd = dict(d_indices)
                 ex = []
-                for d in range(len(cube.shape)):
+                for d in irange(len(cube.shape)):
                     ex.append(dd.get(d, get_all))
                 dlabels = OrderedDict(('d{0}'.format(i), j) for i, j in d_indices)
                 #print dlabels, ex

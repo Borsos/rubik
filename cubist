@@ -18,11 +18,6 @@ from cubist.variable import VariableDefinition
 from cubist.filename import InputFilename, OutputFilename
 from cubist.extractor import Extractor
 
-if sys.version_info.major == 2:
-    PY3 = False
-else:
-    PY3 = True
-
 def _create_cubist(logger, args):
     cubist = Cubist(
             dtype=args.dtype,
@@ -690,6 +685,12 @@ $ cubist -e 'cnp.fill_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
+$ cubist -e 'cnp.const_plans_cube("8x10x4", start=0.0, increment=1.0)' \
+         -o cc_{shape}.{format}
+
+creates a cube of 8 10x4 const plans, each plan fill value is linearly assigned
+starting from 'start' with increment 'increment'.
+
 See --help-cubist-numpy to see the content of the cubist_numpy module.
 """)
         sys.exit(0)
@@ -698,7 +699,6 @@ See --help-cubist-numpy to see the content of the cubist_numpy module.
         log.PRINT("""\
 Output modes
 ============
---------------------------------------------------------------------------------
 There are three output modes:
 * writing the result to a file (--output-filename/-o); you can specify the file
   format, dtype, etc...

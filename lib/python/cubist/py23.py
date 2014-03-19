@@ -15,16 +15,17 @@
 # limitations under the License.
 #
 
-import re
+import sys
 
-from .values import Values
-from .py23 import irange
+if sys.version_info.major == 2:
+    PY3 = False
+else:
+    PY3 = True
 
-class Origins(Values):
-    @classmethod
-    def from_rank(cls, rank):
-        return cls(0 for i in irange(rank))
-
-    def origins(self):
-        return self._values
-
+if PY3:
+    def lrange(*n_args, **p_args):
+        return list(range(*n_args, **p_args))
+    irange = range
+else:
+    lrange = range
+    irange = xrange
