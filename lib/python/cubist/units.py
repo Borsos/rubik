@@ -41,11 +41,11 @@ class UnitsValue(object):
                 default_units = units
             else:
                 default_units = self.__default_units__
-        assert default_units in self.__units__
+        assert default_units in self.__units__, "{0!r} is not a valid default_unis for {1}".format(default_units, self.__class__.__name__)
         self._units = default_units
         if units is None:
             units = self.default_units
-        assert units in self.__units__
+        assert units in self.__units__, "{0!r} is not a valid unis for {1}".format(default_units, self.__class__.__name__)
         self._units = default_units
         self._value = self.convert_units(value, units, default_units)
 
@@ -55,8 +55,10 @@ class UnitsValue(object):
         if not m:
             raise CubistError("cannot make a {0} from {1!r}".format(cls.__name__, s))
         v_s, u_s = m.groups()
-        if u_s is None:
+        if not u_s:
             u_s = cls.__default_units__
+        if u_s is None:
+            raise CubistError("cannot make a {0} from {1!r}: missing units".format(cls.__name__, s))
         return cls.value_from_string(v_s), cls.units_from_string(u_s)
         
     @classmethod
@@ -103,7 +105,7 @@ class Memory(UnitsValue):
         'p': 1024 ** 5,
         'pb': 1024 ** 5,
     }
-    __default_units__ = None
+    __default_units__ = 'b'
 
     def get_bytes(self):
         return self.convert('b')

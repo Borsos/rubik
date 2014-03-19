@@ -72,6 +72,7 @@ class Cubist(object):
         self.optimized_min_size = optimized_min_size
         self.memory_limit = memory_limit
         self.memory_limit_bytes = memory_limit.get_bytes()
+        self.total_read_bytes = 0
 
         self.clobber = clobber
 
@@ -144,8 +145,6 @@ class Cubist(object):
             self._last_cube = self._read(input_label, input_filename)
 
     def _check_memory_limit(self, input_label, input_filename):
-        if self.memory_limit_bytes <= 0:
-            return
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
@@ -159,9 +158,22 @@ class Cubist(object):
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        input_bytes = sub_count * input_dtype_bytes 
-        if input_bytes > self.memory_limit_bytes:
-            raise CubistMemoryError("trying to read {0} bytes, more than memory limit {1}".format(input_bytes, self.memory_limit))
+        input_bytes_sub = sub_count * input_dtype_bytes 
+        if self.read_mode is conf.READ_MODE_OPTIMIZED:
+            input_bytes_read = input_bytes_sub
+        else:
+            input_bytes_read = count * input_dtype_bytes 
+        self.logger.debug("trying to read {0} bytes and extract {1} bytes; already read {2} bytes...".format(
+                    input_bytes_read,
+                    input_bytes_sub,
+                    self.total_read_bytes))
+        if self.memory_limit_bytes > 0 and self.total_read_bytes + input_bytes_read > self.memory_limit_bytes:
+            raise CubistMemoryError("trying to read {0} + {1} = {2} bytes, more than memory limit {1}".format(
+                    self.total_read_bytes,
+                    input_bytes_read,
+                    self.total_read_bytes + input_bytes_read,
+                    self.memory_limit))
+        self.total_read_bytes += input_bytes_sub
 
     def _read(self, input_label, input_filename):
         self._check_memory_limit(input_label, input_filename)
