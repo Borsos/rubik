@@ -332,7 +332,6 @@ class Cubist(object):
                 for d in irange(len(cube.shape)):
                     ex.append(dd.get(d, get_all))
                 dlabels = OrderedDict(('d{0}'.format(i), j) for i, j in d_indices)
-                #print dlabels, ex
                 subcube = cube[tuple(ex)]
                 yield subcube, dlabels
         else:

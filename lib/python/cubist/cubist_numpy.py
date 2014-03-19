@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-__all__ = ['linear_cube', 'random_cube', 'fill_cube', 'const_plans_cube',
+__all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals']
@@ -33,7 +33,7 @@ DEFAULT_DTYPE = np.float32
 
 def set_default_dtype(dtype):
     global DEFAULT_DTYPE
-    DEFAULT_TYPE = dtype
+    DEFAULT_DTYPE = dtype
 
 def linear_cube(shape, start=0.0, increment=1.0):
     """linear_cube(shape, start=0.0, increment=1.0) -> create a cube with the
@@ -59,8 +59,8 @@ def random_cube(shape):
     else:
         return cube
 
-def fill_cube(shape, value=0.0):
-    """fill_cube(shape, value=0.0) -> create a cube with all elements == 'value'
+def const_cube(shape, value=0.0):
+    """const_cube(shape, value=0.0) -> create a cube with all elements == 'value'
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
@@ -73,20 +73,30 @@ def fill_cube(shape, value=0.0):
     else:
         cube = np.empty(count, dtype=DEFAULT_DTYPE)
         cube.fill(value)
-    return cube.reshape(shape.shape())
+    cube = cube.reshape(shape.shape())
+    if cube.dtype != DEFAULT_DTYPE:
+        cube = cube.astype(DEFAULT_DTYPE)
+    return cube
 
-def const_plans_cube(shape, start=0.0, increment=1.0):
-    """const_plans_cube(shape, start=0.0, increment=1.0) -> create a cube with the
-       given shape, with all elements having the same value for the last dimension;
-       this value starts with 'start' and is incremented by 'increment'.
+def const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2):
+    """const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2) ->
+       create a cube with the given shape, composed by blocks filled with
+       const value.  This value starts with 'start' and is incremented by
+       'increment'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
+       If block_dims == 1, it is equivalent to linear_cube(shape, start, increment)
+       If block_dims == len(shape), it is equivalent to const_cube(shape, start)
     """
     shape = Shape(shape)
+    if block_dims < 1:
+        raise CubistError("invalid block_dims={0}: must be > 0".format(block_dims))
+    elif block_dims > len(shape):
+        raise CubistError("invalid block_dims={0}: must be > len(shape) == {1}".format(block_dims, len(shape)))
     shape_t = shape.shape()
-    if len(shape_t) > 2:
-        shape_a = Shape(shape_t[:-2])
-        shape_b = Shape(shape_t[-2:])
+    if len(shape_t) > block_dims:
+        shape_a = Shape(shape_t[:-block_dims])
+        shape_b = Shape(shape_t[-block_dims:])
         plan = np.array(lrange(shape_b.count())).reshape(shape_b.shape())
         cube = np.array([plan for i in irange(shape_a.count())])
         v = start
@@ -94,8 +104,12 @@ def const_plans_cube(shape, start=0.0, increment=1.0):
             cube[i].fill(v)
             v += increment
         cube = cube.reshape(shape.shape())
+    elif len(shape_t) <= block_dims:
+        return const_cube(shape, value=start)
     else:
-        cube = fill_cube(shape, 0.0)
+        cube = const_cube(shape, 0.0)
+    if cube.dtype != DEFAULT_DTYPE:
+        cube = cube.astype(DEFAULT_DTYPE)
     return cube
         
 def not_equals_cube(cube_0, cube_1, tolerance=0.0):

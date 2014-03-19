@@ -27,7 +27,7 @@ from .units import Memory
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
-VERSION_PATCH = 15
+VERSION_PATCH = 16
 VERSION = "{major}.{minor}.{patch}".format(
     major=VERSION_MAJOR,
     minor=VERSION_MINOR,

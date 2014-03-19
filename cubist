@@ -681,15 +681,16 @@ $ cubist -e 'cnp.random_cube("8x10")' -o rc_{shape}.{format}
 
 creates a random cube; and
 
-$ cubist -e 'cnp.fill_cube("8x10", 8.0)' -o cc_{shape}.{format}
+$ cubist -e 'cnp.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
-$ cubist -e 'cnp.const_plans_cube("8x10x4", start=0.0, increment=1.0)' \
+$ cubist -e 'cnp.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2)' \
          -o cc_{shape}.{format}
 
-creates a cube of 8 10x4 const plans, each plan fill value is linearly assigned
-starting from 'start' with increment 'increment'.
+creates a cube of 8 10x4 const planes, each plan fill value is linearly assigned
+starting from 'start' with increment 'increment'. You can change the block
+dimension.
 
 See --help-cubist-numpy to see the content of the cubist_numpy module.
 """)
