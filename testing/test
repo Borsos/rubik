@@ -108,7 +108,14 @@ for test_name in $TESTS ; do
 ###
 EOFCAT
     source "$test_sh" 
+    cat <<EOFCAT
+###
+### TEST $test_name : run $TEST_PROG tests
+###
+EOFCAT
 done
+
+echo "Total number of tests: $TEST_NUM"
 
 if [[ $ERRORS -gt 0 ]] ; then
     echo "ERR: $ERRORS errors" 1>&2

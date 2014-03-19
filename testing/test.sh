@@ -40,14 +40,19 @@ function add_cubist_option {
 
 TEST_NAME="undefined"
 typeset -i TEST_INDEX=-1
+typeset -i TEST_NUM=0    # total number of run tests
+typeset -i TEST_PROG=0   # number of run tests for test $TEST_NAME
 function set_test_name {
     TEST_NAME="$1"
     TEST_INDEX=-1
+    TEST_PROG=0
 }
 
 function test_prex {
     typeset    _command="$1 $ADD_CUBIST_OPTIONS"
     TEST_INDEX=$(( $TEST_INDEX + 1 ))
+    TEST_NUM=$(( $TEST_NUM + 1 ))
+    TEST_PROG=$(( $TEST_PROG + 1 ))
     echo "$_command" > ${TEST_NAME}.${TEST_INDEX}.command
     typeset -i _returncode
     prex "$_command" 1> ${TEST_NAME}.${TEST_INDEX}.eo 2>&1 ; _returncode=$?
