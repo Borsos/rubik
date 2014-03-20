@@ -290,12 +290,12 @@ $ cubist -e 'cnp.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
-$ cubist -e 'cnp.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2)' \
+$ cubist -e 'cnp.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2, start_dim=None)' \
          -o cc_{shape}.{format}
 
-creates a cube of 8 10x4 const planes, each plan fill value is linearly assigned
-starting from 'start' with increment 'increment'. You can change the block
-dimension.
+creates a cube of 8 10x4 const blocks, each block fill value is linearly
+assigned starting from 'start' with increment 'increment'.  You can change the
+block dimension and the starting dimension.
 
 See --help-cubist-numpy to see the content of the cubist_numpy module.
 """)
