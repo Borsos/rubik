@@ -290,7 +290,7 @@ $ cubist -e 'cnp.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
-$ cubist -e 'cnp.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2, start_dim=None)' \
+$ cubist -e 'cnp.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2, start_dim=None)' \\
          -o cc_{shape}.{format}
 
 creates a cube of 8 10x4 const blocks, each block fill value is linearly
@@ -376,18 +376,98 @@ default data type) and write it to r_8x10x20.float64.raw as float64
 ## 5. Read a subcube consisting of the full x and z dimension, and of
       indices from third to third to last along y, and write it:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 \
-         -x :,2:-2,: \
+$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+         -x :,2:-2,: \\
          -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
 
 ## 6. Read a subcube, subsample it along y and z dimension:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 \
-         -x :,::2,::4 \
+$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+         -x :,::2,::4 \\
          -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
+
+## 7. Read a 3D cube, extract a 2D plane corresponding to y=5:
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+         -x :,5,: \\
+         -o rsub_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
+
+## 8. Read a 3D cube, subsample on y, extract a 2D plane for each resulting y
+value (== split on the second dimension):
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+         -x :,::2,: \\
+         -o rsub_y{d1}_{shape}.{format} \\
+         --split 1 -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y0_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y1_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y2_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y3_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
+
+### 9. Compute a linear combination of two input files:
+
+$ cubist -i r_{shape}.{format} \\
+         -i l_{shape}.{format} \\
+         -s 8x10x20 \\
+         -e '0.5 * i0 - i1 / 0.5' \\
+         -o res0_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
+evaluating expression '0.5 * i0 - 0.5 * i1'...
+writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res0_8x10x20.raw'...
+
+or:
+
+$ cubist -i r_{shape}.{format} \\
+         -i l_{shape}.{format} \\
+         -s 8x10x20 \\
+         -V f=0.5 \\
+         -e 'f * i0 - i1 / f' \\
+         -o res1_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
+evaluating expression 'f * i0 - f * i1'...
+writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
+
+### 10. Compute a linear combination with a portion of a file:
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
+         -i rsub_y2_{shape}.{format} -s 8x20 \\
+         -e 'i1 - i0' \\
+         -o rdiff_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y2_8x20.raw'...
+evaluating expression 'i1 - i0'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rdiff_8x20.raw'...
+
+### 11. Show statistics about a cube:
+
+$ cubist -i rdiff_8x20.raw -s 8x20 --stats
+shape         = 8x20
+#elements     = 160
+min           = 0.0
+max           = 0.0
+sum           = 0.0
+ave           = 0.0
+#zero         = 160 [100.00%]
+#nonzero      = 0 [0.00%]
+#nan          = 0 [0.00%]
+#inf          = 0 [0.00%]
+
+### 12. Check if two cubes are equal with a given tolerance '1e-5':
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
+         -i rsub_y2_{shape}.{format} -s 8x20 \\
+         -e 'cnp.equals(i1, i0, 1e-5)' \\
+         --print
+True
 
 """)
