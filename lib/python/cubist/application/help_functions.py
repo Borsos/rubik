@@ -351,4 +351,43 @@ def help_usage():
     PRINT("""\
 Examples/recipes
 ================
+
+## 1. Create a random cube with a given shape:
+
+$ cubist -e 'cnp.random_cube("8x10x20") -o r_{shape}.{format}
+
+This will create 'r_8x10x20.raw'.
+
+## 2. Create a cube with linear values:
+
+$ cubist -e 'cnp.linear_cube("8x10x20") -o l_{shape}.{format}
+
+## 3. Read a cube and write it with a different format:
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
+
+## 4. Read a cube and write it with a different data type:
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
+
+This will read from 'r_8x10x20.raw' a float32 cube (float32 is the
+default data type) and write it to r_8x10x20.float64.raw as float64
+
+## 5. Read a subcube consisting of the full x and z dimension, and of
+      indices from third to third to last along y, and write it:
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 \
+         -x :,2:-2,: \
+         -o rsub_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
+
+## 6. Read a subcube, subsample it along y and z dimension:
+
+$ cubist -i r_{shape}.{format} -s 8x10x20 \
+         -x :,::2,::4 \
+         -o rsub_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
+
 """)
