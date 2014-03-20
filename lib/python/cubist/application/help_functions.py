@@ -35,6 +35,8 @@ __all__ = [
               'help_environment_variables',
               'help_creating_cubes',
               'help_output',
+              'help_memory_usage',
+              'help_usage',
           ]
 
 def help_cubist_numpy():
@@ -345,3 +347,8 @@ can be set through the '--optimized-min-size' option. For instance, if
 file is less than 1gb. By default, the optimized min size is 100mb.
 """)
 
+def help_usage():
+    PRINT("""\
+Examples/recipes
+================
+""")

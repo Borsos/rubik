@@ -418,6 +418,12 @@ Options to show help on specific topics """)
         default=False,
         help="help about memory usage")
 
+    help_group.add_argument("--help-usage", "-hu",
+        dest="help_usage",
+        action="store_true",
+        default=False,
+        help="help about usage: shows some examples and common recipes")
+
     args = conf.CUBIST_OPTIONS + sys.argv[1:]
     try:
         args = parser.parse_args(args)
