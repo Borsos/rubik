@@ -54,3 +54,4 @@ check_files_are_equal res0_${SHAPE}.raw res1_${SHAPE}.raw
 
 test_prex "cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: -i rsub_y2_{shape}.{format} -s 8x20 -e 'i1 - i0' -o rdiff_{shape}.{format}"
 check_file_exists_and_has_size rdiff_${X}x${Z}.raw $(( $X * $Z * bytes_float32 ))
+

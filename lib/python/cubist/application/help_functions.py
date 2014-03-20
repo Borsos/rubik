@@ -462,12 +462,25 @@ ave           = 0.0
 #nan          = 0 [0.00%]
 #inf          = 0 [0.00%]
 
-### 12. Check if two cubes are equal with a given tolerance '1e-5':
+### 12. Check if two cubes are equal content within a given tolerance '1e-5':
 
 $ cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
          -i rsub_y2_{shape}.{format} -s 8x20 \\
          -e 'cnp.equals(i1, i0, 1e-5)' \\
          --print
 True
+
+## 13. Print a random cube with integer values between -5 and +5:
+
+$ cubist -e 'cnp.random_cube("3x5", min=-5, max=5)' \\
+         --dtype int32 \\
+         --random-seed 100 \\
+         --print
+[[ 0 -2  0  3 -4]
+ [-3  1  3 -3  0]
+ [ 3 -2 -3 -3 -2]]
+
+The '--random-seed 100' option sets the random seed; it has been added to make
+the result reproducible.
 
 """)

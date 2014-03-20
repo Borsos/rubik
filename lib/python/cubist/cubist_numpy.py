@@ -52,14 +52,17 @@ def linear_cube(shape, start=0.0, increment=1.0):
     count = shape.count()
     return np.array(np.linspace(start, start + increment * (count - 1), count), dtype=DEFAULT_DTYPE).reshape(shape.shape())
 
-def random_cube(shape):
-    """random_cube(shape) -> create a cube with random elements
+def random_cube(shape, min=0.0, max=1.0):
+    """random_cube(shape, min=0.0, max=1.0) -> create a cube with random elements
+       between 'min' and 'max'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     shape = Shape(shape)
     count = shape.count()
     cube = np.random.rand(count).reshape(shape.shape())
+    if min != 0.0 or max != 1.0:
+        cube = min + cube * (max - min)
     return _as_default_dtype(cube)
 
 def const_cube(shape, value=0.0):
