@@ -19,7 +19,7 @@ import re
 
 from collections import OrderedDict
 
-from .errors import CubistError
+from ..errors import CubistError
 
 class ArgDict(OrderedDict):
     __re_label_split__ = re.compile("^([a-zA-Z]+\w*)\=(.*)")
