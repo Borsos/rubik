@@ -496,11 +496,13 @@ the result reproducible.
 
 ## 14. Setting a single value on a cube:
 $ cubist -i r_{shape}.{format} -s 8x10x20 \\
-         -e '_r[0, 0, 0'] = 4 \\
+         -e '_r[0, 0, 0] = 4' \\
          -o o_{shape}.{format}
 
 ## 15. Setting multiple values on a cube:
 $ cubist -i r_{shape}.{format} -s 8x10x20 \\
-         -e '_r[0, :, 3'] = 4 \\
+         -e '_r[0, :, 3] = 4' \\
          -o o_{shape}.{format}
+
+The '_r' variable is the current result; in this case, the cube just read.
 """)
