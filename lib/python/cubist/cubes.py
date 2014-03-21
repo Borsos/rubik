@@ -159,7 +159,7 @@ def const_cube(shape, value=0.0):
 #        cube = const_cube(shape, 0.0)
 #    return _as_default_dtype(cube)
         
-def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None):
+def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     """const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None) ->
        create a cube with the given shape; each subblock on the given list
        'const_dims' is constant. For instance, if len(shape) is 4 and 
@@ -172,9 +172,17 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None):
     shape = Shape(shape)
     count = shape.count()
     rank = shape.rank()
-    if const_dims is None:
-        for i in max(rank - 2, rank):
-            const_dims.append(i)
+    if rank <= 0:
+        return np.array([], dtype=DEFAULT_DTYPE)
+    cdims = []
+    for cdim in const_dims:
+        while cdim < 0:
+            cdim += len(shape)
+        cdims.append(cdim)
+        if cdim >= rank:
+            raise CubistError("invalid dimension index {0}: max is {1} since shape is {2}".format(cdim, rank - 1, shape))
+    const_dims = cdims
+
     if not const_dims:
         return linear_cube(shape, start=start, increment=increment)
 
@@ -198,7 +206,7 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None):
                     r_start = x_start
                 n_start = x_start
                 l.append(cube)
-            return n_start, np.array(l)
+            return n_start, np.array(l, dtype=DEFAULT_DTYPE)
           
     next_start, cube = _make_cube(0, shape, start, increment, const_dims)
     return cube
