@@ -17,10 +17,10 @@ typeset -i bytes_float64=8
 RANDOM_SEED=100
 add_cubist_option "--random-seed $RANDOM_SEED"
 
-test_prex "cubist -e 'cnp.random_cube(\"${SHAPE}\")' -o r_{shape}.{format}"
+test_prex "cubist -e 'cb.random_cube(\"${SHAPE}\")' -o r_{shape}.{format}"
 check_file_exists_and_has_size r_${X}x${Y}x${Z}.raw $(( $XYZ * bytes_float32 ))
 
-test_prex "cubist -e 'cnp.linear_cube(\"${SHAPE}\")' -o l_{shape}.{format}"
+test_prex "cubist -e 'cb.linear_cube(\"${SHAPE}\")' -o l_{shape}.{format}"
 check_file_exists_and_has_size l_${X}x${Y}x${Z}.raw $(( $XYZ * bytes_float32 ))
 
 test_prex "cubist -i r_{shape}.{format} -s ${SHAPE} -o r.txt -Of text"

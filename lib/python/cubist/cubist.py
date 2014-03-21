@@ -29,7 +29,7 @@ from .shape import Shape
 from .filename import InputFilename, OutputFilename
 from .extractor import Extractor
 from . import conf
-from . import cubist_numpy
+from . import cubes
 
 class Cubist(object):
     def __init__(self,
@@ -103,7 +103,7 @@ class Cubist(object):
 
     def _set_dtype(self, dtype):
         self.dtype = dtype
-        cubist_numpy.set_default_dtype(self.dtype)
+        cubes.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
         self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
 
@@ -292,7 +292,7 @@ class Cubist(object):
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         expected_input_count = shape.count()
-        numpy_function = cubist_numpy.fromfile_generic
+        numpy_function = cubes.fromfile_generic
         numpy_function_nargs = {}
         numpy_function_pargs = []
         if input_format == conf.FILE_FORMAT_RAW:
@@ -546,8 +546,8 @@ ave           = {ave}
         globals_d = {
             'np': np,
             'numpy': np,
-            'cnp': cubist_numpy,
-            'cubist_numpy': cubist_numpy,
+            'cb': cubes,
+            'cubes': cubes,
         }
         globals_d.update(self.input_cubes)
         locals_d = {

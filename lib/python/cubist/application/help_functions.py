@@ -20,11 +20,11 @@ import numpy
 
 from .log import PRINT
 from .. import conf
-from .. import cubist_numpy
+from .. import cubes
 
 __all__ = [
               'help_dtypes',
-              'help_cubist_numpy',
+              'help_cubes',
               'help_numpy',
               'help_labeled_options',
               'help_expression',
@@ -39,8 +39,8 @@ __all__ = [
               'help_usage',
           ]
 
-def help_cubist_numpy():
-    help(cubist_numpy)
+def help_cubes():
+    help(cubes)
 
 def help_numpy():
     help(numpy)
@@ -54,12 +54,12 @@ The input cubes are available through the labels referring to them.
 
 From the expression you can access:
 * the numpy module, as 'numpy' or 'np';
-* the cubist_numpy module, as 'cubist_numpy' or 'cnp';
+* the cubes module, as 'cubes' or 'cb';
 * all the used defined variables (variables set in previous expressions);
 * all the input cubes (by default 'i0', 'i1', ..., 'iN');
 * the current result '_r' (which is generally a cube, but not necessarily).
 
-The cubist_numpy module provides some numpy-based functions to operate with
+The cubes module provides some numpy-based functions to operate with
 cubes; see --help-cubist-numpy.
 
 You can add an arbitrary number of expressions; they will be executed in the
@@ -288,29 +288,29 @@ $ cubist -e 'np.linspace(0, 79, 80).reshape((8, 10))' -o lc_{shape}.{format}
 
 will create a cube with values from 0.0 to 79.0 with increment 1.0.
 
-The cubist_numpy (or cnp) module has some convenience functions to easily
+The cubes (or cb) module has some convenience functions to easily
 create cubes:
 
-$ cubist -e 'cnp.linear_cube("8x10")' -o lc_{shape}.{format}
+$ cubist -e 'cb.linear_cube("8x10")' -o lc_{shape}.{format}
 
 creates the same cube;
 
-$ cubist -e 'cnp.random_cube("8x10")' -o rc_{shape}.{format}
+$ cubist -e 'cb.random_cube("8x10")' -o rc_{shape}.{format}
 
 creates a random cube; and
 
-$ cubist -e 'cnp.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
+$ cubist -e 'cb.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
-$ cubist -e 'cnp.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2, start_dim=None)' \\
+$ cubist -e 'cb.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2, start_dim=None)' \\
          -o cc_{shape}.{format}
 
 creates a cube of 8 10x4 const blocks, each block fill value is linearly
 assigned starting from 'start' with increment 'increment'.  You can change the
 block dimension and the starting dimension.
 
-See --help-cubist-numpy to see the content of the cubist_numpy module.
+See --help-cubist-numpy to see the content of the cubes module.
 """)
 
 def help_output():
@@ -368,13 +368,13 @@ Examples/recipes
 
 ## 1. Create a random cube with a given shape:
 
-$ cubist -e 'cnp.random_cube("8x10x20") -o r_{shape}.{format}
+$ cubist -e 'cb.random_cube("8x10x20") -o r_{shape}.{format}
 
 This will create 'r_8x10x20.raw'.
 
 ## 2. Create a cube with linear values:
 
-$ cubist -e 'cnp.linear_cube("8x10x20") -o l_{shape}.{format}
+$ cubist -e 'cb.linear_cube("8x10x20") -o l_{shape}.{format}
 
 ## 3. Read a cube and write it with a different format:
 
@@ -480,13 +480,13 @@ ave           = 0.0
 
 $ cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
          -i rsub_y2_{shape}.{format} -s 8x20 \\
-         -e 'cnp.equals(i1, i0, 1e-5)' \\
+         -e 'cb.equals(i1, i0, 1e-5)' \\
          --print
 True
 
 ## 13. Print a random cube with integer values between -5 and +5:
 
-$ cubist -e 'cnp.random_cube("3x5", min=-5, max=5)' \\
+$ cubist -e 'cb.random_cube("3x5", min=-5, max=5)' \\
          --dtype int32 \\
          --random-seed 100 \\
          --print
@@ -508,7 +508,7 @@ expression; for instance:
 
 $ cubist -t int32 \\
          --random-seed 100 \\
-         -e 'cnp.random_cube("3x4x5", min=0.0, max=10.0)' \\
+         -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
          -e '_r[:, 1, :] = -5' \\
          --print
 

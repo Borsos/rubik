@@ -368,11 +368,11 @@ Options to show help on specific topics """)
         default=False,
         help="show content of the numpy module")
 
-    help_group.add_argument("--help-cubist-numpy", "-hc",
-        dest="help_cubist_numpy",
+    help_group.add_argument("--help-cubes", "-hc",
+        dest="help_cubes",
         action="store_true",
         default=False,
-        help="show content of the cubist_numpy module")
+        help="show content of the 'cubes' (or 'cb') module")
 
     help_group.add_argument("--help-filenames", "-hf",
         dest="help_filenames",

@@ -16,7 +16,7 @@ typeset -i bytes_float64=8
 RANDOM_SEED=100
 add_cubist_option "--random-seed $RANDOM_SEED"
 
-test_prex "cubist -e 'cnp.random_cube(\"${X}x${Y}x${Z}\")' -o x_${X}x${Y}x${Z}.raw"
+test_prex "cubist -e 'cb.random_cube(\"${X}x${Y}x${Z}\")' -o x_${X}x${Y}x${Z}.raw"
 check_file_exists_and_has_size x_${X}x${Y}x${Z}.raw $(( $XYZ * ${bytes_float32} ))
 
 shape="${X}x${Y}x${Z}"
