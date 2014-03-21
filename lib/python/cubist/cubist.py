@@ -572,6 +572,11 @@ ave           = {ave}
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
                     self._result = result
+                else:
+                    if '_r' in locals_d:
+                        self._result = locals_d['_r']
+                    else:
+                        self._result = globals_d['_r']
             except Exception as err:
                 raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             #if result.dtype != self.dtype:

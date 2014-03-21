@@ -499,10 +499,19 @@ $ cubist -i r_{shape}.{format} -s 8x10x20 \\
          -e '_r[0, 0, 0] = 4' \\
          -o o_{shape}.{format}
 
+The '_r' variable is the current result; in this case, the cube just read. In
+this case, it is 'i0', but in general it can be the result of a previos
+expression; for instance:
+
+$ cubist -t int32 \\
+         --random-seed 100 \\
+         -e 'cnp.random_cube("3x4x5", min=0.0, max=10.0)' \\
+         -e '_r[:, 1, :] = -5' \\
+         --print
+
 ## 15. Setting multiple values on a cube:
 $ cubist -i r_{shape}.{format} -s 8x10x20 \\
          -e '_r[0, :, 3] = 4' \\
          -o o_{shape}.{format}
 
-The '_r' variable is the current result; in this case, the cube just read.
 """)
