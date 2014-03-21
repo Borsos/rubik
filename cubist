@@ -12,7 +12,6 @@ from cubist.shape import Shape
 from cubist.units import Memory
 from cubist.cubist import Cubist
 from cubist.errors import CubistError, CubistMemoryError
-from cubist.variable import VariableDefinition
 from cubist.filename import InputFilename, OutputFilename
 from cubist.extractor import Extractor
 
@@ -120,7 +119,7 @@ Global options""")
         default=0,
         help="set verbose level")
 
-    global_group.add_argument('--version',
+    global_group.add_argument("--version", "-V",
         action='version',
         version='%(prog)s {version}'.format(version=conf.VERSION))
 
@@ -187,13 +186,6 @@ Global options""")
         action="append",
         default=[],
         help="add an expressions to evaluate (--help-expression/-he for more information)")
-
-    global_group.add_argument("--add-var", "-V",
-        metavar="N=V",
-        action="append",
-        type=VariableDefinition,
-        default=[],
-        help="add a variable definition (--help-user-defined-variables/-hV for more information)")
 
     global_group.add_argument("--random-seed", "-r",
         type=int,

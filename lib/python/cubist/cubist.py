@@ -27,7 +27,6 @@ from .errors import CubistError, CubistMemoryError
 from .clip import Clip
 from .shape import Shape
 from .filename import InputFilename, OutputFilename
-from .variable import VariableDefinition
 from .extractor import Extractor
 from . import conf
 from . import cubist_numpy
@@ -100,6 +99,7 @@ class Cubist(object):
         self._used_output_filenames = set()
 
         self._result = None
+        self._locals = {}
 
     def _set_dtype(self, dtype):
         self.dtype = dtype
@@ -550,14 +550,11 @@ ave           = {ave}
             'cubist_numpy': cubist_numpy,
         }
         globals_d.update(self.input_cubes)
-        locals_d = {}
-        for var_name, var_instance in VariableDefinition.__variables__.items():
-            self.logger.debug("evaluating variable {0}={1!r}...".format(var_name, var_instance.value()))
-            var_instance.evaluate(globals_d, locals_d)
-            locals_d[var_name] = var_instance.value()
+        locals_d = {
+            '_r': self._result,
+        }
         result = self._result
         for expression in expressions:
-            globals_d['_r'] = self._result
             self.logger.info("evaluating expression {0!r}...".format(expression))
             try:
                 mode = 'eval'
@@ -572,11 +569,9 @@ ave           = {ave}
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
                     self._result = result
+                    locals_d['_r'] = self._result
                 else:
-                    if '_r' in locals_d:
-                        self._result = locals_d['_r']
-                    else:
-                        self._result = globals_d['_r']
+                    self._result = locals_d.get('_r', None)
             except Exception as err:
                 raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             #if result.dtype != self.dtype:

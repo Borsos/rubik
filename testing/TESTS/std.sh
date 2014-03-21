@@ -89,10 +89,10 @@ check_file_exists_and_has_size out1_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_
 check_files_are_equal out0_${X}x${Y}.float64.raw out1_${X}x${Y}.float64.raw
 
 ## --- user defined variables ---
-test_prex "cubist -i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -o r0_{shape}.{format} -V f_a=10.0 -V f_b=-5.0 -e 'f_a * a + f_b * b'"
+test_prex "cubist -i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -o r0_{shape}.{format} -e f_a=10.0 -e f_b=-5.0 -e 'f_a * a + f_b * b'"
 check_file_exists_and_has_size r0_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "cubist -i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -o r1_{shape}.{format} -V c='10.0 * a' -V d='-5.0 * b' -e 'c + d'"
+test_prex "cubist -i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -o r1_{shape}.{format} -e c='10.0 * a' -e d='-5.0 * b' -e 'c + d'"
 check_file_exists_and_has_size r1_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal r0_${X}x${Y}.raw r1_${X}x${Y}.raw
 

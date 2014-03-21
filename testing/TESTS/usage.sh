@@ -48,7 +48,7 @@ done
 test_prex "cubist -i r_{shape}.{format} -i l_{shape}.{format} -s ${SHAPE} -e '0.5 * i0 - i1 / 0.5' -o res0_{shape}.{format}"
 check_file_exists_and_has_size res0_${X}x${Y}x${Z}.raw $(( $XYZ * bytes_float32 ))
 
-test_prex "cubist -i r_{shape}.{format} -i l_{shape}.{format} -s ${SHAPE} -V f=0.5 -e 'f * i0 - i1 / f' -o res1_{shape}.{format}"
+test_prex "cubist -i r_{shape}.{format} -i l_{shape}.{format} -s ${SHAPE} -e f=0.5 -e 'f * i0 - i1 / f' -o res1_{shape}.{format}"
 check_file_exists_and_has_size res1_${X}x${Y}x${Z}.raw $(( $XYZ * bytes_float32 ))
 check_files_are_equal res0_${SHAPE}.raw res1_${SHAPE}.raw
 

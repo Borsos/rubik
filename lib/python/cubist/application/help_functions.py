@@ -106,16 +106,11 @@ def help_user_defined_variables():
     PRINT("""\
 User defined variables
 ======================
-User defined variables can be used in generic numpy expressions. For instance:
-  -V alpha=1.5 -V beta=-0.5 -e 'alpha * i0 + beta * i1'
-is equivalent to 
+--------------------------------------------------------------------------------
+Generic expressions can be used to set variables to be used in the following
+expressions. For instance:
+  -e alpha=1.5 -e beta=-0.5 -e 'alpha * i0 + beta * i1'
   -e '1.5 * i0 - 0.5 * i1'
-Also input cubes and previusly defined variables can be used:
-  -V a=10 -V b='a + 5' -V c='i0 * b'
-will set
-  * a = 10
-  * b = 15
-  * c = i0 * 15 ('i0' is the first cube)
 """)
 
 def help_dtypes():
@@ -440,7 +435,7 @@ or:
 $ cubist -i r_{shape}.{format} \\
          -i l_{shape}.{format} \\
          -s 8x10x20 \\
-         -V f=0.5 \\
+         -e f=0.5 \\
          -e 'f * i0 - i1 / f' \\
          -o res1_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
