@@ -60,7 +60,7 @@ From the expression you can access:
 * the current result '_r' (which is generally a cube, but not necessarily).
 
 The cubes module provides some numpy-based functions to operate with
-cubes; see --help-cubist-numpy.
+cubes; see --help-cubes.
 
 You can add an arbitrary number of expressions; they will be executed in the
 same order.
@@ -303,14 +303,17 @@ $ cubist -e 'cb.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
-$ cubist -e 'cb.const_blocks_cube("8x10x4", start=0.0, increment=1.0, block_dims=2, start_dim=None)' \\
+$ cubist -e 'cb.const_blocks_cube("8x10x4", start=0.0, increment=1.0, const_dims=[1, 2])' \\
          -o cc_{shape}.{format}
 
-creates a cube of 8 10x4 const blocks, each block fill value is linearly
-assigned starting from 'start' with increment 'increment'.  You can change the
-block dimension and the starting dimension.
+creates a cube _r for which each subcube _r[x, :, :] is const, with value 'x'.
+In general, if the cube is N-dimensional, every subcube obtained by fixing
+all the coordinates except those listed in const_dims (d_a, d_b, d_c, ...) has
+const values. Moreover, the first subcube corresponding to (0, 0, ..., 0) has
+value 'start', the second, corresponding to (0, 0, ..., 1) has value 'start + 
+increment', and so on.
 
-See --help-cubist-numpy to see the content of the cubes module.
+See --help-cubes to see the content of the cubes module.
 """)
 
 def help_output():
