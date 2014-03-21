@@ -549,8 +549,6 @@ ave           = {ave}
             'cnp': cubist_numpy,
             'cubist_numpy': cubist_numpy,
         }
-        if self._result is not None:
-            globals_d['_r'] = self._result
         globals_d.update(self.input_cubes)
         locals_d = {}
         for var_name, var_instance in VariableDefinition.__variables__.items():
@@ -559,6 +557,7 @@ ave           = {ave}
             locals_d[var_name] = var_instance.value()
         result = self._result
         for expression in expressions:
+            globals_d['_r'] = self._result
             self.logger.info("evaluating expression {0!r}...".format(expression))
             try:
                 mode = 'eval'
@@ -573,11 +572,8 @@ ave           = {ave}
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
                     self._result = result
-                else:
-                    result = self._result
             except Exception as err:
                 raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             #if result.dtype != self.dtype:
             #    result = result.astype(self.dtype)
-        return result
         
