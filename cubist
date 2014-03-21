@@ -49,21 +49,19 @@ def _create_cubist(logger, args):
     return cubist
 
 def _read(cubist, logger, args):
-    expression = getattr(args, 'expression', None)
+    expressions = getattr(args, 'expressions', None)
     cubist.read()
-    if expression:
-        cube = cubist.evaluate_expression(expression=expression)
+    if expressions:
+        cubist.evaluate_expressions(*expressions)
     else:
         if args.input_filenames is None or len(args.input_filenames) == 0:
             logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
         elif len(args.input_filenames) == 0:
             logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
-        cube = cubist.last_cube()
-    return cube
 
 def main_write(logger, args):
     cubist = _create_cubist(logger, args)
-    cube = _read(cubist, logger, args)
+    _read(cubist, logger, args)
     if args.in_place:
         if args.output_filenames:
             raise CubistError("--in-place/-Oi is not compatible with --output-filename/-o")
@@ -72,7 +70,7 @@ def main_write(logger, args):
                 args.output_filenames.add(input_filename.filename())
     #print "I", InputFilename.__filenames__
     #print "O", OutputFilename.__filenames__
-    cubist.output(cube=cube)
+    cubist.output()
     return 0
 
 def main():
@@ -184,9 +182,11 @@ Global options""")
 
     global_group.add_argument("--expression", "-e",
         metavar="E",
-        dest="expression",
+        dest="expressions",
         type=str,
-        help="expression to evaluate (--help-expression/-he for more information)")
+        action="append",
+        default=[],
+        help="add an expressions to evaluate (--help-expression/-he for more information)")
 
     global_group.add_argument("--add-var", "-V",
         metavar="N=V",

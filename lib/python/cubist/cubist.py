@@ -84,7 +84,6 @@ class Cubist(object):
             split_dimensions = ()
         self.split_dimensions = split_dimensions
 
-        self._last_cube = None
         self.input_cubes = OrderedDict()
 
         self.input_filenames = input_filenames
@@ -99,6 +98,8 @@ class Cubist(object):
 
         self._used_input_filenames = set()
         self._used_output_filenames = set()
+
+        self._result = None
 
     def _set_dtype(self, dtype):
         self.dtype = dtype
@@ -135,15 +136,15 @@ class Cubist(object):
     def register_input_cube(self, input_label, input_filename, cube):
         self.input_cubes[input_label] = cube
 
-    def last_cube(self):
-        return self._last_cube
+    def result(self):
+        return self._result
 
     def read(self):
-        self._last_cube = None
+        self._result = None
         if not self.input_filenames:
             return
         for input_label, input_filename in self.input_filenames.items():
-            self._last_cube = self._read(input_label, input_filename)
+            self._result = self._read(input_label, input_filename)
 
     def _check_memory_limit(self, input_label, input_filename):
         input_ordinal = self.input_filenames.get_ordinal(input_label)
@@ -337,8 +338,9 @@ class Cubist(object):
         else:
             yield cube, None
         
-    def output(self, cube):
+    def output(self):
         useless_run = True
+        cube = self._result
         for subcube, dlabels in self.split_over_dimensions(cube):
             if self.print_cube or self.print_stats:
                 self._log_dlabels(dlabels)
@@ -540,25 +542,42 @@ ave           = {ave}
         subcube = cube[extractor.index_pickers()]
         return subcube
  
-    def evaluate_expression(self, expression):
+    def evaluate_expressions(self, *expressions):
         globals_d = {
             'np': np,
             'numpy': np,
             'cnp': cubist_numpy,
             'cubist_numpy': cubist_numpy,
         }
+        if self._result is not None:
+            globals_d['_r'] = self._result
         globals_d.update(self.input_cubes)
         locals_d = {}
         for var_name, var_instance in VariableDefinition.__variables__.items():
             self.logger.debug("evaluating variable {0}={1!r}...".format(var_name, var_instance.value()))
             var_instance.evaluate(globals_d, locals_d)
             locals_d[var_name] = var_instance.value()
-        self.logger.info("evaluating expression {0!r}...".format(expression))
-        try:
-            result = eval(expression, globals_d, locals_d)
-        except Exception as e:
-            raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(e).__name__, e))
-        #if result.dtype != self.dtype:
-        #    result = result.astype(self.dtype)
+        result = self._result
+        for expression in expressions:
+            self.logger.info("evaluating expression {0!r}...".format(expression))
+            try:
+                mode = 'eval'
+                compiled_expression = compile(expression, '<string>', mode)
+            except SyntaxError as err:
+                try:
+                    mode = 'exec'
+                    compiled_expression = compile(expression, '<string>', mode)
+                except SyntaxError as err:
+                    raise CubistError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
+            try:
+                result = eval(compiled_expression, globals_d, locals_d)
+                if mode == 'eval':
+                    self._result = result
+                else:
+                    result = self._result
+            except Exception as err:
+                raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
+            #if result.dtype != self.dtype:
+            #    result = result.astype(self.dtype)
         return result
         

@@ -55,10 +55,21 @@ evaluated. The input cubes are available through the labels referring to them.
 From the expression you can access:
 * the numpy module, as 'numpy' or 'np';
 * the cubist_numpy module, as 'cubist_numpy' or 'cnp';
-* all the used defined variables.
+* all the used defined variables;
+* all the input cubes (by default 'i0', 'i1', ..., 'iN');
+* the current result '_r' (which is generally a cube, but not necessarily).
 
 The cubist_numpy module provides some numpy-based functions to operate with
 cubes; see --help-cubist-numpy.
+
+You can add an arbitrary number of expressions; they will be executed in the
+same order.
+
+The expression can be:
+* a python expression, like '0.5 * i0 - 0.5 * i1'
+* a python statement, like '_r[1, :] = 3.0' (this will set to 3.0 all the points
+  having first coordinate == 1 in '_r', which is the current result, and which
+  should be a 2D cube).
 """)
 
 def help_extractor():
@@ -483,4 +494,13 @@ $ cubist -e 'cnp.random_cube("3x5", min=-5, max=5)' \\
 The '--random-seed 100' option sets the random seed; it has been added to make
 the result reproducible.
 
+## 14. Setting a single value on a cube:
+$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+         -e '_r[0, 0, 0'] = 4 \\
+         -o o_{shape}.{format}
+
+## 15. Setting multiple values on a cube:
+$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+         -e '_r[0, :, 3'] = 4 \\
+         -o o_{shape}.{format}
 """)
