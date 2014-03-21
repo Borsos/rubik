@@ -47,15 +47,15 @@ def help_numpy():
 
 def help_expression():
     PRINT("""\
-Generic numpy expressions
-=========================
-The --expression/-e options allows to pass a generic numpy expression to be
-evaluated. The input cubes are available through the labels referring to them.
+Generic expressions
+===================
+The --expression/-e options allows to pass a generic expression to be evaluated.
+The input cubes are available through the labels referring to them.
 
 From the expression you can access:
 * the numpy module, as 'numpy' or 'np';
 * the cubist_numpy module, as 'cubist_numpy' or 'cnp';
-* all the used defined variables;
+* all the used defined variables (variables set in previous expressions);
 * all the input cubes (by default 'i0', 'i1', ..., 'iN');
 * the current result '_r' (which is generally a cube, but not necessarily).
 
@@ -66,8 +66,8 @@ You can add an arbitrary number of expressions; they will be executed in the
 same order.
 
 The expression can be:
-* a python expression, like '0.5 * i0 - 0.5 * i1'
-* a python statement, like '_r[1, :] = 3.0' (this will set to 3.0 all the points
+* a python 'eval' expression producing a 'value', like '0.5 * i0 - 0.5 * i1'
+* a python 'exec' string, like '_r[1, :] = 3.0' (this will set to 3.0 all the points
   having first coordinate == 1 in '_r', which is the current result, and which
   should be a 2D cube).
 """)
@@ -106,17 +106,28 @@ def help_user_defined_variables():
     PRINT("""\
 User defined variables
 ======================
---------------------------------------------------------------------------------
-Generic expressions can be used to set variables to be used in the following
-expressions. For instance:
-  -e alpha=1.5 -e beta=-0.5 -e 'alpha * i0 + beta * i1'
-  -e '1.5 * i0 - 0.5 * i1'
+It is possible to use expressions to set variables; this variables can then
+be used in the following expressions. For instance:
+
+$ cubist -i l_{shape}.{format} \\
+         -i r_{shape}.{format} \\
+         -s 8x10 \\
+         -e alpha=1.5 \\
+         -e beta=-0.5 \\
+         -e 'alpha * i0 + beta * i1' \\
+         -o o_{shape}.{format}
 """)
 
 def help_dtypes():
     PRINT("""\
-Available dtypes
-================
+Available data types
+====================
+All numpy dtypes are valid data types.
+You can set:
+* the internal dtype, which is the default dtype;
+* the specific dtype for each input file ('--input-dtype/-It');
+* the specific dtype for each output file ('--output-dtype/-Ot');
+
 This is the list of the available numpy dtypes:
 """)
     for dtype_name, dtype_description in conf.DATA_TYPES.items():
@@ -200,10 +211,9 @@ These labels can be used to
   - the shape
   - an extractor
   for instance, '-s i0=8x10' sets the shape for the first input cube only;
-* refer to the corresponding cube in a generic numpy expression; in this case,
-  'i0' refers to the cube read from the first input filename, after the
-  extractor has been applied (indeed extractors are applied just during the
-  file loading).
+* refer to the corresponding cube in expressions; in this case, 'i0' refers to
+  the cube read from the first input filename, after the extractor has been
+  applied (indeed extractors are applied just during the file loading).
 
 See --help-labeled-options/-ho for more information about options referring to
 labeled files.
@@ -218,7 +228,7 @@ Output filenames
 ================
 Also the output filenames have a label (by default 'o0'); the label can be used
 to set specific parameters on the output file, for instance the format. It
-cannot be used in the generic numpy expression.
+cannot be used in expressions.
 
 For instance, '-o x=x_8x10.raw --output-dtype x=float64' applies the dtype
 'float64' to the output file 'x_8x10.raw'.
@@ -272,10 +282,7 @@ def help_creating_cubes():
     PRINT("""\
 Creating cubes from scratch
 ===========================
-It is possible to create cubes from scratch. Indeed, it is possible to use a
-generic numpy expression without input filenames.
-
-For instance:
+It is possible to create cubes from scratch, using an expression.  For instance:
 
 $ cubist -e 'np.linspace(0, 79, 80).reshape((8, 10))' -o lc_{shape}.{format}
 
@@ -322,9 +329,10 @@ def help_memory_usage():
 Memory usage
 ============
 A complete control of the memory usage is not possible, due to the possibility
-to execute generic numpy expressions. Nevertheless cubist can check the amount
-of memory necessary to read input files and store the result. You can provide
-a limit for this amout of memory using the '--memory-limit/m' option.
+to execute generic expressions involving numpy arrays. Nevertheless cubist can
+check the amount of memory necessary to read input files and store the result.
+You can provide a limit for this amout of memory using the '--memory-limit/m'
+option.
 
 For instance, with the option '--memory-limit 16gb', you will not allowed to
 read more than 16 gb of data. The default memory limit is '0', which means no
