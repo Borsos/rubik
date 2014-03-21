@@ -18,7 +18,8 @@
 __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
-           'equals_cube', 'equals_num', 'equals']
+           'equals_cube', 'equals_num', 'equals',
+           'reldiff_cube', 'threshold']
 
 import numpy as np
 
@@ -198,6 +199,19 @@ def equals(cube_0, cube_1, tolerance=0.0):
            within the given tolerance, False otherwise
     """
     return equals_num(cube_0, cube_1, tolerance) != 0
+
+def threshold(cube, epsilon=0.0, value=0.0):
+    """threshold(cube, epsilon=0.0, value=0.0) : sets to 'value' all elements <= 'epsilon'
+    """
+    return np.where(cube > epsilon, cube, value)
+
+def reldiff_cube(cube_0, cube_1):
+    """reldiff(cube_0, cube_1) -> cube of relative difference
+    | a - b |
+    _________
+       |a|
+    """
+    return np.nan_to_num(np.abs(cube_0 - cube_1) / np.abs(cube_0))
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_size):
