@@ -21,79 +21,55 @@ import itertools
 from collections import OrderedDict
 
 from .application import log
+from .application import utils
 from .py23 import irange
 from .units import Memory
 from .errors import CubistError, CubistMemoryError
 from .clip import Clip
 from .shape import Shape
 from .filename import InputFilename, OutputFilename
+from .application.argdict import InputArgDict, OutputArgDict
+from .application.arglist import ArgList
 from .extractor import Extractor
 from . import conf
 from . import cubes
 
 class Cubist(object):
-    def __init__(self,
-            dtype,
-            logger,
-            input_filenames,
-            input_formats,
-            input_dtypes,
-            output_filenames,
-            output_dtypes,
-            output_formats,
-            extractors,
-            shapes,
-            input_csv_separators,
-            output_csv_separators,
-            input_text_delimiters,
-            output_text_delimiters,
-            output_text_newlines,
-            output_text_converters,
-            accept_bigger_raw_files=False,
-            read_mode=conf.DEFAULT_READ_MODE,
-            optimized_min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
-            memory_limit=conf.DEFAULT_LIMIT_MEMORY,
-            split_dimensions=None,
-            clobber=conf.DEFAULT_CLOBBER,
-            print_cube=False,
-            print_stats=False):
-        self._set_dtype(dtype)
-        self.logger = logger
-        self.input_csv_separators = input_csv_separators
-        self.output_csv_separators = output_csv_separators
-        self.input_text_delimiters = input_text_delimiters
-        self.output_text_delimiters = output_text_delimiters
-        self.output_text_newlines = output_text_newlines
-        self.output_text_converters = output_text_converters
-        self.accept_bigger_raw_files = accept_bigger_raw_files
+    def __init__(self):
+        self.input_filenames = InputArgDict(InputFilename)
+        self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
+        self.input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
+        self.input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
+        self.input_text_delimiters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
+        self.shapes = InputArgDict(Shape)
+        self.extractors = InputArgDict(Extractor, default=None)
 
-        self.read_mode = read_mode
+        self.output_filenames = OutputArgDict(OutputFilename)
+        self.output_dtypes = OutputArgDict(conf.get_dtype, default=None)
+        self.output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
+        self.output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
+        self.output_text_delimiters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
+        self.output_text_newlines = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
+        self.output_text_converters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_CONVERTER)
 
-        self.optimized_min_size = optimized_min_size
-        self.memory_limit = memory_limit
-        self.memory_limit_bytes = memory_limit.get_bytes()
+        self.expressions = ArgList(str)
+
+        default_dtype = conf.get_dtype(conf.DEFAULT_DATA_TYPE)
+        self.logger = log.LOGGER
+
+        self.set_accept_bigger_raw_files(False)
+        self.set_read_mode(conf.DEFAULT_READ_MODE)
+        self.set_optimized_min_size(conf.DEFAULT_OPTIMIZED_MIN_SIZE)
+        self.set_memory_limit(conf.DEFAULT_LIMIT_MEMORY)
+        self.set_split_dimensions(None)
+        self.set_clobber(conf.DEFAULT_CLOBBER)
+        self.set_print_cube(False)
+        self.set_print_stats(False)
+        self.set_in_place(False)
+        self.set_dtype(default_dtype)
+
         self.total_read_bytes = 0
-
-        self.clobber = clobber
-
-        self.print_cube = print_cube
-        self.print_stats = print_stats
-
-        if split_dimensions is None:
-            split_dimensions = ()
-        self.split_dimensions = split_dimensions
-
         self.input_cubes = OrderedDict()
-
-        self.input_filenames = input_filenames
-        self.input_formats = input_formats
-        self.input_dtypes = input_dtypes
-        self.shapes = shapes
-        self.extractors = extractors
-
-        self.output_filenames = output_filenames
-        self.output_dtypes = output_dtypes
-        self.output_formats = output_formats
 
         self._used_input_filenames = set()
         self._used_output_filenames = set()
@@ -101,11 +77,64 @@ class Cubist(object):
         self._result = None
         self._locals = {}
 
-    def _set_dtype(self, dtype):
+    def set_dtype(self, dtype):
         self.dtype = dtype
         cubes.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
         self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
+
+    def set_logger(self, logger):
+        self.logger = logger
+
+    def set_accept_bigger_raw_files(self, accept_bigger_raw_files):
+        self.accept_bigger_raw_files = accept_bigger_raw_files
+
+    def set_read_mode(self, read_mode):
+        self.read_mode = read_mode
+
+    def set_in_place(self, in_place):
+        self.in_place = in_place
+
+    def set_optimized_min_size(self, optimized_min_size):
+        self.optimized_min_size = optimized_min_size
+
+    def set_memory_limit(self, memory_limit):
+        self.memory_limit = memory_limit
+        self.memory_limit_bytes = memory_limit.get_bytes()
+
+    def set_split_dimensions(self, split_dimensions):
+        if split_dimensions is None:
+            split_dimensions = ()
+        self.split_dimensions = split_dimensions
+
+    def set_clobber(self, clobber):
+        self.clobber = clobber
+
+    def set_print_cube(self, print_cube):
+        self.print_cube = print_cube
+
+    def set_print_stats(self, print_stats):
+        self.print_stats = print_stats
+
+    def run(self):
+        self.read()
+        if self.expressions:
+            self.evaluate_expressions(*self.expressions)
+        else:
+            if self.input_filenames is None or len(self.input_filenames) == 0:
+                logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
+            elif len(self.input_filenames) == 0:
+                logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
+
+        if self.in_place:
+            if self.output_filenames:
+                raise CubistError("--in-place/-Oi is not compatible with --output-filename/-o")
+            else:
+                for input_filename in self.input_filenames.values():
+                    self.output_filenames.add(input_filename.filename())
+        #print "I", InputFilename.__filenames__
+        #print "O", OutputFilename.__filenames__
+        self.output()
 
     def get_dtype_bytes(self, dtype):
         if not dtype in self._cache_dtype_bytes:
@@ -379,7 +408,7 @@ class Cubist(object):
         output_dtype_bytes = self.get_dtype_bytes(output_dtype)
         if cube.dtype != output_dtype:
             cube = cube.astype(output_dtype)
-        assert isinstance(output_filename, OutputFilename)
+        assert isinstance(output_filename, OutputFilename), (output_filename, type(output_filename))
         output_filename = output_filename.filename
         numpy_function = None
         numpy_function_pargs = []

@@ -8,18 +8,12 @@ import random
 import numpy as np
 
 from cubist import conf
-from cubist.shape import Shape
 from cubist.units import Memory
 from cubist.cubist import Cubist
 from cubist.errors import CubistError, CubistMemoryError
-from cubist.filename import InputFilename, OutputFilename
-from cubist.extractor import Extractor
 
 from cubist.application import log
 from cubist.application import help_functions
-from cubist.application.argdict import InputArgDict, OutputArgDict
-
-from cubist.application import utils
 
 _EXPRNUM = 0
 def expression_type(value):
@@ -27,60 +21,6 @@ def expression_type(value):
     t = _EXPRNUM
     _EXPRNUM += 1
     return (t, value)
-
-def _create_cubist(logger, args):
-    cubist = Cubist(
-            dtype=args.dtype,
-            logger=logger,
-            input_filenames=args.input_filenames,
-            input_dtypes=args.input_dtypes,
-            input_formats=args.input_formats,
-            output_filenames=args.output_filenames,
-            output_dtypes=args.output_dtypes,
-            output_formats=args.output_formats,
-            shapes=args.shapes,
-            extractors=args.extractors,
-            input_csv_separators=args.input_csv_separators,
-            output_csv_separators=args.output_csv_separators,
-            input_text_delimiters=args.input_text_delimiters,
-            output_text_delimiters=args.output_text_delimiters,
-            output_text_newlines=args.output_text_newlines,
-            output_text_converters=args.output_text_converters,
-            accept_bigger_raw_files=getattr(args, 'accept_bigger_raw_files', None),
-            read_mode=getattr(args, 'read_mode', conf.DEFAULT_READ_MODE),
-            optimized_min_size=args.optimized_min_size,
-            memory_limit=args.memory_limit,
-            split_dimensions=args.split_dimensions,
-            clobber=args.clobber,
-            print_cube=args.print_cube,
-            print_stats=args.print_stats)
-    return cubist
-
-def _read(cubist, logger, args):
-    expressions = utils.flatten_tuple(args.expressions, depth=1) + utils.flatten_tuple(args.expression, depth=1)
-    expressions = [v[1] for v in sorted(expressions, key=lambda x: x[0])]
-    cubist.read()
-    if expressions:
-        cubist.evaluate_expressions(*expressions)
-    else:
-        if args.input_filenames is None or len(args.input_filenames) == 0:
-            logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
-        elif len(args.input_filenames) == 0:
-            logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
-
-def main_write(logger, args):
-    cubist = _create_cubist(logger, args)
-    _read(cubist, logger, args)
-    if args.in_place:
-        if args.output_filenames:
-            raise CubistError("--in-place/-Oi is not compatible with --output-filename/-o")
-        else:
-            for input_filename in args.input_filenames.values():
-                args.output_filenames.add(input_filename.filename())
-    #print "I", InputFilename.__filenames__
-    #print "O", OutputFilename.__filenames__
-    cubist.output()
-    return 0
 
 def main():
 
@@ -92,21 +32,7 @@ expressions, and write the result.
 """
     epilog = ""
     
-    argdict_input_filenames = InputArgDict(InputFilename)
-    argdict_input_dtypes = InputArgDict(conf.get_dtype, default=None)
-    argdict_input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
-    argdict_input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
-    argdict_input_text_delimiters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
-    argdict_shapes = InputArgDict(Shape)
-    argdict_extractors = InputArgDict(Extractor, default=None)
-
-    argdict_output_filenames = OutputArgDict(OutputFilename)
-    argdict_output_dtypes = OutputArgDict(conf.get_dtype, default=None)
-    argdict_output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
-    argdict_output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
-    argdict_output_text_delimiters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
-    argdict_output_text_newlines = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
-    argdict_output_text_converters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_CONVERTER)
+    cubist = Cubist()
 
     parser = argparse.ArgumentParser(
         description=description,
@@ -114,10 +40,6 @@ expressions, and write the result.
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.set_defaults(
-        function=main_write,
-    )
-    
     global_group = parser.add_argument_group(
         "global options",
         description="""\
@@ -197,18 +119,14 @@ Global options""")
     global_group.add_argument("--expression", "-e",
         metavar="E",
         dest="expressions",
-        type=expression_type,
-        action="append",
+        type=cubist.expressions.store,
         nargs='+',
-        default=[],
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
     global_group.add_argument("expression",
         metavar="E",
-        type=expression_type,
-        action="append",
+        type=cubist.expressions.store,
         nargs='*',
-        default=[],
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
     input_group = parser.add_argument_group(
@@ -220,49 +138,42 @@ see --help-labeled-options for more information.""")
     input_group.add_argument("--input-filename", "-i",
         metavar='I',
         dest="input_filenames",
-        type=argdict_input_filenames.store_function(),
-        default=argdict_input_filenames,
+        type=cubist.input_filenames.store,
         help="input filename (--help-filename/-hf for an explanation about filenames)")
 
     input_group.add_argument("--shape", "-s",
         metavar="[D0[:D1[...]]]",
         dest="shapes",
-        type=argdict_shapes.store_function(),
-        default=argdict_shapes,
+        type=cubist.shapes.store,
         help="shape of the input filename")
 
     input_group.add_argument("--extract", "-x",
         metavar="X",
         dest="extractors",
-        type=argdict_extractors.store_function(),
-        default=argdict_extractors,
+        type=cubist.extractors.store,
         help="subcube extractor (--help-extractor/-he for more information)")
 
     input_group.add_argument("--input-dtype", "-It",
         metavar="D",
         dest="input_dtypes",
-        type=argdict_input_dtypes.store_function(),
-        default=argdict_input_dtypes,
+        type=cubist.input_dtypes.store,
         help="input data type name (--help-data-types/-hd to show all available data types)")
 
     input_group.add_argument("--input-format", "-If",
         dest="input_formats",
-        type=argdict_input_formats.store_function(),
-        default=argdict_input_formats,
+        type=cubist.input_formats.store,
         help="input file format")
 
     input_group.add_argument("--input-csv-separator", "-Is",
         metavar='S',
         dest="input_csv_separators",
-        type=argdict_input_csv_separators.store_function(),
-        default=argdict_input_csv_separators,
+        type=cubist.input_csv_separators.store,
         help="separator to be used with '{0}' input file format".format(conf.FILE_FORMAT_CSV))
 
     input_group.add_argument("--input-text-delimiter", "-Id",
         metavar='D',
         dest="input_text_delimiters",
-        type=argdict_input_text_delimiters.store_function(),
-        default=argdict_input_text_delimiters,
+        type=cubist.input_text_delimiters.store,
         help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
 
     output_group = parser.add_argument_group(
@@ -279,8 +190,7 @@ see --help-labeled-options for more information.""")
     write_output_filename_group.add_argument("--output-filename", "-o",
         metavar='O',
         dest="output_filenames",
-        type=argdict_output_filenames.store_function(),
-        default=argdict_output_filenames,
+        type=cubist.output_filenames.store,
         help="output filename (--help-filename/-hf for an explanation about filenames)")
 
     output_group.add_argument('--print', '-P',
@@ -306,42 +216,36 @@ see --help-labeled-options for more information.""")
     output_group.add_argument("--output-dtype", "-Ot",
         metavar="D",
         dest="output_dtypes",
-        type=argdict_output_dtypes.store_function(),
-        default=argdict_output_dtypes,
+        type=cubist.output_dtypes.store,
         help="output data type name (--help-data-types/-hd to show all available data types)")
 
     output_group.add_argument("--output-format", "-Of",
         dest="output_formats",
-        type=argdict_output_formats.store_function(),
-        default=argdict_output_formats,
+        type=cubist.output_formats.store,
         help="output file format")
 
     output_group.add_argument("--output-csv-separator", "-Os",
         metavar='S',
         dest="output_csv_separators",
-        type=argdict_output_csv_separators.store_function(),
-        default=argdict_output_csv_separators,
+        type=cubist.output_csv_separators.store,
         help="separator to be used with '{0}' output file format".format(conf.FILE_FORMAT_CSV))
 
     output_group.add_argument("--output-text-delimiter", "-Od",
         metavar='D',
         dest="output_text_delimiters",
-        type=argdict_output_text_delimiters.store_function(),
-        default=argdict_output_text_delimiters,
+        type=cubist.output_text_delimiters.store,
         help="delimiter to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
     output_group.add_argument("--output-text-newline", "-On",
         metavar='N',
         dest="output_text_newlines",
-        type=argdict_output_text_newlines.store_function(),
-        default=argdict_output_text_newlines,
+        type=cubist.output_text_newlines.store,
         help="newline to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
     output_group.add_argument("--output-text-converter", "-Oc",
         metavar='C',
         dest="output_text_converters",
-        type=argdict_output_text_converters.store_function(),
-        default=argdict_output_text_converters,
+        type=cubist.output_text_converters.store,
         help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
 
@@ -442,6 +346,19 @@ Options to show help on specific topics """)
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
         sys.exit(1)
 
+    logger = log.set_logger(args.verbose_level)
+    cubist.set_logger(logger)
+    cubist.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
+    cubist.set_read_mode(args.read_mode)
+    cubist.set_in_place(args.in_place)
+    cubist.set_optimized_min_size(args.optimized_min_size)
+    cubist.set_memory_limit(args.memory_limit)
+    cubist.set_split_dimensions(args.split_dimensions)
+    cubist.set_clobber(args.clobber)
+    cubist.set_print_cube(args.print_cube)
+    cubist.set_print_stats(args.print_stats)
+    cubist.set_dtype(args.dtype)
+
     help_done = False
     for key in dir(args):
         if key.startswith('help_') and getattr(args, key):
@@ -451,7 +368,6 @@ Options to show help on specific topics """)
     if help_done:
         sys.exit(0)
         
-    logger = log.set_logger(args.verbose_level)
     
     if args.random_seed is not None:
         np.random.seed(args.random_seed)
@@ -459,7 +375,7 @@ Options to show help on specific topics """)
 
     return_code = 0
     try:
-        return_code = args.function(logger, args)
+        return_code = cubist.run()
     except CubistMemoryError:
         log.trace_error(args.trace_errors)
         logger.error("error: the memory limit of {0} has been exceeded; you can try to increase the memory limit (--memory-limit/-m)".format(args.memory_limit))

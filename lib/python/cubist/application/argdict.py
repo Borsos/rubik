@@ -19,15 +19,17 @@ import re
 
 from collections import OrderedDict
 
+from .storage import Storage
+
 from ..errors import CubistError
 
-class ArgDict(OrderedDict):
+class ArgDict(Storage, OrderedDict):
     __formatter__ = "o{ordinal}"
     def __init__(self, factory, formatter=None, default=None, separator='='):
+        Storage.__init__(self, factory)
         OrderedDict.__init__(self)
         self._re_split = re.compile("^([a-zA-Z]+\w*){separator}(.*)".format(separator=re.escape(separator)))
         self._default = default
-        self._factory = factory
         if formatter is None:
             formatter = self.__formatter__
         self._formatter = formatter
@@ -36,7 +38,7 @@ class ArgDict(OrderedDict):
 
     def add(self, value):
         label, value = self.label_split(value)
-        value = self._factory(value)
+        value = self.factory(value)
         ordinal = len(self)
         if label is None:
             self._default = value
@@ -57,15 +59,6 @@ class ArgDict(OrderedDict):
             if automatic_label in self:
                 return self[automatic_label]
         return self._default
-
-    def store_function(self):
-        def f_closure(self_, name):
-            def f(x):
-                return self_.add(x)
-            for a in 'func_name', '__name__':
-                setattr(f, a, name)
-            return f
-        return f_closure(self, self._factory.__name__)
 
     def label_split(self, value):
         m = self._re_split.match(value)
