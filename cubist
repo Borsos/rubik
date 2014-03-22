@@ -19,6 +19,15 @@ from cubist.application import log
 from cubist.application import help_functions
 from cubist.application.argdict import InputArgDict, OutputArgDict
 
+from cubist.application import utils
+
+_EXPRNUM = 0
+def expression_type(value):
+    global _EXPRNUM
+    t = _EXPRNUM
+    _EXPRNUM += 1
+    return (t, value)
+
 def _create_cubist(logger, args):
     cubist = Cubist(
             dtype=args.dtype,
@@ -48,7 +57,8 @@ def _create_cubist(logger, args):
     return cubist
 
 def _read(cubist, logger, args):
-    expressions = getattr(args, 'expressions', None)
+    expressions = utils.flatten_tuple(args.expressions, depth=1) + utils.flatten_tuple(args.expression, depth=1)
+    expressions = [v[1] for v in sorted(expressions, key=lambda x: x[0])]
     cubist.read()
     if expressions:
         cubist.evaluate_expressions(*expressions)
@@ -179,18 +189,27 @@ Global options""")
         default=conf.DEFAULT_CLOBBER,
         help="do not overwrite existing output files")
 
-    global_group.add_argument("--expression", "-e",
-        metavar="E",
-        dest="expressions",
-        type=str,
-        action="append",
-        default=[],
-        help="add an expressions to evaluate (--help-expression/-he for more information)")
-
     global_group.add_argument("--random-seed", "-r",
         type=int,
         default=None,
         help="set the random seed")
+
+    global_group.add_argument("--expression", "-e",
+        metavar="E",
+        dest="expressions",
+        type=expression_type,
+        action="append",
+        nargs='+',
+        default=[],
+        help="add an expressions to evaluate (--help-expression/-he for more information)")
+
+    global_group.add_argument("expression",
+        metavar="E",
+        type=expression_type,
+        action="append",
+        nargs='*',
+        default=[],
+        help="add an expressions to evaluate (--help-expression/-he for more information)")
 
     input_group = parser.add_argument_group(
         "input options",
