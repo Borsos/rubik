@@ -22,10 +22,10 @@ from collections import OrderedDict
 from ..errors import CubistError
 
 class ArgDict(OrderedDict):
-    __re_label_split__ = re.compile("^([a-zA-Z]+\w*)\=(.*)")
     __formatter__ = "o{ordinal}"
-    def __init__(self, factory, formatter=None, default=None):
+    def __init__(self, factory, formatter=None, default=None, separator='='):
         OrderedDict.__init__(self)
+        self._re_split = re.compile("^([a-zA-Z]+\w*){separator}(.*)".format(separator=re.escape(separator)))
         self._default = default
         self._factory = factory
         if formatter is None:
@@ -67,9 +67,8 @@ class ArgDict(OrderedDict):
             return f
         return f_closure(self, self._factory.__name__)
 
-    @classmethod
-    def label_split(cls, value):
-        m = cls.__re_label_split__.match(value)
+    def label_split(self, value):
+        m = self._re_split.match(value)
         if m:
             label, value = m.groups()
         else:
