@@ -182,3 +182,6 @@ done
 test_prex "cubist -i d{rank}_{shape}.{format} -s $D6_SHAPE -x $D6_EXTRACTOR -o d{rank}_d0=${D0f}_d2=${D2f}_d4=${D4f}_d5=${D5f}_{shape}.{format}"
 check_file_exists_and_has_size d2_d0=${D0f}_d2=${D2f}_d4=${D4f}_d5=${D5f}_${D2_SHAPE}.raw $(( $D1 * $D3 * $bytes_float32 ))
 
+## --- multiple expressions ---
+test_prex "cubist -e 'a10=10' 'b30=a10 * 3' -e 'c50=b30 + 20' --random-seed 100 'd100=c50 * 2' 'd100 - 10' --print > c.out"
+check_file_exists_and_has_content c.out '90'
