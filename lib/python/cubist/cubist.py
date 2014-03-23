@@ -30,6 +30,7 @@ from .shape import Shape
 from .filename import InputFilename, OutputFilename
 from .application.argdict import InputArgDict, OutputArgDict
 from .application.arglist import ArgList
+from .application.logo import RUBIK
 from .extractor import Extractor
 from . import conf
 from . import cubes
@@ -77,6 +78,15 @@ class Cubist(object):
         self._result = None
         self._locals = {}
 
+    def show_logo(self):
+        log.PRINT(RUBIK)
+
+    def show_logo_once(self):
+        attr_name = '_logo_has_been_shown'
+        if not getattr(self, attr_name, False):
+            self.show_logo()
+            setattr(self, attr_name, True)
+
     def set_dtype(self, dtype):
         self.dtype = dtype
         cubes.set_default_dtype(self.dtype)
@@ -122,9 +132,10 @@ class Cubist(object):
             self.evaluate_expressions(*self.expressions)
         else:
             if self.input_filenames is None or len(self.input_filenames) == 0:
-                logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
+                self.show_logo_once()
+                self.logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
             elif len(self.input_filenames) == 0:
-                logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
+                self.logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
 
         if self.in_place:
             if self.output_filenames:
@@ -392,6 +403,7 @@ class Cubist(object):
                 useless_run = False
                 self._write_cube(cube=subcube, dlabels=dlabels)
         if useless_run:
+            self.show_logo_once()
             self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
     
     def write(self, cube):

@@ -13,6 +13,7 @@ from cubist.cubist import Cubist
 from cubist.errors import CubistError, CubistMemoryError
 
 from cubist.application import log
+from cubist.application import logo
 from cubist.application import help_functions
 
 _EXPRNUM = 0
@@ -25,11 +26,23 @@ def expression_type(value):
 def main():
 
     description = """\
-Tool to read/write N-dimensional cubes
+================================================================================
+Cubist {version}
+================================================================================
+{rubik}
+Cubist is a command line tool to generate/read/transform/write N-dimensional
+cubes. It is based on the numpy library.
 
-Read N-dimensional cubes, extract M-dimensional subcubes, evaluate generic
-expressions, and write the result.
-"""
+Cubist can:
+* create cubes from scratch;
+* read input files containing N-dimensional cubes ('raw', 'text' or 'csv'
+  formats are supported);
+* extract a portion of the cube during read;
+* execute generic expressions involving input cubes and producing other cubes;
+* changing values on the cubes;
+* writing cubes to output files ('raw', 'text' or 'csv' formats are supported).
+
+""".format(version=conf.VERSION, rubik=logo.RUBIK)
     epilog = ""
     
     cubist = Cubist()
@@ -124,7 +137,6 @@ Global options""")
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
     global_group.add_argument("expression",
-        metavar="E",
         type=cubist.expressions.store,
         nargs='*',
         help="add an expressions to evaluate (--help-expression/-he for more information)")
