@@ -133,6 +133,7 @@ class Rubik(object):
             if self.input_filenames is None or len(self.input_filenames) == 0:
                 #self.show_logo_once()
                 self.logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
+                return
             elif len(self.input_filenames) == 0:
                 self.logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
 

@@ -162,12 +162,12 @@ It is possible to use expressions to set variables; this variables can then
 be used in the following expressions. For instance:
 
 $ rubik -i l_{shape}.{format} \\
-         -i r_{shape}.{format} \\
-         -s 8x10 \\
-         -e alpha=1.5 \\
-         -e beta=-0.5 \\
-         -e 'alpha * i0 + beta * i1' \\
-         -o o_{shape}.{format}
+        -i r_{shape}.{format} \\
+        -s 8x10 \\
+        -e alpha=1.5 \\
+        -e beta=-0.5 \\
+        -e 'alpha * i0 + beta * i1' \\
+        -o o_{shape}.{format}
 """)
 
 def help_dtypes():
@@ -356,7 +356,7 @@ $ rubik -e 'cb.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 creates a const cube with all values 8.0.
 
 $ rubik -e 'cb.const_blocks_cube("8x10x4", start=0.0, increment=1.0, const_dims=[1, 2])' \\
-         -o cc_{shape}.{format}
+        -o cc_{shape}.{format}
 
 creates a cube _r for which each subcube _r[x, :, :] is const, with value 'x'.
 In general, if the cube is N-dimensional, every subcube obtained by fixing
@@ -446,24 +446,24 @@ default data type) and write it to r_8x10x20.float64.raw as float64
       indices from third to third to last along y, and write it:
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
-         -x :,2:-2,: \\
-         -o rsub_{shape}.{format} -v
+        -x :,2:-2,: \\
+        -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
 
 ## 6. Read a subcube, subsample it along y and z dimension:
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
-         -x :,::2,::4 \\
-         -o rsub_{shape}.{format} -v
+        -x :,::2,::4 \\
+        -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
 
 ## 7. Read a 3D cube, extract a 2D plane corresponding to y=5:
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
-         -x :,5,: \\
-         -o rsub_{shape}.{format} -v
+        -x :,5,: \\
+        -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
 
@@ -471,9 +471,9 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
 value (== split on the second dimension):
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
-         -x :,::2,: \\
-         -o rsub_y{d1}_{shape}.{format} \\
-         --split 1 -v
+        -x :,::2,: \\
+        -o rsub_y{d1}_{shape}.{format} \\
+        --split 1 -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y0_8x20.raw'...
 writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y1_8x20.raw'...
@@ -484,10 +484,10 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
 ### 9. Compute a linear combination of two input files:
 
 $ rubik -i r_{shape}.{format} \\
-         -i l_{shape}.{format} \\
-         -s 8x10x20 \\
-         -e '0.5 * i0 - i1 / 0.5' \\
-         -o res0_{shape}.{format} -v
+        -i l_{shape}.{format} \\
+        -s 8x10x20 \\
+        -e '0.5 * i0 - i1 / 0.5' \\
+        -o res0_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
 evaluating expression '0.5 * i0 - 0.5 * i1'...
@@ -496,11 +496,11 @@ writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res0_8x10x20.raw'...
 or:
 
 $ rubik -i r_{shape}.{format} \\
-         -i l_{shape}.{format} \\
-         -s 8x10x20 \\
-         -e f=0.5 \\
-         -e 'f * i0 - i1 / f' \\
-         -o res1_{shape}.{format} -v
+        -i l_{shape}.{format} \\
+        -s 8x10x20 \\
+        -e f=0.5 \\
+        -e 'f * i0 - i1 / f' \\
+        -o res1_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
 evaluating expression 'f * i0 - f * i1'...
@@ -509,9 +509,9 @@ writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
 ### 10. Compute a linear combination with a portion of a file:
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
-         -i rsub_y2_{shape}.{format} -s 8x20 \\
-         -e 'i1 - i0' \\
-         -o rdiff_{shape}.{format} -v
+        -i rsub_y2_{shape}.{format} -s 8x20 \\
+        -e 'i1 - i0' \\
+        -o rdiff_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
 reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y2_8x20.raw'...
 evaluating expression 'i1 - i0'...
@@ -534,17 +534,17 @@ ave           = 0.0
 ### 12. Check if two cubes are equal content within a given tolerance '1e-5':
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
-         -i rsub_y2_{shape}.{format} -s 8x20 \\
-         -e 'cb.equals(i1, i0, 1e-5)' \\
-         --print
+        -i rsub_y2_{shape}.{format} -s 8x20 \\
+        -e 'cb.equals(i1, i0, 1e-5)' \\
+        --print
 True
 
 ## 13. Print a random cube with integer values between -5 and +5:
 
 $ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
-         --dtype int32 \\
-         --random-seed 100 \\
-         --print
+        --dtype int32 \\
+        --random-seed 100 \\
+        --print
 [[ 0 -2  0  3 -4]
  [-3  1  3 -3  0]
  [ 3 -2 -3 -3 -2]]
@@ -554,22 +554,22 @@ the result reproducible.
 
 ## 14. Setting a single value on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
-         -e '_r[0, 0, 0] = 4' \\
-         -o o_{shape}.{format}
+        -e '_r[0, 0, 0] = 4' \\
+        -o o_{shape}.{format}
 
 The '_r' variable is the current result; in this case, the cube just read. In
 this case, it is 'i0', but in general it can be the result of a previos
 expression; for instance:
 
 $ rubik -t int32 \\
-         --random-seed 100 \\
-         -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
-         -e '_r[:, 1, :] = -5' \\
-         --print
+        --random-seed 100 \\
+        -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
+        -e '_r[:, 1, :] = -5' \\
+        --print
 
 ## 15. Setting multiple values on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
-         -e '_r[0, :, 3] = 4' \\
-         -o o_{shape}.{format}
+        -e '_r[0, :, 3] = 4' \\
+        -o o_{shape}.{format}
 
 """)

@@ -68,6 +68,11 @@ Global options""")
         action='version',
         version='%(prog)s {version}'.format(version=conf.VERSION))
 
+    global_group.add_argument("--logo", "-L",
+        action='store_true',
+        default=False,
+        help="show rubik's logo")
+
     global_group.add_argument("--trace-errors", "-E",
         dest="trace_errors",
         action="store_true",
@@ -370,6 +375,10 @@ Options to show help on specific topics """)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
     rubik.set_dtype(args.dtype)
+
+    if args.logo:
+        rubik.show_logo()
+        sys.exit(0)
 
     help_done = False
     for key in dir(args):
