@@ -7,19 +7,19 @@ TESTING_DIR=$( cd $TESTING_DIR && pwd )
 ## Loading library
 source $TESTING_DIR/test.sh
 
-TEMPROOT="$PWD/tmp_test_cubist.$$"
+TEMPROOT="$PWD/tmp_test_rubik.$$"
 TEMPDIR=""
 TESTS="$EMPTY"
 
 
 function print_help {
-    echo "Usage: ${PROGNAME} [options] [-- [cubist options]]"
+    echo "Usage: ${PROGNAME} [options] [-- [rubik options]]"
     cat << EOFHLP
 [options]
     --tmpdir, -t TEMPDIR        set tmp dir to TEMPDIR
     --list-tests, -l            list available tests
     --test, -t TEST             execute test TEST
-    --pass OPTION               pass OPTION to cubist
+    --pass OPTION               pass OPTION to rubik
     --help, -h                  show this help
 EOFHLP
 }
@@ -29,7 +29,7 @@ while [[ ${#@} -ne 0 ]] ; do
     option="$1"
     shift 1
     if $END_OF_OPTIONS ; then
-        add_cubist_option "'$option'"
+        add_rubik_option "'$option'"
     else
         case "$option" in
             --)
@@ -59,7 +59,7 @@ while [[ ${#@} -ne 0 ]] ; do
                 shift 1
                 ;;
             --pass)
-                add_cubist_option "'$1'"
+                add_rubik_option "'$1'"
                 shift 1
                 ;;
             --help|-h)
@@ -67,8 +67,8 @@ while [[ ${#@} -ne 0 ]] ; do
                 exit 0
                 ;;
             *)
-                echo "WRN: passing option '$option' to cubist"
-                add_cubist_option "'$option'"
+                echo "WRN: passing option '$option' to rubik"
+                add_rubik_option "'$option'"
                 #exit 1
                 ;;
         esac

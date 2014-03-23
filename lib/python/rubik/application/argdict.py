@@ -21,8 +21,6 @@ from collections import OrderedDict
 
 from .storage import Storage
 
-from ..errors import CubistError
-
 class ArgDict(Storage, OrderedDict):
     __formatter__ = "o{ordinal}"
     def __init__(self, factory, formatter=None, default=None, separator='='):

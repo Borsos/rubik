@@ -17,8 +17,6 @@
 
 import re
 
-from .errors import CubistError
-
 class Filename(object):
     def __init__(self, init):
         if isinstance(init, Filename):

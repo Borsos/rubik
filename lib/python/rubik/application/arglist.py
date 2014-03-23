@@ -15,8 +15,16 @@
 # limitations under the License.
 #
 
-class CubistError(Exception):
-    pass
+import re
 
-class CubistMemoryError(CubistError):
-    pass
+from .storage import Storage
+
+class ArgList(Storage, list):
+    def __init__(self, factory):
+        Storage.__init__(self, factory)
+        list.__init__(self)
+
+    def add(self, value):
+        self.append(self.factory(value))
+        return self
+        

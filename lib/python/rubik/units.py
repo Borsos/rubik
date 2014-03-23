@@ -17,7 +17,7 @@
 
 import re
 
-from .errors import CubistError
+from .errors import RubikUnitsError
 
 class UnitsValue(object):
     __re_split_string__ = re.compile("^([\d]+)\s*(.*)$")
@@ -33,9 +33,9 @@ class UnitsValue(object):
             try:
                 value, units = self.from_string(init)
             except Exception as err:
-                raise CubistError("cannot make a {0} from {1!r}: {2}: {3}".format(self.__class__.__name__, init, err.__class__.__name__, err))
+                raise RubikUnitsError("cannot make a {0} from {1!r}: {2}: {3}".format(self.__class__.__name__, init, err.__class__.__name__, err))
         else:
-            raise CubistError("cannot make a {0} from {1!r} of type {2}".format(self.__class__.__name__, init, type(init).__name__))
+            raise RubikUnitsError("cannot make a {0} from {1!r} of type {2}".format(self.__class__.__name__, init, type(init).__name__))
         if default_units is None:
             if units is not None:
                 default_units = units
@@ -53,12 +53,12 @@ class UnitsValue(object):
     def from_string(cls, s):
         m = cls.__re_split_string__.match(s)
         if not m:
-            raise CubistError("cannot make a {0} from {1!r}".format(cls.__name__, s))
+            raise RubikUnitsError("cannot make a {0} from {1!r}".format(cls.__name__, s))
         v_s, u_s = m.groups()
         if not u_s:
             u_s = cls.__default_units__
         if u_s is None:
-            raise CubistError("cannot make a {0} from {1!r}: missing units".format(cls.__name__, s))
+            raise RubikUnitsError("cannot make a {0} from {1!r}: missing units".format(cls.__name__, s))
         return cls.value_from_string(v_s), cls.units_from_string(u_s)
         
     @classmethod

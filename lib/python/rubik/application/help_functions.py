@@ -52,11 +52,11 @@ Generic expressions
 Expressions can be passed:
 * positionally, for instance
 
-  $ cubist 'cb.linear_cube("4x4")' --print
+  $ rubik 'cb.linear_cube("4x4")' --print
 
 * through the '--expression/-e' options:
 
-  $ cubist -e 'cb.linear_cube("4x4")' --print
+  $ rubik -e 'cb.linear_cube("4x4")' --print
 
 You can pass multiple expressions; they will be evaluated in order.
 
@@ -78,11 +78,11 @@ The expression can be:
 
 Expressions starting with '-'
 =============================
-If an expression starts with a '-' sign, cubist can try to parse it as an
+If an expression starts with a '-' sign, rubik can try to parse it as an
 option:
 
-$ cubist '-cb.linear_cube("3x4")' --print
-usage: cubist [-h] [--verbose] [--version] [--trace-errors] [--safe]
+$ rubik '-cb.linear_cube("3x4")' --print
+usage: rubik [-h] [--verbose] [--version] [--trace-errors] [--safe]
               [--optimized] [--optimized-min-size S] [--memory-limit L[units]]
               [--dtype D] [--accept-bigger-raw-files] [--clobber]
               [--no-clobber] [--random-seed RANDOM_SEED]
@@ -100,26 +100,26 @@ usage: cubist [-h] [--verbose] [--version] [--trace-errors] [--safe]
               [--help-creating-cubes] [--help-output] [--help-memory-usage]
               [--help-usage]
               [E [E ...]]
-cubist: error: unrecognized arguments: -cb.linear_cube("3x4")
+rubik: error: unrecognized arguments: -cb.linear_cube("3x4")
 
 In this case, you can pass all the expressions positionally after '--':
 
-$ cubist --print -- '-cb.linear_cube("3x4")'
+$ rubik --print -- '-cb.linear_cube("3x4")'
 [[ -0.  -1.  -2.  -3.]
  [ -4.  -5.  -6.  -7.]
  [ -8.  -9. -10. -11.]]
 
 Other working alternatives are:
 
-$ cubist --print -e'-cb.linear_cube("3x4")'
+$ rubik --print -e'-cb.linear_cube("3x4")'
 ...
-$ cubist --print -e='-cb.linear_cube("3x4")'
+$ rubik --print -e='-cb.linear_cube("3x4")'
 ...
-$ cubist --print --expression='-cb.linear_cube("3x4")'
+$ rubik --print --expression='-cb.linear_cube("3x4")'
 ...
 
 or, more tricky:
-$ cubist '0 - cb.linear_cube("3x4")' --print
+$ rubik '0 - cb.linear_cube("3x4")' --print
 ...
 
 """)
@@ -161,7 +161,7 @@ User defined variables
 It is possible to use expressions to set variables; this variables can then
 be used in the following expressions. For instance:
 
-$ cubist -i l_{shape}.{format} \\
+$ rubik -i l_{shape}.{format} \\
          -i r_{shape}.{format} \\
          -s 8x10 \\
          -e alpha=1.5 \\
@@ -210,12 +210,12 @@ the second unlabeled option to the second file, and so on.
 
 For instance:
 
-* 'cubist -i a.raw -i b.raw -c i.raw -s 8x10 ...': the shape 8x10 is assigned to
+* 'rubik -i a.raw -i b.raw -c i.raw -s 8x10 ...': the shape 8x10 is assigned to
   all the input files.
-* 'cubist -i a.raw -i b.raw -c i.raw -s 8x10 -s i1=8x20x10 ...': the shape 8x10
+* 'rubik -i a.raw -i b.raw -c i.raw -s 8x10 -s i1=8x20x10 ...': the shape 8x10
   is assigned to 'a.raw' and 'c.raw', since 'b.raw' has a labeled shape option, so
   its shape is 8x20x10;
-* 'cubist -i a.raw -i b.raw -c i.raw -s 8x10 -s 8x20x10 ...': in this case,
+* 'rubik -i a.raw -i b.raw -c i.raw -s 8x10 -s 8x20x10 ...': in this case,
   - 'a.raw' has shape 8x10;
   - 'b.raw' and 'c.raw' have shape 8x20x10.
 
@@ -229,7 +229,7 @@ Splitting dimensions
 Suppose you have a _8x4x10_ cube, and you want to write _4_ _8x10_ cubes, one
 for each index in the second dimension. The command is:
 
-$ cubist -i a_{shape}.{format} -s 8x4x10 --split 1 -o s_{shape}.{d1}.{format} -v
+$ rubik -i a_{shape}.{format} -s 8x4x10 --split 1 -o s_{shape}.{d1}.{format} -v
 reading 320 'float32' elements (1280 bytes) from 'raw' file 'a_8x4x10.raw'...
 writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.0.raw'...
 writing 80 'float32' elements (320 bytes) to 'raw' file 's_8x10.1.raw'...
@@ -321,10 +321,10 @@ def help_environment_variables():
     PRINT("""\
     Environment variables
 =====================
-Currently the only accepted environment variable is '$CUBIST_OPTIONS', that can
-be set to a list of valid cubist options. For instance:
+Currently the only accepted environment variable is '$RUBIK_OPTIONS', that can
+be set to a list of valid rubik options. For instance:
 
-$ export CUBIST_OPTIONS='-v --memory-limit 16gb'
+$ export RUBIK_OPTIONS='-v --memory-limit 16gb'
 
 These options will be prepended to the list of command line arguments. So, they
 can be overwritten by command line arguments.
@@ -336,26 +336,26 @@ Creating cubes from scratch
 ===========================
 It is possible to create cubes from scratch, using an expression.  For instance:
 
-$ cubist -e 'np.linspace(0, 79, 80).reshape((8, 10))' -o lc_{shape}.{format}
+$ rubik -e 'np.linspace(0, 79, 80).reshape((8, 10))' -o lc_{shape}.{format}
 
 will create a cube with values from 0.0 to 79.0 with increment 1.0.
 
 The cubes (or cb) module has some convenience functions to easily
 create cubes:
 
-$ cubist -e 'cb.linear_cube("8x10")' -o lc_{shape}.{format}
+$ rubik -e 'cb.linear_cube("8x10")' -o lc_{shape}.{format}
 
 creates the same cube;
 
-$ cubist -e 'cb.random_cube("8x10")' -o rc_{shape}.{format}
+$ rubik -e 'cb.random_cube("8x10")' -o rc_{shape}.{format}
 
 creates a random cube; and
 
-$ cubist -e 'cb.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
+$ rubik -e 'cb.const_cube("8x10", 8.0)' -o cc_{shape}.{format}
 
 creates a const cube with all values 8.0.
 
-$ cubist -e 'cb.const_blocks_cube("8x10x4", start=0.0, increment=1.0, const_dims=[1, 2])' \\
+$ rubik -e 'cb.const_blocks_cube("8x10x4", start=0.0, increment=1.0, const_dims=[1, 2])' \\
          -o cc_{shape}.{format}
 
 creates a cube _r for which each subcube _r[x, :, :] is const, with value 'x'.
@@ -384,7 +384,7 @@ def help_memory_usage():
 Memory usage
 ============
 A complete control of the memory usage is not possible, due to the possibility
-to execute generic expressions involving numpy arrays. Nevertheless cubist can
+to execute generic expressions involving numpy arrays. Nevertheless rubik can
 check the amount of memory necessary to read input files and store the result.
 You can provide a limit for this amout of memory using the '--memory-limit/m'
 option.
@@ -423,21 +423,21 @@ Examples/recipes
 
 ## 1. Create a random cube with a given shape:
 
-$ cubist -e 'cb.random_cube("8x10x20") -o r_{shape}.{format}
+$ rubik -e 'cb.random_cube("8x10x20") -o r_{shape}.{format}
 
 This will create 'r_8x10x20.raw'.
 
 ## 2. Create a cube with linear values:
 
-$ cubist -e 'cb.linear_cube("8x10x20") -o l_{shape}.{format}
+$ rubik -e 'cb.linear_cube("8x10x20") -o l_{shape}.{format}
 
 ## 3. Read a cube and write it with a different format:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
+$ rubik -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
 
 ## 4. Read a cube and write it with a different data type:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
+$ rubik -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
 
 This will read from 'r_8x10x20.raw' a float32 cube (float32 is the
 default data type) and write it to r_8x10x20.float64.raw as float64
@@ -445,7 +445,7 @@ default data type) and write it to r_8x10x20.float64.raw as float64
 ## 5. Read a subcube consisting of the full x and z dimension, and of
       indices from third to third to last along y, and write it:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
          -x :,2:-2,: \\
          -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
@@ -453,7 +453,7 @@ writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
 
 ## 6. Read a subcube, subsample it along y and z dimension:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
          -x :,::2,::4 \\
          -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
@@ -461,7 +461,7 @@ writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
 
 ## 7. Read a 3D cube, extract a 2D plane corresponding to y=5:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
          -x :,5,: \\
          -o rsub_{shape}.{format} -v
 reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
@@ -470,7 +470,7 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
 ## 8. Read a 3D cube, subsample on y, extract a 2D plane for each resulting y
 value (== split on the second dimension):
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
          -x :,::2,: \\
          -o rsub_y{d1}_{shape}.{format} \\
          --split 1 -v
@@ -483,7 +483,7 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
 
 ### 9. Compute a linear combination of two input files:
 
-$ cubist -i r_{shape}.{format} \\
+$ rubik -i r_{shape}.{format} \\
          -i l_{shape}.{format} \\
          -s 8x10x20 \\
          -e '0.5 * i0 - i1 / 0.5' \\
@@ -495,7 +495,7 @@ writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res0_8x10x20.raw'...
 
 or:
 
-$ cubist -i r_{shape}.{format} \\
+$ rubik -i r_{shape}.{format} \\
          -i l_{shape}.{format} \\
          -s 8x10x20 \\
          -e f=0.5 \\
@@ -508,7 +508,7 @@ writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
 
 ### 10. Compute a linear combination with a portion of a file:
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
          -i rsub_y2_{shape}.{format} -s 8x20 \\
          -e 'i1 - i0' \\
          -o rdiff_{shape}.{format} -v
@@ -519,7 +519,7 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rdiff_8x20.raw'...
 
 ### 11. Show statistics about a cube:
 
-$ cubist -i rdiff_8x20.raw -s 8x20 --stats
+$ rubik -i rdiff_8x20.raw -s 8x20 --stats
 shape         = 8x20
 #elements     = 160
 min           = 0.0
@@ -533,7 +533,7 @@ ave           = 0.0
 
 ### 12. Check if two cubes are equal content within a given tolerance '1e-5':
 
-$ cubist -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
          -i rsub_y2_{shape}.{format} -s 8x20 \\
          -e 'cb.equals(i1, i0, 1e-5)' \\
          --print
@@ -541,7 +541,7 @@ True
 
 ## 13. Print a random cube with integer values between -5 and +5:
 
-$ cubist -e 'cb.random_cube("3x5", min=-5, max=5)' \\
+$ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
          --dtype int32 \\
          --random-seed 100 \\
          --print
@@ -553,7 +553,7 @@ The '--random-seed 100' option sets the random seed; it has been added to make
 the result reproducible.
 
 ## 14. Setting a single value on a cube:
-$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
          -e '_r[0, 0, 0] = 4' \\
          -o o_{shape}.{format}
 
@@ -561,14 +561,14 @@ The '_r' variable is the current result; in this case, the cube just read. In
 this case, it is 'i0', but in general it can be the result of a previos
 expression; for instance:
 
-$ cubist -t int32 \\
+$ rubik -t int32 \\
          --random-seed 100 \\
          -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
          -e '_r[:, 1, :] = -5' \\
          --print
 
 ## 15. Setting multiple values on a cube:
-$ cubist -i r_{shape}.{format} -s 8x10x20 \\
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
          -e '_r[0, :, 3] = 4' \\
          -o o_{shape}.{format}
 

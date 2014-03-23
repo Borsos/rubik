@@ -22,7 +22,7 @@ import collections
 import numpy as np
 
 
-from .errors import CubistError
+from .errors import RubikDataTypeError
 from .units import Memory
 
 VERSION_MAJOR = 1
@@ -55,7 +55,7 @@ DEFAULT_OPTIMIZED_MIN_SIZE = Memory("100mb")
 
 DEFAULT_CLOBBER = True
 
-CUBIST_OPTIONS = shlex.split(os.environ.get('CUBIST_OPTIONS', ''))
+RUBIK_OPTIONS = shlex.split(os.environ.get('RUBIK_OPTIONS', ''))
     
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
@@ -85,4 +85,4 @@ def get_dtype(data_type):
     try:
         return getattr(np, data_type)
     except Exception as err:
-        raise CubistError("invalid dtype {0!r}: {1}: {2}".format(data_type, err.__class__.__name__, err))
+        raise RubikDataTypeError("invalid dtype {0!r}: {1}: {2}".format(data_type, err.__class__.__name__, err))

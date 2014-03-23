@@ -26,7 +26,7 @@ import numpy as np
 from . import conf
 from .py23 import lrange, irange
 from .units import Memory
-from .errors import CubistError
+from .errors import RubikError
 from .shape import Shape
 from .extractor import Extractor
 
@@ -83,82 +83,6 @@ def const_cube(shape, value=0.0):
     cube = cube.reshape(shape.shape())
     return _as_default_dtype(cube)
 
-#def const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2, start_dim=None):
-#    """const_blocks_cube(shape, start=0.0, increment=1.0, block_dims=2, start_dim=None) ->
-#       create a cube with the given shape, composed by blocks filled with
-#       const value.  This value starts with 'start' and is incremented by
-#       'increment'.
-#       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
-#       (for instance, "8x10")
-#       If block_dims == 1, it is equivalent to linear_cube(shape, start, increment)
-#       If block_dims == len(shape), it is equivalent to const_cube(shape, start)
-#       'start_dim' is the starting dimension for blocks. By default it is '-block_dims'.
-#    """
-#    shape = Shape(shape)
-#    if len(shape) == 0:
-#        return np.array([], dtype=DEFAULT_DTYPE)
-#    if block_dims < 1:
-#        raise CubistError("invalid block_dims={0}: must be > 0".format(block_dims))
-#    elif block_dims > len(shape):
-#        raise CubistError("invalid block_dims={0}: must be > len(shape) == {1}".format(block_dims, len(shape)))
-#    if start_dim is None:
-#       start_dim = -block_dims
-#    while start_dim < 0:
-#       start_dim += len(shape)
-#    if start_dim >= len(shape):
-#        raise CubistError("invalid start_dim={0}: must be < len(shape) == {1}".format(start_dim, len(shape)))
-#    end_dim = min(len(shape), start_dim + block_dims)
-#    shape_t = shape.shape()
-#
-#    def _make_sub_block(const_count, lin_count, begin, increment):
-#        #print "const_count={0}, lin_count={1}, begin={2}, increment={3}".format(const_count, lin_count, begin, increment)
-#        if const_count:
-#            if lin_count:
-#                cube = np.array([np.arange(begin, begin + lin_count * increment, increment, dtype=DEFAULT_DTYPE) for i in irange(const_count)], dtype=DEFAULT_DTYPE)
-#            else:
-#                #cube = _make_lin(const_count, b, 0.0)
-#                cube = np.linspace(begin, begin, const_count)
-#        else:
-#            if lin_count:
-#                #cube = _make_lin(lin_count, b, increment)
-#                cube = np.linspace(begin, begin + lin_count * increment, lin_count)
-#            else:
-#                cube = None
-#        #print cube
-#        #if cube is None:
-#        #    print "-> None"
-#        #else:
-#        #    print "-> cube.size={0}".format(cube.size)
-#        return cube
-#
-#    if len(shape_t) > block_dims:
-#        shape_a = Shape(shape_t[:start_dim])
-#        shape_b = Shape(shape_t[start_dim:end_dim])
-#        shape_c = Shape(shape_t[end_dim:])
-#        shape_a_count = shape_a.count()
-#        shape_b_count = shape_b.count()
-#        shape_c_count = shape_c.count()
-#        #print "start_dim={0}, block_dims={1}, end_dim={2}".format(start_dim, block_dims, end_dim)
-#        #print "A:", shape_a_count, repr(str(shape_a))
-#        #print "B:", shape_b_count, repr(str(shape_b))
-#        #print "C:", shape_c_count, repr(str(shape_c))
-#        if shape_a_count:
-#            b_beg = 0
-#            b_inc = 1
-#            b_end = shape_a_count
-#            if shape_c_count:
-#                b_inc *= shape_c_count
-#                b_end *= shape_c_count
-#            cube = np.array([_make_sub_block(shape_b_count, shape_c_count, b, increment) for b in irange(b_beg, b_end, b_inc)])
-#        else:
-#            cube = _make_sub_block(shape_b_count, shape_c_count, start, increment)
-#        cube = cube.reshape(shape.shape())
-#    elif len(shape_t) <= block_dims:
-#        return const_cube(shape, value=start)
-#    else:
-#        cube = const_cube(shape, 0.0)
-#    return _as_default_dtype(cube)
-        
 def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     """const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None) ->
        create a cube with the given shape; each subblock on the given list
@@ -180,7 +104,7 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
             cdim += len(shape)
         cdims.append(cdim)
         if cdim >= rank:
-            raise CubistError("invalid dimension index {0}: max is {1} since shape is {2}".format(cdim, rank - 1, shape))
+            raise RubikError("invalid dimension index {0}: max is {1} since shape is {2}".format(cdim, rank - 1, shape))
     const_dims = cdims
 
     if not const_dims:
@@ -390,7 +314,7 @@ def fromfile_generic(ftype, f, dtype, shape, extractor=None, min_size=conf.DEFAU
         elif ftype == conf.FILE_FORMAT_CSV:
             ereader_class = ExtractCsvReader
         else:
-            raise CubistError("invalid file type {0}".format(ftype))
+            raise RubikError("invalid file type {0}".format(ftype))
         ereader = ereader_class(dtype=dtype, shape=shape, extractor=extractor, min_size=min_size, **n_args)
         return ereader.read(f)
 

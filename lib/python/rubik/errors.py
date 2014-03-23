@@ -15,18 +15,14 @@
 # limitations under the License.
 #
 
-import re
+class RubikError(Exception):
+    pass
 
-from .storage import Storage
+class RubikMemoryError(RubikError):
+    pass
 
-from ..errors import CubistError
+class RubikUnitsError(RubikError):
+    pass
 
-class ArgList(Storage, list):
-    def __init__(self, factory):
-        Storage.__init__(self, factory)
-        list.__init__(self)
-
-    def add(self, value):
-        self.append(self.factory(value))
-        return self
-        
+class RubikDataTypeError(RubikError):
+    pass

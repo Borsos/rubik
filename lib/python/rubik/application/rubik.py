@@ -20,22 +20,21 @@ import numpy as np
 import itertools
 from collections import OrderedDict
 
-from .application import log
-from .application import utils
-from .py23 import irange
-from .units import Memory
-from .errors import CubistError, CubistMemoryError
-from .clip import Clip
-from .shape import Shape
-from .filename import InputFilename, OutputFilename
-from .application.argdict import InputArgDict, OutputArgDict
-from .application.arglist import ArgList
-from .application.logo import RUBIK
-from .extractor import Extractor
-from . import conf
-from . import cubes
+from . import log
+from . import utils
+from ..py23 import irange
+from ..units import Memory
+from ..errors import RubikError, RubikMemoryError
+from ..shape import Shape
+from ..filename import InputFilename, OutputFilename
+from ..application.argdict import InputArgDict, OutputArgDict
+from ..application.arglist import ArgList
+from ..application.logo import RUBIK
+from ..extractor import Extractor
+from .. import conf
+from .. import cubes
 
-class Cubist(object):
+class Rubik(object):
     def __init__(self):
         self.input_filenames = InputArgDict(InputFilename)
         self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
@@ -139,7 +138,7 @@ class Cubist(object):
 
         if self.in_place:
             if self.output_filenames:
-                raise CubistError("--in-place/-Oi is not compatible with --output-filename/-o")
+                raise RubikError("--in-place/-Oi is not compatible with --output-filename/-o")
             else:
                 for input_filename in self.input_filenames.values():
                     self.output_filenames.add(input_filename.filename())
@@ -190,7 +189,7 @@ class Cubist(object):
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
-            raise CubistError("missing shape for filename {0}".format(input_filename))
+            raise RubikError("missing shape for filename {0}".format(input_filename))
         extractor = self.extractors.get(input_label, input_ordinal)
         if extractor is not None:
             count, sub_count = extractor.get_counts(shape)
@@ -210,7 +209,7 @@ class Cubist(object):
                     input_bytes_sub,
                     self.total_read_bytes))
         if self.memory_limit_bytes > 0 and self.total_read_bytes + input_bytes_read > self.memory_limit_bytes:
-            raise CubistMemoryError("trying to read {0} + {1} = {2} bytes, more than memory limit {1}".format(
+            raise RubikMemoryError("trying to read {0} + {1} = {2} bytes, more than memory limit {1}".format(
                     self.total_read_bytes,
                     input_bytes_read,
                     self.total_read_bytes + input_bytes_read,
@@ -224,14 +223,14 @@ class Cubist(object):
         elif self.read_mode == conf.READ_MODE_OPTIMIZED:
             return self._read_optimized(input_label, input_filename)
         else:
-            raise CubistError("invalid read mode {0!r}".format(self.read_mode))
+            raise RubikError("invalid read mode {0!r}".format(self.read_mode))
 
     def _read_safe(self, input_label, input_filename):
         self.logger.debug("executing safe read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
-            raise CubistError("missing shape for filename {0}".format(input_filename))
+            raise RubikError("missing shape for filename {0}".format(input_filename))
         input_format = self.input_formats.get(input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
@@ -268,7 +267,7 @@ class Cubist(object):
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
         else:
-            raise CubistError("invalid file format {0!r}".format(input_format))
+            raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
         self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
@@ -281,7 +280,7 @@ class Cubist(object):
         input_count = array.size
         if array.size != expected_input_count:
             if input_count < expected_input_count:
-                raise CubistError("input file {0} is not big enough: it contains {1} elements, expected {2} elements".format(
+                raise RubikError("input file {0} is not big enough: it contains {1} elements, expected {2} elements".format(
                     input_filename,
                     input_count,
                     expected_input_count,
@@ -295,12 +294,12 @@ class Cubist(object):
                 if self.accept_bigger_raw_files:
                     self.logger.warning("warning: " + message)
                 else:
-                    raise CubistError(message)
+                    raise RubikError(message)
                 array.resize(shape.shape())
         try:
             cube = array.reshape(shape.shape())
         except ValueError as err:
-            raise CubistError("cannot reshape read data: {t}: {e} [input size={ic}, shape={s}, shape size={sc}]".format(
+            raise RubikError("cannot reshape read data: {t}: {e} [input size={ic}, shape={s}, shape size={sc}]".format(
                     t=type(err).__name__,
                     e=err,
                     ic=array.size,
@@ -317,7 +316,7 @@ class Cubist(object):
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
-            raise CubistError("missing shape for filename {0}".format(input_filename))
+            raise RubikError("missing shape for filename {0}".format(input_filename))
         input_format = self.input_formats.get(input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
@@ -351,7 +350,7 @@ class Cubist(object):
             if text_delimiter is not None:
                 numpy_function_nargs['delimiter'] = text_delimiter
         else:
-            raise CubistError("invalid file format {0!r}".format(input_format))
+            raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
         if extractor is None:
@@ -414,7 +413,7 @@ class Cubist(object):
 
     def _write_cube(self, cube, dlabels=None):
         #if not isinstance(cube, np.ndarray):
-        #    raise CubistError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        #    raise RubikError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         for output_label, output_filename in self.output_filenames.items():
             self._write(cube, output_label, output_filename, dlabels=dlabels)
         
@@ -461,7 +460,7 @@ class Cubist(object):
             if text_converter is not None:
                 numpy_function_nargs['fmt'] = text_convert
         else:
-            raise CubistError("invalid file format {0!r}".format(output_format))
+            raise RubikError("invalid file format {0!r}".format(output_format))
         self.logger.info("writing {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
             c=cube.size,
             t=output_dtype.__name__,
@@ -483,7 +482,7 @@ class Cubist(object):
 
     def stats_cube(self, cube):
         if not isinstance(cube, np.ndarray):
-            raise CubistError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+            raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cube_sum = cube.sum()
         cube_ave = None
         cobe_count = 0
@@ -542,7 +541,7 @@ ave           = {ave}
 
     def _check_output_filename(self, output_filename):
         if (not self.clobber) and os.path.exists(output_filename):
-            raise CubistError("output file {0!r} already exists".format(output_filename))
+            raise RubikError("output file {0!r} already exists".format(output_filename))
         if output_filename in self._used_output_filenames:
             self.logger.warning("warning: output filename {0!r} already written".format(output_filename))
         self._used_output_filenames.add(output_filename)
@@ -555,14 +554,14 @@ ave           = {ave}
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         if not os.path.isfile(input_filename):
-            raise CubistError("missing input file {0}".format(input_filename))
+            raise RubikError("missing input file {0}".format(input_filename))
         if input_format == conf.FILE_FORMAT_RAW:
             expected_input_count = shape.count()
             expected_input_bytes = expected_input_count * self.get_dtype_bytes(input_dtype)
             input_stat_result = os.stat(input_filename)
             input_bytes = input_stat_result.st_size
             if input_bytes < expected_input_bytes:
-                raise CubistError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
+                raise RubikError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
                     input_filename,
                     input_bytes,
                     expected_input_bytes,
@@ -576,13 +575,13 @@ ave           = {ave}
                 if self.accept_bigger_raw_files:
                     self.logger.warning("warning: " + message)
                 else:
-                    raise CubistError(message)
+                    raise RubikError(message)
         return input_filename
 
     def extract(self, cube, extractor):
         assert isinstance(extractor, Extractor)
         if extractor.rank() != len(cube.shape):
-            raise CubistError("invalid extractor {extractor} for shape {shape}: rank {rextractor} does not match {rshape}".format(
+            raise RubikError("invalid extractor {extractor} for shape {shape}: rank {rextractor} does not match {rshape}".format(
                 extractor=extractor,
                 rextractor=extractor.rank(),
                 shape=cube.shape,
@@ -614,7 +613,7 @@ ave           = {ave}
                     mode = 'exec'
                     compiled_expression = compile(expression, '<string>', mode)
                 except SyntaxError as err:
-                    raise CubistError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
+                    raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             try:
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
@@ -623,7 +622,7 @@ ave           = {ave}
                 else:
                     self._result = locals_d.get('_r', None)
             except Exception as err:
-                raise CubistError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
+                raise RubikError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             #if result.dtype != self.dtype:
             #    result = result.astype(self.dtype)
         

@@ -19,25 +19,25 @@ import os
 import sys
 
 scripts = [
-	'cubist',
+	'rubik',
 ]
 
 dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
 py_dirname = os.path.join(dirname, "lib", "python")
 sys.path.insert(0, py_dirname)
 
-from cubist import conf
+from rubik import conf
 
 setup(
-    name = "cubist",
+    name = "rubik",
     version = conf.VERSION,
     requires = [],
     description = "Tool to read/write N-dimensional cubes",
     author = "Simone Campagna",
     author_email = "simone.campagna@tiscali.it",
-    url="https://github.com/simone-campagna/cubist",
-    packages = ["cubist", "cubist.application"],
-    package_dir = {"cubist": "lib/python/cubist"},
+    url="https://github.com/simone-campagna/rubik",
+    packages = ["rubik", "rubik.application"],
+    package_dir = {"rubik": "lib/python/rubik"},
     scripts = scripts,
     package_data = {},
 )

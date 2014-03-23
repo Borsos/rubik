@@ -7,14 +7,14 @@ import random
 
 import numpy as np
 
-from cubist import conf
-from cubist.units import Memory
-from cubist.cubist import Cubist
-from cubist.errors import CubistError, CubistMemoryError
+from rubik import conf
+from rubik.units import Memory
+from rubik.errors import RubikError, RubikMemoryError
 
-from cubist.application import log
-from cubist.application import logo
-from cubist.application import help_functions
+from rubik.application import log
+from rubik.application import logo
+from rubik.application import help_functions
+from rubik.application.rubik import Rubik
 
 _EXPRNUM = 0
 def expression_type(value):
@@ -27,13 +27,13 @@ def main():
 
     description = """\
 ================================================================================
-Cubist {version}
+Rubik {version}
 ================================================================================
-{rubik}
-Cubist is a command line tool to generate/read/transform/write N-dimensional
+{logo}
+Rubik is a command line tool to generate/read/transform/write N-dimensional
 cubes. It is based on the numpy library.
 
-Cubist can:
+Rubik can:
 * create cubes from scratch;
 * read input files containing N-dimensional cubes ('raw', 'text' or 'csv'
   formats are supported);
@@ -42,10 +42,10 @@ Cubist can:
 * changing values on the cubes;
 * writing cubes to output files ('raw', 'text' or 'csv' formats are supported).
 
-""".format(version=conf.VERSION, rubik=logo.RUBIK)
+""".format(version=conf.VERSION, logo=logo.RUBIK)
     epilog = ""
     
-    cubist = Cubist()
+    rubik = Rubik()
 
     parser = argparse.ArgumentParser(
         description=description,
@@ -132,12 +132,12 @@ Global options""")
     global_group.add_argument("--expression", "-e",
         metavar="E",
         dest="expressions",
-        type=cubist.expressions.store,
+        type=rubik.expressions.store,
         nargs='+',
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
     global_group.add_argument("expression",
-        type=cubist.expressions.store,
+        type=rubik.expressions.store,
         nargs='*',
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
@@ -150,42 +150,42 @@ see --help-labeled-options for more information.""")
     input_group.add_argument("--input-filename", "-i",
         metavar='I',
         dest="input_filenames",
-        type=cubist.input_filenames.store,
+        type=rubik.input_filenames.store,
         help="input filename (--help-filename/-hf for an explanation about filenames)")
 
     input_group.add_argument("--shape", "-s",
         metavar="[D0[:D1[...]]]",
         dest="shapes",
-        type=cubist.shapes.store,
+        type=rubik.shapes.store,
         help="shape of the input filename")
 
     input_group.add_argument("--extract", "-x",
         metavar="X",
         dest="extractors",
-        type=cubist.extractors.store,
+        type=rubik.extractors.store,
         help="subcube extractor (--help-extractor/-he for more information)")
 
     input_group.add_argument("--input-dtype", "-It",
         metavar="D",
         dest="input_dtypes",
-        type=cubist.input_dtypes.store,
+        type=rubik.input_dtypes.store,
         help="input data type name (--help-data-types/-hd to show all available data types)")
 
     input_group.add_argument("--input-format", "-If",
         dest="input_formats",
-        type=cubist.input_formats.store,
+        type=rubik.input_formats.store,
         help="input file format")
 
     input_group.add_argument("--input-csv-separator", "-Is",
         metavar='S',
         dest="input_csv_separators",
-        type=cubist.input_csv_separators.store,
+        type=rubik.input_csv_separators.store,
         help="separator to be used with '{0}' input file format".format(conf.FILE_FORMAT_CSV))
 
     input_group.add_argument("--input-text-delimiter", "-Id",
         metavar='D',
         dest="input_text_delimiters",
-        type=cubist.input_text_delimiters.store,
+        type=rubik.input_text_delimiters.store,
         help="delimiter to be used with '{0}' input file format".format(conf.FILE_FORMAT_TEXT))
 
     output_group = parser.add_argument_group(
@@ -202,7 +202,7 @@ see --help-labeled-options for more information.""")
     write_output_filename_group.add_argument("--output-filename", "-o",
         metavar='O',
         dest="output_filenames",
-        type=cubist.output_filenames.store,
+        type=rubik.output_filenames.store,
         help="output filename (--help-filename/-hf for an explanation about filenames)")
 
     output_group.add_argument('--print', '-P',
@@ -228,36 +228,36 @@ see --help-labeled-options for more information.""")
     output_group.add_argument("--output-dtype", "-Ot",
         metavar="D",
         dest="output_dtypes",
-        type=cubist.output_dtypes.store,
+        type=rubik.output_dtypes.store,
         help="output data type name (--help-data-types/-hd to show all available data types)")
 
     output_group.add_argument("--output-format", "-Of",
         dest="output_formats",
-        type=cubist.output_formats.store,
+        type=rubik.output_formats.store,
         help="output file format")
 
     output_group.add_argument("--output-csv-separator", "-Os",
         metavar='S',
         dest="output_csv_separators",
-        type=cubist.output_csv_separators.store,
+        type=rubik.output_csv_separators.store,
         help="separator to be used with '{0}' output file format".format(conf.FILE_FORMAT_CSV))
 
     output_group.add_argument("--output-text-delimiter", "-Od",
         metavar='D',
         dest="output_text_delimiters",
-        type=cubist.output_text_delimiters.store,
+        type=rubik.output_text_delimiters.store,
         help="delimiter to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
     output_group.add_argument("--output-text-newline", "-On",
         metavar='N',
         dest="output_text_newlines",
-        type=cubist.output_text_newlines.store,
+        type=rubik.output_text_newlines.store,
         help="newline to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
     output_group.add_argument("--output-text-converter", "-Oc",
         metavar='C',
         dest="output_text_converters",
-        type=cubist.output_text_converters.store,
+        type=rubik.output_text_converters.store,
         help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
 
@@ -351,7 +351,7 @@ Options to show help on specific topics """)
         default=False,
         help="help about usage: shows some examples and common recipes")
 
-    args = conf.CUBIST_OPTIONS + sys.argv[1:]
+    args = conf.RUBIK_OPTIONS + sys.argv[1:]
     try:
         args = parser.parse_args(args)
     except Exception as err:
@@ -359,17 +359,17 @@ Options to show help on specific topics """)
         sys.exit(1)
 
     logger = log.set_logger(args.verbose_level)
-    cubist.set_logger(logger)
-    cubist.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
-    cubist.set_read_mode(args.read_mode)
-    cubist.set_in_place(args.in_place)
-    cubist.set_optimized_min_size(args.optimized_min_size)
-    cubist.set_memory_limit(args.memory_limit)
-    cubist.set_split_dimensions(args.split_dimensions)
-    cubist.set_clobber(args.clobber)
-    cubist.set_print_cube(args.print_cube)
-    cubist.set_print_stats(args.print_stats)
-    cubist.set_dtype(args.dtype)
+    rubik.set_logger(logger)
+    rubik.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
+    rubik.set_read_mode(args.read_mode)
+    rubik.set_in_place(args.in_place)
+    rubik.set_optimized_min_size(args.optimized_min_size)
+    rubik.set_memory_limit(args.memory_limit)
+    rubik.set_split_dimensions(args.split_dimensions)
+    rubik.set_clobber(args.clobber)
+    rubik.set_print_cube(args.print_cube)
+    rubik.set_print_stats(args.print_stats)
+    rubik.set_dtype(args.dtype)
 
     help_done = False
     for key in dir(args):
@@ -387,8 +387,8 @@ Options to show help on specific topics """)
 
     return_code = 0
     try:
-        return_code = cubist.run()
-    except CubistMemoryError:
+        return_code = rubik.run()
+    except RubikMemoryError:
         log.trace_error(args.trace_errors)
         logger.error("error: the memory limit of {0} has been exceeded; you can try to increase the memory limit (--memory-limit/-m)".format(args.memory_limit))
     except:
