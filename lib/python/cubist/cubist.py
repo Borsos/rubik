@@ -320,12 +320,16 @@ class Cubist(object):
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
-        expected_input_count = shape.count()
+        if extractor:
+            expected_input_count, expected_read_count = extractor.get_counts(shape)
+        else:
+            expected_input_count = shape.count()
+            expected_read_count = expected_input_count
         numpy_function = cubes.fromfile_generic
         numpy_function_nargs = {}
         numpy_function_pargs = []
         if input_format == conf.FILE_FORMAT_RAW:
-            num_bytes = shape.count() * input_dtype_bytes
+            num_bytes = expected_read_count * input_dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
         elif input_format == conf.FILE_FORMAT_CSV:
             msg_bytes = ''
@@ -339,12 +343,17 @@ class Cubist(object):
             raise CubistError("invalid file format {0!r}".format(input_format))
         input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
-        self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
-            c=expected_input_count,
+        if extractor is None:
+            extractor_msg = ''
+        else:
+            extractor_msg = "[{0}]".format(extractor)
+        self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}{x}...".format(
+            c=expected_read_count,
             t=input_dtype.__name__,
             b=msg_bytes,
             f=input_format,
-            i=input_filename))
+            i=input_filename,
+            x=extractor_msg))
         cube = numpy_function(input_format, input_filename, shape=shape, extractor=extractor, dtype=input_dtype, min_size=self.optimized_min_size, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube

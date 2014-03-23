@@ -19,6 +19,7 @@ import re
 
 class Values(object):
     __re_split__ = re.compile("[,x]")
+    __default_separator__ = 'x'
     def __init__(self, init):
         if isinstance(init, Values):
             values = init._values
@@ -60,7 +61,7 @@ class Values(object):
         return len(self._values)
 
     def __str__(self):
-        return str("x".join(str(i) for i in self._values))
+        return str(self.__default_separator__.join(str(i) for i in self._values))
 
     def __repr__(self):
         return "{c}({s!r})".format(c=self.__class__.__name__, s=self._values)

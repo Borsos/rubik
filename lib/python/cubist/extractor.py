@@ -23,7 +23,7 @@ from .values import Values
 from .index_picker import IndexPicker
 
 class Extractor(Values):
-
+    __default_separator__ = ', '
     def rank(self):
         return len(self._values)
 
@@ -51,3 +51,5 @@ class Extractor(Values):
                     start, stop, step = index_picker.get_indices(dim)
                     sub_count *= (stop - start) / step
         return count, sub_count
+
+    
