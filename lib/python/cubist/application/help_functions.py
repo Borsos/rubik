@@ -49,8 +49,16 @@ def help_expression():
     PRINT("""\
 Generic expressions
 ===================
-The --expression/-e options allows to pass a generic expression to be evaluated.
-The input cubes are available through the labels referring to them.
+Expressions can be passed:
+* positionally, for instance
+
+  $ cubist 'cb.linear_cube("4x4")' --print
+
+* through the '--expression/-e' options:
+
+  $ cubist -e 'cb.linear_cube("4x4")' --print
+
+You can pass multiple expressions; they will be evaluated in order.
 
 From the expression you can access:
 * the numpy module, as 'numpy' or 'np';
@@ -62,14 +70,58 @@ From the expression you can access:
 The cubes module provides some numpy-based functions to operate with
 cubes; see --help-cubes.
 
-You can add an arbitrary number of expressions; they will be executed in the
-same order.
-
 The expression can be:
 * a python 'eval' expression producing a 'value', like '0.5 * i0 - 0.5 * i1'
-* a python 'exec' string, like '_r[1, :] = 3.0' (this will set to 3.0 all the points
-  having first coordinate == 1 in '_r', which is the current result, and which
-  should be a 2D cube).
+* a python 'exec' string, like '_r[1, :] = 3.0' (this will set to 3.0 all the
+  points having first coordinate == 1 in '_r', which is the current result, and
+  which should be a 2D cube).
+
+Expressions starting with '-'
+=============================
+If an expression starts with a '-' sign, cubist can try to parse it as an
+option:
+
+$ cubist '-cb.linear_cube("3x4")' --print
+usage: cubist [-h] [--verbose] [--version] [--trace-errors] [--safe]
+              [--optimized] [--optimized-min-size S] [--memory-limit L[units]]
+              [--dtype D] [--accept-bigger-raw-files] [--clobber]
+              [--no-clobber] [--random-seed RANDOM_SEED]
+              [--expression E [E ...]] [--input-filename I]
+              [--shape [D0[:D1[...]]]] [--extract X] [--input-dtype D]
+              [--input-format INPUT_FORMATS] [--input-csv-separator S]
+              [--input-text-delimiter D] [--in-place | --output-filename O]
+              [--print] [--stats] [--split D] [--output-dtype D]
+              [--output-format OUTPUT_FORMATS] [--output-csv-separator S]
+              [--output-text-delimiter D] [--output-text-newline N]
+              [--output-text-converter C] [--help-dtypes]
+              [--help-labeled-options] [--help-expression] [--help-extractor]
+              [--help-user-defined-variables] [--help-numpy] [--help-cubes]
+              [--help-filenames] [--help-split] [--help-environment-variables]
+              [--help-creating-cubes] [--help-output] [--help-memory-usage]
+              [--help-usage]
+              [E [E ...]]
+cubist: error: unrecognized arguments: -cb.linear_cube("3x4")
+
+In this case, you can pass all the expressions positionally after '--':
+
+$ cubist --print -- '-cb.linear_cube("3x4")'
+[[ -0.  -1.  -2.  -3.]
+ [ -4.  -5.  -6.  -7.]
+ [ -8.  -9. -10. -11.]]
+
+Other working alternatives are:
+
+$ cubist --print -e'-cb.linear_cube("3x4")'
+...
+$ cubist --print -e='-cb.linear_cube("3x4")'
+...
+$ cubist --print --expression='-cb.linear_cube("3x4")'
+...
+
+or, more tricky:
+$ cubist '0 - cb.linear_cube("3x4")' --print
+...
+
 """)
 
 def help_extractor():
