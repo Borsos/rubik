@@ -15,6 +15,7 @@ from rubik.application import log
 from rubik.application import logo
 from rubik.application import help_functions
 from rubik.application.rubik import Rubik
+from rubik.application.argument_parser import CommandLineArgumentParser
 
 _EXPRNUM = 0
 def expression_type(value):
@@ -47,7 +48,8 @@ Rubik can:
     
     rubik = Rubik()
 
-    parser = argparse.ArgumentParser(
+    parser = CommandLineArgumentParser(
+        #fromfile_prefix_chars='%',
         description=description,
         epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -115,7 +117,7 @@ Global options""")
         help="data type name (--help-data-types/-hd to show all available data types)")
 
     global_group.add_argument("--accept-bigger-raw-files", "-a",
-        action="store_false",
+        action="store_true",
         default=False,
         help="if an input raw file is bigger than expected, simply issue a warning message")
 
@@ -133,6 +135,19 @@ Global options""")
         type=int,
         default=None,
         help="set the random seed")
+
+    global_group.add_argument("--warnings", "-W",
+        action="append",
+        choices=conf.ALL_WARNINGS,
+        default=[],
+        help="enable warnings")
+
+    global_group.add_argument("--source-file", "-f",
+        metavar="E",
+        dest="source_files",
+        type=lambda x: rubik.expressions.store('@' + x),
+        nargs='+',
+        help="add a source file (--help-expression/-he for more information)")
 
     global_group.add_argument("--expression", "-e",
         metavar="E",
@@ -375,6 +390,8 @@ Options to show help on specific topics """)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
     rubik.set_dtype(args.dtype)
+
+    conf.enable_warnings(*args.warnings)
 
     if args.logo:
         rubik.show_logo()

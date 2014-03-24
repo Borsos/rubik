@@ -19,7 +19,8 @@ __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals',
-           'reldiff_cube', 'threshold']
+           'reldiff_cube', 'threshold_cube',
+           'nonzero_cube']
 
 import numpy as np
 
@@ -176,18 +177,38 @@ def equals(cube_0, cube_1, tolerance=0.0):
     """
     return equals_num(cube_0, cube_1, tolerance) != 0
 
-def threshold(cube, epsilon=0.0, value=0.0):
-    """threshold(cube, epsilon=0.0, value=0.0) : sets to 'value' all elements <= 'epsilon'
+def threshold_cube(cube, threshold=0.0, value=0.0):
+    """threshold_cube(cube, threshold=0.0, value=0.0) : sets to 'value' all elements <= 'threshold'
     """
-    return np.where(cube > epsilon, cube, value)
+    return np.where(cube > threshold, cube, value)
 
-def reldiff_cube(cube_0, cube_1):
-    """reldiff(cube_0, cube_1) -> cube of relative difference
+def reldiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
+    """reldiff(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False) ->
+    cube of relative difference
     | a - b |
     _________
        |a|
+    'in_threshold': if passed, this threshold is applied to 'a' and 'b';
+    'out_threshold': if passed, this threshold is applied to the output (the reldiff)
+    'percentage': if True, the output is multiplied by 100.0
     """
-    return np.nan_to_num(np.abs(cube_0 - cube_1) / np.abs(cube_0))
+    if in_threshold is not None:
+        cube_0 = threshold_cube(cube_0, threshold=in_threshold)
+        cube_1 = threshold_cube(cube_1, threshold=in_threshold)
+    cube_out = np.nan_to_num(np.abs(cube_0 - cube_1) / np.abs(cube_0))
+    if out_threshold is not None:
+        cube_out = threshold_cube(cube_out, threshold=out_threshold)
+    if percentage:
+        cube_out *= 100.0
+    return cube_out
+
+def nonzero_cube(cube, tolerance=0.0):
+    """nonzero_cube(cube_in, tolerance=0.0) -> a cube with 0.0 where cube_in == 0.0 within
+    the given tolerance, 1.0 elsewhere"""
+    if tolerance:
+        return (np.abs(cube) > tolerance).astype(DEFAULT_DTYPE)
+    else:
+        return (cube != 0).astype(DEFAULT_DTYPE)
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_size):

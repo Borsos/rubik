@@ -17,6 +17,7 @@
 
 import os
 import numpy as np
+import warnings
 import itertools
 from collections import OrderedDict
 
@@ -195,7 +196,8 @@ class Rubik(object):
         if extractor is not None:
             count, sub_count = extractor.get_counts(shape)
         else:
-            sub_count = shape.count()
+            count = shape.count()
+            sub_count = count
         input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
@@ -293,7 +295,8 @@ class Rubik(object):
                     expected_input_count,
                 )
                 if self.accept_bigger_raw_files:
-                    self.logger.warning("warning: " + message)
+                    warnings.warn(RuntimeWarning(message))
+                    #self.logger.warning("warning: " + message)
                 else:
                     raise RubikError(message)
                 array.resize(shape.shape())
@@ -404,7 +407,8 @@ class Rubik(object):
                 self._write_cube(cube=subcube, dlabels=dlabels)
         if useless_run:
             #self.show_logo_once()
-            self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
+            #self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
+            pass
     
     def write(self, cube):
         if not self.output_filenames:
@@ -574,7 +578,8 @@ ave           = {ave}
                     expected_input_bytes,
                 )
                 if self.accept_bigger_raw_files:
-                    self.logger.warning("warning: " + message)
+                    warnings.warn(RuntimeWarning(message))
+                    #self.logger.warning("warning: " + message)
                 else:
                     raise RubikError(message)
         return input_filename
@@ -605,16 +610,32 @@ ave           = {ave}
         }
         result = self._result
         for expression in expressions:
-            self.logger.info("evaluating expression {0!r}...".format(expression))
-            try:
-                mode = 'eval'
-                compiled_expression = compile(expression, '<string>', mode)
-            except SyntaxError as err:
+            if expression.startswith('@'):
+                source_filename = expression[1:]
+                self.logger.info("loading source from file {0!r}...".format(source_filename))
+                if not os.path.exists(source_filename):
+                    raise RubikError("cannot compile expression {0!r}: missing filename {1}".format(expression, source_filename))
+                try:
+                    with open(source_filename, "r") as f_in:
+                        source = f_in.read()
+                except Exception as err:
+                    raise RubikError("cannot load source from file {0}: {1}: {2}".format(source_filename, type(err).__name__, err))
                 try:
                     mode = 'exec'
-                    compiled_expression = compile(expression, '<string>', mode)
+                    compiled_expression = compile(source, source_filename, mode)
                 except SyntaxError as err:
                     raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
+            else:
+                self.logger.info("evaluating expression {0!r}...".format(expression))
+                try:
+                    mode = 'eval'
+                    compiled_expression = compile(expression, '<string>', mode)
+                except SyntaxError as err:
+                    try:
+                        mode = 'exec'
+                        compiled_expression = compile(expression, '<string>', mode)
+                    except SyntaxError as err:
+                        raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             try:
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
