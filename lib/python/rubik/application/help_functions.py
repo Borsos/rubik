@@ -70,7 +70,7 @@ Expressions/source can be passed:
 
   $ rubik -e 'cb.linear_cube("4x4")' --print
 
-* through the '--expression-file/-f' option, that :
+* through the '--source-file/-f' option, that :
 
   $ rubik -f expr.txt --print
 
@@ -105,7 +105,7 @@ usage: rubik [-h] [--verbose] [--version] [--trace-errors] [--safe]
              [--optimized] [--optimized-min-size S] [--memory-limit L[units]]
              [--dtype D] [--accept-bigger-raw-files] [--clobber]
              [--no-clobber] [--random-seed RANDOM_SEED]
-             [--expression-file E [E ...]] [--expression E [E ...]]
+             [--source-file E [E ...]] [--expression E [E ...]]
              [--input-filename I] [--shape [D0[:D1[...]]]] [--extract X]
              [--input-dtype D] [--input-format INPUT_FORMATS]
              [--input-csv-separator S] [--input-text-delimiter D]

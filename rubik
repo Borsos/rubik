@@ -70,6 +70,11 @@ Global options""")
         action='version',
         version='%(prog)s {version}'.format(version=conf.VERSION))
 
+    global_group.add_argument("--logo", "-L",
+        action='store_true',
+        default=False,
+        help="show rubik's logo")
+
     global_group.add_argument("--trace-errors", "-E",
         dest="trace_errors",
         action="store_true",
@@ -131,9 +136,9 @@ Global options""")
         default=None,
         help="set the random seed")
 
-    global_group.add_argument("--expression-file", "-f",
+    global_group.add_argument("--source-file", "-f",
         metavar="E",
-        dest="expression_files",
+        dest="source_files",
         type=lambda x: rubik.expressions.store('@' + x),
         nargs='+',
         help="add a source file (--help-expression/-he for more information)")
@@ -379,6 +384,10 @@ Options to show help on specific topics """)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
     rubik.set_dtype(args.dtype)
+
+    if args.logo:
+        rubik.show_logo()
+        sys.exit(0)
 
     help_done = False
     for key in dir(args):
