@@ -15,6 +15,7 @@ from rubik.application import log
 from rubik.application import logo
 from rubik.application import help_functions
 from rubik.application.rubik import Rubik
+from rubik.application.argument_parser import CommandLineArgumentParser
 
 _EXPRNUM = 0
 def expression_type(value):
@@ -47,7 +48,8 @@ Rubik can:
     
     rubik = Rubik()
 
-    parser = argparse.ArgumentParser(
+    parser = CommandLineArgumentParser(
+        #fromfile_prefix_chars='%',
         description=description,
         epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,

@@ -604,16 +604,32 @@ ave           = {ave}
         }
         result = self._result
         for expression in expressions:
-            self.logger.info("evaluating expression {0!r}...".format(expression))
-            try:
-                mode = 'eval'
-                compiled_expression = compile(expression, '<string>', mode)
-            except SyntaxError as err:
+            if expression.startswith('@'):
+                source_filename = expression[1:]
+                self.logger.info("loading source from file {0!r}...".format(source_filename))
+                if not os.path.exists(source_filename):
+                    raise RubikError("cannot compile expression {0!r}: missing filename {1}".format(expression, source_filename))
+                try:
+                    with open(source_filename, "r") as f_in:
+                        source = f_in.read()
+                except Exception as err:
+                    raise RubikError("cannot load source from file {0}: {1}: {2}".format(source_filename, type(err).__name__, err))
                 try:
                     mode = 'exec'
-                    compiled_expression = compile(expression, '<string>', mode)
+                    compiled_expression = compile(source, source_filename, mode)
                 except SyntaxError as err:
                     raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
+            else:
+                self.logger.info("evaluating expression {0!r}...".format(expression))
+                try:
+                    mode = 'eval'
+                    compiled_expression = compile(expression, '<string>', mode)
+                except SyntaxError as err:
+                    try:
+                        mode = 'exec'
+                        compiled_expression = compile(expression, '<string>', mode)
+                    except SyntaxError as err:
+                        raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             try:
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
