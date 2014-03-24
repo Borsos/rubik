@@ -17,6 +17,7 @@
 
 import os
 import numpy as np
+import warnings
 import itertools
 from collections import OrderedDict
 
@@ -194,7 +195,8 @@ class Rubik(object):
         if extractor is not None:
             count, sub_count = extractor.get_counts(shape)
         else:
-            sub_count = shape.count()
+            count = shape.count()
+            sub_count = count
         input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
@@ -292,7 +294,8 @@ class Rubik(object):
                     expected_input_count,
                 )
                 if self.accept_bigger_raw_files:
-                    self.logger.warning("warning: " + message)
+                    warnings.warn(RuntimeWarning(message))
+                    #self.logger.warning("warning: " + message)
                 else:
                     raise RubikError(message)
                 array.resize(shape.shape())
@@ -403,7 +406,8 @@ class Rubik(object):
                 self._write_cube(cube=subcube, dlabels=dlabels)
         if useless_run:
             #self.show_logo_once()
-            self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
+            #self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
+            pass
     
     def write(self, cube):
         if not self.output_filenames:
@@ -573,7 +577,8 @@ ave           = {ave}
                     expected_input_bytes,
                 )
                 if self.accept_bigger_raw_files:
-                    self.logger.warning("warning: " + message)
+                    warnings.warn(RuntimeWarning(message))
+                    #self.logger.warning("warning: " + message)
                 else:
                     raise RubikError(message)
         return input_filename

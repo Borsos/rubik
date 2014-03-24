@@ -17,6 +17,7 @@
 
 import os
 import shlex
+import warnings
 import collections
 
 import numpy as np
@@ -27,7 +28,7 @@ from .units import Memory
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 0
-VERSION_PATCH = 25
+VERSION_PATCH = 26
 VERSION = "{major}.{minor}.{patch}".format(
     major=VERSION_MAJOR,
     minor=VERSION_MINOR,
@@ -86,3 +87,21 @@ def get_dtype(data_type):
         return getattr(np, data_type)
     except Exception as err:
         raise RubikDataTypeError("invalid dtype {0!r}: {1}: {2}".format(data_type, err.__class__.__name__, err))
+
+WARNING_RuntimeWarning = "RuntimeWarning"
+WARNING_all = "all"
+WARNINGS = (
+        WARNING_RuntimeWarning,
+)
+ALL_WARNINGS = WARNINGS + (
+        WARNING_all,
+)
+
+def enable_warnings(*warns):
+    s = set(warns)
+    if WARNING_all in s:
+        s.update(WARNINGS)
+    for warn in WARNINGS:
+        if not warn in s:
+            #print "disable ", warn
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
