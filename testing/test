@@ -19,7 +19,8 @@ function print_help {
     --tmpdir, -t TEMPDIR        set tmp dir to TEMPDIR
     --list-tests, -l            list available tests
     --test, -t TEST             execute test TEST
-    --pass OPTION               pass OPTION to rubik
+    --prepend OPTION            prepend OPTION to rubik options
+    --append OPTION             append OPTION to rubik options
     --help, -h                  show this help
 EOFHLP
 }
@@ -58,8 +59,12 @@ while [[ ${#@} -ne 0 ]] ; do
                 fi
                 shift 1
                 ;;
-            --pass)
-                add_rubik_option "'$1'"
+            --prepend)
+                prepend_rubik_option "'$1'"
+                shift 1
+                ;;
+            --append)
+                append_rubik_option "'$1'"
                 shift 1
                 ;;
             --help|-h)
@@ -67,8 +72,8 @@ while [[ ${#@} -ne 0 ]] ; do
                 exit 0
                 ;;
             *)
-                echo "WRN: passing option '$option' to rubik"
-                add_rubik_option "'$option'"
+                echo "WRN: prepending option '$option' to rubik"
+                prepend_rubik_option "'$option'"
                 #exit 1
                 ;;
         esac

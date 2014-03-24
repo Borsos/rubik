@@ -131,6 +131,13 @@ Global options""")
         default=None,
         help="set the random seed")
 
+    global_group.add_argument("--expression-file", "-f",
+        metavar="E",
+        dest="expression_files",
+        type=lambda x: rubik.expressions.store('@' + x),
+        nargs='+',
+        help="add a source file (--help-expression/-he for more information)")
+
     global_group.add_argument("--expression", "-e",
         metavar="E",
         dest="expressions",

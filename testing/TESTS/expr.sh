@@ -25,10 +25,14 @@ for line in \
     expr_args="$expr_args'$line' "
 done
 
-test_prex "rubik -o a_{shape}.{format} -- $expr_args"
+test_prex "-o a_{shape}.{format} -- $expr_args"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "rubik -o b_{shape}.{format} @${expr_file}"
+test_prex "-o b_{shape}.{format} @${expr_file}"
 check_file_exists_and_has_size b_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal a_${X}x${Y}.raw b_${X}x${Y}.raw
+
+test_prex "-o c_{shape}.{format} -f ${expr_file}"
+check_file_exists_and_has_size c_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
+check_files_are_equal a_${X}x${Y}.raw c_${X}x${Y}.raw
 

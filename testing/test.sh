@@ -33,9 +33,13 @@ for _test in $( get_matching_tests '*' ) ; do
     AVAILABLE_TESTS="$AVAILABLE_TESTS$_test "
 done
 
-ADD_RUBIK_OPTIONS=" "
-function add_rubik_option {
-    ADD_RUBIK_OPTIONS="$ADD_RUBIK_OPTIONS$1 "
+PREPEND_RUBIK_OPTIONS=" "
+function prepend_rubik_option {
+    PREPEND_RUBIK_OPTIONS="$PREPEND_RUBIK_OPTIONS$1 "
+}
+APPEND_RUBIK_OPTIONS=" "
+function append_rubik_option {
+    APPEND_RUBIK_OPTIONS="$APPEND_RUBIK_OPTIONS$1 "
 }
 
 TEST_NAME="undefined"
@@ -49,7 +53,7 @@ function set_test_name {
 }
 
 function test_prex {
-    typeset    _command="$1 $ADD_RUBIK_OPTIONS"
+    typeset    _command="rubik ${PREPEND_RUBIK_OPTIONS} $1 ${APPEND_RUBIK_OPTIONS}"
     TEST_INDEX=$(( $TEST_INDEX + 1 ))
     TEST_NUM=$(( $TEST_NUM + 1 ))
     TEST_PROG=$(( $TEST_PROG + 1 ))

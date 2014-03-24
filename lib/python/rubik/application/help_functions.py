@@ -47,34 +47,53 @@ def help_numpy():
 
 def help_expression():
     PRINT("""\
-Generic expressions
-===================
-Expressions can be passed:
+Generic expressions/source code
+===============================
+--------------------------------------------------------------------------------
+You can pass to rubik generic python source code to be executed. This source
+code can be:
+
+* a python 'eval' expression producing a value, like '0.5 * i0 - 0.5 * i1' (this
+  will set '_r', the current result, to the value produced by the expression);
+
+* a python 'exec' source, like '_r[1, :] = 3.0' (this will set to 3.0 all the
+  points having first coordinate == 1 in '_r', which should be a 2D cube in this
+  case).
+
+Expressions/source can be passed:
+
 * positionally, for instance
 
   $ rubik 'cb.linear_cube("4x4")' --print
 
-* through the '--expression/-e' options:
+* through the '--expression/-e' option:
 
   $ rubik -e 'cb.linear_cube("4x4")' --print
 
-You can pass multiple expressions; they will be evaluated in order.
+* through the '--expression-file/-f' option, that :
 
-From the expression you can access:
+  $ rubik -f expr.txt --print
+
+  in this case, 'expr.txt' must be an existing file containing valid source
+  code;
+
+* passing an expression starting with '@', for instance
+
+  $ rubik @expr.txt --print
+
+  which is equivalent to 'rubik -f expr.txt --print'.
+
+You can pass multiple expressions/source files; they will be evaluated in order.
+
+Inside an expression/source you can access:
 * the numpy module, as 'numpy' or 'np';
 * the cubes module, as 'cubes' or 'cb';
 * all the used defined variables (variables set in previous expressions);
 * all the input cubes (by default 'i0', 'i1', ..., 'iN');
 * the current result '_r' (which is generally a cube, but not necessarily).
 
-The cubes module provides some numpy-based functions to operate with
+The 'cubes' module provides some numpy-based functions to operate with
 cubes; see --help-cubes.
-
-The expression can be:
-* a python 'eval' expression producing a 'value', like '0.5 * i0 - 0.5 * i1'
-* a python 'exec' string, like '_r[1, :] = 3.0' (this will set to 3.0 all the
-  points having first coordinate == 1 in '_r', which is the current result, and
-  which should be a 2D cube).
 
 Expressions starting with '-'
 =============================
@@ -83,23 +102,23 @@ option:
 
 $ rubik '-cb.linear_cube("3x4")' --print
 usage: rubik [-h] [--verbose] [--version] [--trace-errors] [--safe]
-              [--optimized] [--optimized-min-size S] [--memory-limit L[units]]
-              [--dtype D] [--accept-bigger-raw-files] [--clobber]
-              [--no-clobber] [--random-seed RANDOM_SEED]
-              [--expression E [E ...]] [--input-filename I]
-              [--shape [D0[:D1[...]]]] [--extract X] [--input-dtype D]
-              [--input-format INPUT_FORMATS] [--input-csv-separator S]
-              [--input-text-delimiter D] [--in-place | --output-filename O]
-              [--print] [--stats] [--split D] [--output-dtype D]
-              [--output-format OUTPUT_FORMATS] [--output-csv-separator S]
-              [--output-text-delimiter D] [--output-text-newline N]
-              [--output-text-converter C] [--help-dtypes]
-              [--help-labeled-options] [--help-expression] [--help-extractor]
-              [--help-user-defined-variables] [--help-numpy] [--help-cubes]
-              [--help-filenames] [--help-split] [--help-environment-variables]
-              [--help-creating-cubes] [--help-output] [--help-memory-usage]
-              [--help-usage]
-              [E [E ...]]
+             [--optimized] [--optimized-min-size S] [--memory-limit L[units]]
+             [--dtype D] [--accept-bigger-raw-files] [--clobber]
+             [--no-clobber] [--random-seed RANDOM_SEED]
+             [--expression-file E [E ...]] [--expression E [E ...]]
+             [--input-filename I] [--shape [D0[:D1[...]]]] [--extract X]
+             [--input-dtype D] [--input-format INPUT_FORMATS]
+             [--input-csv-separator S] [--input-text-delimiter D]
+             [--in-place | --output-filename O] [--print] [--stats]
+             [--split D] [--output-dtype D] [--output-format OUTPUT_FORMATS]
+             [--output-csv-separator S] [--output-text-delimiter D]
+             [--output-text-newline N] [--output-text-converter C]
+             [--help-dtypes] [--help-labeled-options] [--help-expression]
+             [--help-extractor] [--help-user-defined-variables] [--help-numpy]
+             [--help-cubes] [--help-filenames] [--help-split]
+             [--help-environment-variables] [--help-creating-cubes]
+             [--help-output] [--help-memory-usage] [--help-usage]
+             [expression [expression ...]]
 rubik: error: unrecognized arguments: -cb.linear_cube("3x4")
 
 In this case, you can pass all the expressions positionally after '--':
@@ -121,6 +140,30 @@ $ rubik --print --expression='-cb.linear_cube("3x4")'
 or, more tricky:
 $ rubik '0 - cb.linear_cube("3x4")' --print
 ...
+
+Loading expressions from files
+==============================
+It is possible to load expressions from file; for instance:
+
+$ cat expr.txt
+a = cb.linear_cube("3x4")
+a[1, :] += 10
+a[:, 1] -= 10
+_r = a + 0.5
+$ rubik -f expr.txt --print
+[[  0.5  -8.5   2.5   3.5]
+ [ 14.5   5.5  16.5  17.5]
+ [  8.5  -0.5  10.5  11.5]]
+$
+
+If an expression starts with '@', it is considered a filename to be load. For
+instance:
+
+$ rubik @expr.txt --print
+[[  0.5  -8.5   2.5   3.5]
+ [ 14.5   5.5  16.5  17.5]
+ [  8.5  -0.5  10.5  11.5]]
+$
 
 """)
 
