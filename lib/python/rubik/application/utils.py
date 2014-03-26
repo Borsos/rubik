@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 def flatten_list(sequence, depth=-1):
     out = []
     for item in sequence:

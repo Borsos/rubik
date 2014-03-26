@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 class IndexPicker(object):
     def __init__(self, init):
         if isinstance(init, IndexPicker):

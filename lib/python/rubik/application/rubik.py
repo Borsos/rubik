@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 import os
 import numpy as np
 import warnings
@@ -637,6 +639,7 @@ ave           = {ave}
                     except SyntaxError as err:
                         raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             try:
+                self.logger.debug("executing {0!r} expression...".format(mode))
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
                     self._result = result

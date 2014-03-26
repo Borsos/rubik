@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 import sys
 
 if sys.version_info.major == 2:

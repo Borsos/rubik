@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 import re
 
 from .storage import Storage

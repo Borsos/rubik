@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 RUBIK = r"""
                                          _a??</                                 
                                      .a;?:: :..(<                               

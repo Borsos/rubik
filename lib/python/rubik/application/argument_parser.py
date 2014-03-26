@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 __all__ = ['CommandLineArgumentParser']
 
 import shlex

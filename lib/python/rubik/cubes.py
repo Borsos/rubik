@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',

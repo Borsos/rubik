@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+__author__ = "Simone Campagna"
+
 from distutils.core import setup
 import os
 import sys
