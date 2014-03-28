@@ -31,3 +31,8 @@ if PY3:
 else:
     lrange = range
     irange = xrange
+
+if PY3:
+    get_input = input
+else:
+    get_input = raw_input

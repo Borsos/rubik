@@ -17,6 +17,14 @@
 
 __author__ = "Simone Campagna"
 
+__all__ = [
+        'RubikError',
+        'RubikMemoryError',
+        'RubikUnitsError',
+        'RubikDataTypeError',
+        'RubikTestError',
+]
+
 class RubikError(Exception):
     pass
 
@@ -27,4 +35,7 @@ class RubikUnitsError(RubikError):
     pass
 
 class RubikDataTypeError(RubikError):
+    pass
+
+class RubikTestError(RubikError):
     pass
