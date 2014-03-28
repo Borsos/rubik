@@ -20,14 +20,119 @@ __author__ = "Simone Campagna"
 import re
 import textwrap
 import subprocess
+import shlex
 
 from .log import PRINT
 from ..py23 import get_input
 from ..errors import RubikTestError
 
+class Text(object):
+    TEXT_WRAPPER = textwrap.TextWrapper(initial_indent='', drop_whitespace=True, replace_whitespace=True, fix_sentence_endings=True)
+    RE_ESCAPED_NEWLINES = re.compile('\\\\\n')
+    RE_CONTINUATION = re.compile(r"^.*(?<!\\)\\$")
+    RE_WHITESPACES = re.compile(r"\s+")
+    def __init__(self, parent, text=None):
+        self._parent = parent
+        self._child = None
+        if self._parent is not None:
+            self._parent._child = self
+        self._lines = []
+        if text:
+            self._lines.append(text)
+
+    def get_mode(self):
+        return 'default'
+
+    def requires(self):
+        return False
+
+    def accepts(self):
+        return False
+
+    def add(self, text):
+        self._lines.append(text)
+
+    @classmethod
+    def remove_escaped_newlines(cls, text):
+        return cls.RE_ESCAPED_NEWLINES.sub('', text)
+
+    @classmethod
+    def fill_text(cls, text):
+        text = cls.RE_WHITESPACES.sub(' ', text.strip())
+        return cls.TEXT_WRAPPER.fill(text)
+
+    def get_text(self):
+        return '\n'.join(self._lines)
+
+class Paragraph(Text):
+    def accepts(self):
+        if len(self._lines) >= 2:
+            return len(self._lines[-1]) != 0 and len(self._lines[-2]) != 0
+        else:
+            return True
+
+    def get_text(self):
+        while self._lines:
+            if not self._lines[-1]:
+                self._lines.pop(-1)
+            else:
+                break
+        if self._lines:
+            return self.fill_text('\n'.join(self._lines)) + '\n'
+        else:
+            return None
+
+class Header(Text):
+    def __init__(self, parent, heading, text):
+        self._heading = heading
+        super(Header, self).__init__(parent, text)
+
+    def requires(self):
+        return self.RE_CONTINUATION.match(self._lines[-1]) is not None
+
+    def get_text(self):
+        text = '\n'.join(self._lines)
+        return self._heading + ' ' + self.fill_text(self.remove_escaped_newlines(text)) + '\n'
+
+class Command(Text):
+    def __init__(self, parent, heading, text):
+        self._heading = heading
+        super(Command, self).__init__(parent, text)
+
+    def requires(self):
+        return self.RE_CONTINUATION.match(self._lines[-1]) is not None
+
+    def get_mode(self):
+        return 'result'
+
+    def get_text(self):
+        return '\n' + self._heading + ' ' + self.get_command()
+
+    def get_command(self):
+        return '\n'.join(self._lines)
+
+class Result(Text):
+    def accepts(self):
+        return True
+    
+    def get_text(self):
+        text = super(Result, self).get_text()
+        command = self._parent.get_command()
+        command = self.remove_escaped_newlines(command)
+        command_line = shlex.split(command)
+        process = subprocess.Popen(command_line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output = process.communicate()[0].rstrip('\n')
+        if output != text:
+            PRINT("expected output is <<<\n{0}\n>>>".format(text))
+            PRINT("actual   output is <<<\n{0}\n>>>".format(output))
+            raise RubikTestError("demo test failed")
+        if text:
+            text += '\n'
+        return text + '$\n'
+
 class Interface(object):
-    RE_HEADER = re.compile(r"^(\#+)\s(.*)$")
-    RE_PARAGRAPH_SPLIT = re.compile(r"\n\n")
+    RE_SPECIAL_LINE = re.compile(r"^(#+|\$)\s+(.*)$")
+    RE_END_RESULT = re.compile("^\$\s*$")
     def __init__(self):
         pass
 
@@ -39,66 +144,70 @@ class Interface(object):
 
     @classmethod
     def split(cls, text):
-        begin, end = 0, 0
-        for m in cls.RE_HEADER.finditer(text):
-            print m
-            b, e = m.span()
-            if b > begin:
-                for text in cls.split_paragraph(text[:b]):
-                    yield text + '\n'
-            begin = b
-            end = e
-            yield "\n>>>{0} {1}\n".format(m.groups())
-        if end < len(text):
-            for text in cls.split_paragraph(text[end:]):
-                yield text
- 
-
-    @classmethod
-    def split_paragraph(cls, paragraph):
-        for text in cls.RE_PARAGRAPH_SPLIT.split(paragraph):
-            yield cls.wrap_paragraph(text)
-        
-    @classmethod
-    def wrap_paragraph(cls, text):
-        return textwrap.fill(text)
+        prev = None
+        continuation = False
+        mode = 'default'
+        for line in text.split('\n'):
+            #print "@@@", mode, prev, repr(line)
+            if prev is not None and prev.requires():
+                prev.add(line)
+            else:
+                if mode == 'default':
+                    m = cls.RE_SPECIAL_LINE.match(line)
+                    if m:
+                        if prev is not None:
+                            yield prev.get_text()
+                            mode = prev.get_mode()
+                        t, content = m.groups()
+                        if t.startswith('#'):
+                            prev = Header(prev, t, content)
+                        elif t.startswith('$'):
+                            prev = Command(prev, t, content)
+                    else:
+                        if prev is None:
+                            prev = Paragraph(prev, line)
+                        else:
+                            if prev.accepts():
+                                prev.add(line)
+                            else:
+                                yield prev.get_text()
+                                mode = prev.get_mode()
+                                if mode == 'result':
+                                    m = cls.RE_END_RESULT.match(line)
+                                    if m:
+                                        prev = Result(prev, None)
+                                        yield prev.get_text()
+                                        mode = prev.get_mode()
+                                        prev = None
+                                    else:
+                                        prev = Result(prev, line)
+                                else:
+                                    prev = Paragraph(prev, line)
+                elif mode == 'result':
+                    m = cls.RE_END_RESULT.match(line)
+                    if m:
+                        yield prev.get_text()
+                        mode = prev.get_mode()
+                        prev = None
+                        continue
+                    else:
+                        prev.add(line)
+        if prev is not None:
+            yield prev.get_text()
+            mode = prev.get_mode()
 
     def show_text(self, text):
         for t in self.split(text):
-            PRINT(t)
+            if t is not None:
+                PRINT(t)
 
 class Demo(Interface):
-    RE_SPACES = re.compile("\s+")
     def __init__(self):
         pass
 
-    @classmethod
-    def iter_args(cls, command_line):
-        for item in command_line:
-            if cls.RE_SPACES.match(item):
-                yield repr(item)
-            else:
-                yield item
+    def run(self, text):
+        self.show_text(text)
 
-    @classmethod
-    def repr_command_line(cls, command_line):
-        return ' '.join(cls.iter_args(command_line))
-
-    def run_command(self, command_line, expected_output=None, should_fail=False, expected_returncode=None):
-        PRINT("$ {0}".format(self.repr_command_line(command_line)))
-        process = subprocess.Popen(command_line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        output = process.communicate()[0]
-        PRINT(output)
-        PRINT("$")
-        returncode = process.returncode
-        if expected_output is not None and expected_output != output:
-            raise RubikTestError("output does not match")
-        if expected_returncode is not None and expected_returncode != returncode:
-            raise RubikTestError("returncode does not match [{0} != {1}]".format(returncode, expected_returncode))
-        if should_fail and returncode == 0:
-            raise RubikTestError("test should fail, but does not fail")
-        elif (not should_fail) and returncode != 0:
-            raise RubikTestError("test failed")
-
-    def run(self):
-        raise NotImplementedError()
+def demo_runner(text):
+    demo = Demo()
+    demo.run(text)

@@ -21,6 +21,7 @@ import sys
 import numpy
 
 from .log import PRINT
+from .demo import demo_runner
 from .. import conf
 from .. import cubes
 
@@ -468,13 +469,13 @@ Examples/recipes
 
 ## 1. Create a random cube with a given shape:
 
-$ rubik -e 'cb.random_cube("8x10x20") -o r_{shape}.{format}
+$ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
 
 This will create 'r_8x10x20.raw'.
 
 ## 2. Create a cube with linear values:
 
-$ rubik -e 'cb.linear_cube("8x10x20") -o l_{shape}.{format}
+$ rubik -e 'cb.linear_cube("8x10x20")' -o l_{shape}.{format}
 
 ## 3. Read a cube and write it with a different format:
 
@@ -493,7 +494,7 @@ default data type) and write it to r_8x10x20.float64.raw as float64
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -x :,2:-2,: \\
         -o rsub_{shape}.{format} -v
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+reading 960 'float32' elements (3840 bytes) from 'raw' file 'r_8x10x20.raw'[:, 2:-2, :]...
 writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
 
 ## 6. Read a subcube, subsample it along y and z dimension:
@@ -616,5 +617,44 @@ $ rubik -t int32 \\
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, :, 3] = 4' \\
         -o o_{shape}.{format}
+
+""")
+
+def help_demo():
+    demo_runner("""\
+## 1. Create a random cube with a given shape:
+
+$ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
+$
+
+This will create 'r_8x10x20.raw'.
+
+## 2. Create a cube with linear values:
+
+$ rubik -e 'cb.linear_cube("8x10x20")' -o l_{shape}.{format}
+$
+
+## 3. Read a cube and write it with a different format:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
+$
+
+## 4. Read a cube and write it with a different data type:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
+$
+
+This will read from 'r_8x10x20.raw' a float32 cube (float32 is the
+default data type) and write it to r_8x10x20.float64.raw as float64
+
+## 5. Read a subcube consisting of the full x and z dimension, and of
+      indices from third to third to last along y, and write it:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -x :,2:-2,: \\
+        -o rsub_{shape}.{format} -v
+reading 960 'float32' elements (3840 bytes) from 'raw' file 'r_8x10x20.raw'[:, 2:-2, :]...
+writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
+$
 
 """)

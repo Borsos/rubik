@@ -388,6 +388,12 @@ Options to show help on specific topics """)
         default=False,
         help="help about usage: shows some examples and common recipes")
 
+    help_group.add_argument("--demo", "-D",
+        dest="help_demo",
+        action="store_true",
+        default=False,
+        help="show demo")
+
     args = conf.RUBIK_OPTIONS + sys.argv[1:]
     try:
         args = parser.parse_args(args)
