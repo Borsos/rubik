@@ -228,7 +228,7 @@ class ExtractReader(object):
             self.min_size_bytes = min_size.get_bytes()
         else:
             self.min_size_bytes = min_size
-        self.min_size_count = self.min_size_bytes / dtype().itemsize
+        self.min_size_count = self.min_size_bytes // dtype().itemsize
 
     def read(self, input_file):
         if self.extractor is None:

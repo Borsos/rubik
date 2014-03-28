@@ -459,7 +459,7 @@ class Rubik(object):
             if len(cube.shape) <= 2:
                 c2d = cube
             else:
-                c2d = cube.reshape((cube.shape[0], cube.size / cube.shape[0]))
+                c2d = cube.reshape((cube.shape[0], cube.size // cube.shape[0]))
             numpy_function_pargs.append(c2d)
             text_delimiter = self.output_text_delimiters.get(output_label, output_ordinal)
             text_newline = self.output_text_newlines.get(output_label, output_ordinal)

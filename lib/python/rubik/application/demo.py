@@ -23,7 +23,7 @@ import subprocess
 import shlex
 
 from .log import PRINT
-from ..py23 import get_input
+from .. import py23
 from ..errors import RubikTestError
 
 class Text(object):
@@ -121,7 +121,7 @@ class Result(Text):
         command = self.remove_escaped_newlines(command)
         command_line = shlex.split(command)
         process = subprocess.Popen(command_line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        output = process.communicate()[0].rstrip('\n')
+        output = py23.decode(process.communicate()[0]).rstrip('\n')
         if output != text:
             PRINT("expected output is <<<\n{0}\n>>>".format(text))
             PRINT("actual   output is <<<\n{0}\n>>>".format(output))
@@ -137,7 +137,7 @@ class Interface(object):
         pass
 
     def ask(self, message):
-        return get_input(message)
+        return py23.get_input(message)
         
     def press_enter(self):
         return self.ask("Press ENTER...")

@@ -51,7 +51,7 @@ class Extractor(Values):
                 count *= dim
                 if index_picker.is_slice():
                     start, stop, step = index_picker.get_indices(dim)
-                    sub_count *= (stop - start) / step
+                    sub_count *= (stop - start) // step
         return count, sub_count
 
     

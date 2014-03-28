@@ -17,26 +17,14 @@
 
 __author__ = "Simone Campagna"
 
-import sys
+import os
+import tempfile
+import contextlib
 
-if sys.version_info.major == 2:
-    PY3 = False
-else:
-    PY3 = True
-
-if PY3:
-    def lrange(*n_args, **p_args):
-        return list(range(*n_args, **p_args))
-    irange = range
-else:
-    lrange = range
-    irange = xrange
-
-if PY3:
-    get_input = input
-    def decode(b):
-        return b.decode('utf8')
-else:
-    get_input = raw_input
-    def decode(t):
-        return t
+@contextlib.contextmanager
+def chtempdir():
+    old_pwd = os.getcwd()
+    dirname = tempfile.mkdtemp()
+    os.chdir(dirname)
+    yield
+    os.chdir(dirname)
