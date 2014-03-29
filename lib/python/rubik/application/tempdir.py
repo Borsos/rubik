@@ -18,6 +18,7 @@
 __author__ = "Simone Campagna"
 
 import os
+import shutil
 import tempfile
 import contextlib
 
@@ -27,4 +28,6 @@ def chtempdir():
     dirname = tempfile.mkdtemp()
     os.chdir(dirname)
     yield
-    os.chdir(dirname)
+    os.chdir(old_pwd)
+    shutil.rmtree(dirname)
+    

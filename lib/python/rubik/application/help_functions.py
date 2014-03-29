@@ -43,6 +43,212 @@ __all__ = [
               'help_usage',
           ]
 
+_DEMO_TEXT = """\
+# Examples/recipes
+
+## 1. Create a random cube with a given shape:
+
+$ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
+$ echo ciao
+ciao
+$
+
+This will create 'r_8x10x20.raw'.
+
+<<<BREAK>>>
+## 2. Create a cube with linear values:
+
+$ rubik -e 'cb.linear_cube("8x10x20")' -o l_{shape}.{format}
+$
+
+<<<BREAK>>>
+## 3. Read a cube and write it with a different format:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
+$
+
+<<<BREAK>>>
+## 4. Read a cube and write it with a different data type:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
+$
+
+This will read from 'r_8x10x20.raw' a float32 cube (float32 is the
+default data type) and write it to r_8x10x20.float64.raw as float64
+
+<<<BREAK>>>
+## 5. Read a subcube consisting of the \
+      full x and z dimension, and of \
+      indices from third to third to last along y, and write it:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -x :,2:-2,: \\
+        -o rsub_{shape}.{format} -v
+reading 960 'float32' elements (3840 bytes) from 'raw' file 'r_8x10x20.raw'[:, 2:-2, :]...
+writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
+$
+
+<<<BREAK>>>
+## 6. Read a subcube, subsample it along y and z dimension:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -x :,::2,::4 \\
+        -o rsub_{shape}.{format} -v
+reading 200 'float32' elements (800 bytes) from 'raw' file 'r_8x10x20.raw'[:, ::2, ::4]...
+writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
+$
+
+<<<BREAK>>>
+## 7. Read a 3D cube, extract a 2D plane corresponding to y=5:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -x :,5,: \\
+        -o rsub_{shape}.{format} -v
+reading 160 'float32' elements (640 bytes) from 'raw' file 'r_8x10x20.raw'[:, 5, :]...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
+$
+
+<<<BREAK>>>
+## 8. Read a 3D cube, subsample on y, extract a 2D plane for each resulting y \
+value (== split on the second dimension):
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -x :,::2,: \\
+        -o rsub_y{d1}_{shape}.{format} \\
+        --split 1 -v
+reading 800 'float32' elements (3200 bytes) from 'raw' file 'r_8x10x20.raw'[:, ::2, :]...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y0_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y1_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y2_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y3_8x20.raw'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
+$
+
+<<<BREAK>>>
+### 9. Compute a linear combination of two input files:
+
+$ rubik -i r_{shape}.{format} \\
+        -i l_{shape}.{format} \\
+        -s 8x10x20 \\
+        -e '0.5 * i0 - i1 / 0.5' \\
+        -o res0_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
+evaluating expression '0.5 * i0 - i1 / 0.5'...
+writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res0_8x10x20.raw'...
+$
+
+or:
+
+$ rubik -i r_{shape}.{format} \\
+        -i l_{shape}.{format} \\
+        -s 8x10x20 \\
+        -e f=0.5 \\
+        -e 'f * i0 - i1 / f' \\
+        -o res1_{shape}.{format} -v
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
+reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
+evaluating expression 'f=0.5'...
+evaluating expression 'f * i0 - i1 / f'...
+writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
+$
+
+<<<BREAK>>>
+### 10. Compute a linear combination with a portion of a file:
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
+        -i rsub_y2_{shape}.{format} -s 8x20 \\
+        -e 'i1 - i0' \\
+        -o rdiff_{shape}.{format} -v
+reading 160 'float32' elements (640 bytes) from 'raw' file 'r_8x10x20.raw'[:, 4, :]...
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y2_8x20.raw'...
+evaluating expression 'i1 - i0'...
+writing 160 'float32' elements (640 bytes) to 'raw' file 'rdiff_8x20.raw'...
+$
+
+<<<BREAK>>>
+### 11. Show statistics about a cube:
+
+$ rubik -i rdiff_8x20.raw -s 8x20 --stats
+shape         = 8x20
+#elements     = 160
+min           = 0.0
+max           = 0.0
+sum           = 0.0
+ave           = 0.0
+#zero         = 160 [100.00%]
+#nonzero      = 0 [0.00%]
+#nan          = 0 [0.00%]
+#inf          = 0 [0.00%]
+$
+
+<<<BREAK>>>
+### 12. Check if two cubes are equal content within a given tolerance '1e-5':
+
+$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
+        -i rsub_y2_{shape}.{format} -s 8x20 \\
+        -e 'cb.equals(i1, i0, 1e-5)' \\
+        --print
+True
+$
+
+<<<BREAK>>>
+## 13. Print a random cube with integer values between -5 and +5:
+
+$ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
+        --dtype int32 \\
+        --random-seed 100 \\
+        --print
+[[ 0 -2  0  3 -4]
+ [-3  1  3 -3  0]
+ [ 3 -2 -3 -3 -2]]
+$
+
+The '--random-seed 100' option sets the random seed; it has been added to make
+the result reproducible.
+
+<<<BREAK>>>
+## 14. Setting a single value on a cube:
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -e '_r[0, 0, 0] = 4' \\
+        -o o_{shape}.{format}
+$
+
+The '_r' variable is the current result; in this case, the cube just read. In
+this case, it is 'i0', but in general it can be the result of a previos
+expression; for instance:
+
+$ rubik -t int32 \\
+        --random-seed 100 \\
+        -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
+        -e '_r[:, 1, :] = -5' \\
+        --print
+[[[ 5  2  4  8  0]
+  [-5 -5 -5 -5 -5]
+  [ 8  2  1  1  2]
+  [ 9  8  1  8  2]]
+
+ [[ 4  9  8  3  1]
+  [-5 -5 -5 -5 -5]
+  [ 5  6  1  3  0]
+  [ 8  9  0  8  5]]
+
+ [[ 7  6  5  0  2]
+  [-5 -5 -5 -5 -5]
+  [ 9  8  3  5  3]
+  [ 3  1  2  0  5]]]
+$
+
+<<<BREAK>>>
+## 15. Setting multiple values on a cube:
+$ rubik -i r_{shape}.{format} -s 8x10x20 \\
+        -e '_r[0, :, 3] = 4' \\
+        -o o_{shape}.{format}
+$
+
+
+
+"""
 def help_cubes():
     help(cubes)
 
@@ -464,355 +670,11 @@ file is less than 1gb. By default, the optimized min size is 100mb.
 """)
 
 def help_usage():
-    PRINT("""\
-Examples/recipes
-================
-
-## 1. Create a random cube with a given shape:
-
-$ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
-
-This will create 'r_8x10x20.raw'.
-
-## 2. Create a cube with linear values:
-
-$ rubik -e 'cb.linear_cube("8x10x20")' -o l_{shape}.{format}
-
-## 3. Read a cube and write it with a different format:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
-
-## 4. Read a cube and write it with a different data type:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
-
-This will read from 'r_8x10x20.raw' a float32 cube (float32 is the
-default data type) and write it to r_8x10x20.float64.raw as float64
-
-## 5. Read a subcube consisting of the full x and z dimension, and of
-      indices from third to third to last along y, and write it:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,2:-2,: \\
-        -o rsub_{shape}.{format} -v
-reading 960 'float32' elements (3840 bytes) from 'raw' file 'r_8x10x20.raw'[:, 2:-2, :]...
-writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
-
-## 6. Read a subcube, subsample it along y and z dimension:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,::2,::4 \\
-        -o rsub_{shape}.{format} -v
-reading 200 'float32' elements (800 bytes) from 'raw' file 'r_8x10x20.raw'[:, ::2, ::4]...
-writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
-
-## 7. Read a 3D cube, extract a 2D plane corresponding to y=5:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,5,: \\
-        -o rsub_{shape}.{format} -v
-reading 160 'float32' elements (640 bytes) from 'raw' file 'r_8x10x20.raw'[:, 5, :]...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
-
-## 8. Read a 3D cube, subsample on y, extract a 2D plane for each resulting y
-value (== split on the second dimension):
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,::2,: \\
-        -o rsub_y{d1}_{shape}.{format} \\
-        --split 1 -v
-reading 800 'float32' elements (3200 bytes) from 'raw' file 'r_8x10x20.raw'[:, ::2, :]...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y0_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y1_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y2_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y3_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
-
-### 9. Compute a linear combination of two input files:
-
-$ rubik -i r_{shape}.{format} \\
-        -i l_{shape}.{format} \\
-        -s 8x10x20 \\
-        -e '0.5 * i0 - i1 / 0.5' \\
-        -o res0_{shape}.{format} -v
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
-evaluating expression '0.5 * i0 - i1 / 0.5'...
-writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res0_8x10x20.raw'...
-
-or:
-
-$ rubik -i r_{shape}.{format} \\
-        -i l_{shape}.{format} \\
-        -s 8x10x20 \\
-        -e f=0.5 \\
-        -e 'f * i0 - i1 / f' \\
-        -o res1_{shape}.{format} -v
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
-evaluating expression 'f=0.5'...
-evaluating expression 'f * i0 - i1 / f'...
-writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
-
-
-### 10. Compute a linear combination with a portion of a file:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
-        -i rsub_y2_{shape}.{format} -s 8x20 \\
-        -e 'i1 - i0' \\
-        -o rdiff_{shape}.{format} -v
-reading 160 'float32' elements (640 bytes) from 'raw' file 'r_8x10x20.raw'[:, 4, :]...
-reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y2_8x20.raw'...
-evaluating expression 'i1 - i0'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rdiff_8x20.raw'...
-
-### 11. Show statistics about a cube:
-
-$ rubik -i rdiff_8x20.raw -s 8x20 --stats
-shape         = 8x20
-#elements     = 160
-min           = 0.0
-max           = 0.0
-sum           = 0.0
-ave           = 0.0
-#zero         = 160 [100.00%]
-#nonzero      = 0 [0.00%]
-#nan          = 0 [0.00%]
-#inf          = 0 [0.00%]
-
-### 12. Check if two cubes are equal content within a given tolerance '1e-5':
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
-        -i rsub_y2_{shape}.{format} -s 8x20 \\
-        -e 'cb.equals(i1, i0, 1e-5)' \\
-        --print
-True
-
-## 13. Print a random cube with integer values between -5 and +5:
-
-$ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
-        --dtype int32 \\
-        --random-seed 100 \\
-        --print
-[[ 0 -2  0  3 -4]
- [-3  1  3 -3  0]
- [ 3 -2 -3 -3 -2]]
-
-The '--random-seed 100' option sets the random seed; it has been added to make
-the result reproducible.
-
-## 14. Setting a single value on a cube:
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -e '_r[0, 0, 0] = 4' \\
-        -o o_{shape}.{format}
-
-The '_r' variable is the current result; in this case, the cube just read. In
-this case, it is 'i0', but in general it can be the result of a previos
-expression; for instance:
-
-$ rubik -t int32 \\
-        --random-seed 100 \\
-        -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
-        -e '_r[:, 1, :] = -5' \\
-        --print
-
-## 15. Setting multiple values on a cube:
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -e '_r[0, :, 3] = 4' \\
-        -o o_{shape}.{format}
-
-""")
+    with chtempdir():
+        example = Example(_DEMO_TEXT)
+        example.show(test=True, interactive=False)
 
 def help_demo():
     with chtempdir():
-        example = Example("""\
-## 1. Create a random cube with a given shape:
-
-$ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
-$ echo ciao
-ciao
-$
-
-This will create 'r_8x10x20.raw'.
-
-## 2. Create a cube with linear values:
-
-$ rubik -e 'cb.linear_cube("8x10x20")' -o l_{shape}.{format}
-$
-
-## 3. Read a cube and write it with a different format:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -o r.x -Of text
-$
-
-## 4. Read a cube and write it with a different data type:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -o r_{shape}.{dtype}.{format} -Ot float64
-$
-
-This will read from 'r_8x10x20.raw' a float32 cube (float32 is the
-default data type) and write it to r_8x10x20.float64.raw as float64
-
-## 5. Read a subcube consisting of the \
-      full x and z dimension, and of \
-      indices from third to third to last along y, and write it:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,2:-2,: \\
-        -o rsub_{shape}.{format} -v
-reading 960 'float32' elements (3840 bytes) from 'raw' file 'r_8x10x20.raw'[:, 2:-2, :]...
-writing 960 'float32' elements (3840 bytes) to 'raw' file 'rsub_8x6x20.raw'...
-$
-
-## 6. Read a subcube, subsample it along y and z dimension:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,::2,::4 \\
-        -o rsub_{shape}.{format} -v
-reading 200 'float32' elements (800 bytes) from 'raw' file 'r_8x10x20.raw'[:, ::2, ::4]...
-writing 200 'float32' elements (800 bytes) to 'raw' file 'rsub_8x5x5.raw'...
-$
-
-## 7. Read a 3D cube, extract a 2D plane corresponding to y=5:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,5,: \\
-        -o rsub_{shape}.{format} -v
-reading 160 'float32' elements (640 bytes) from 'raw' file 'r_8x10x20.raw'[:, 5, :]...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_8x20.raw'...
-$
-
-## 8. Read a 3D cube, subsample on y, extract a 2D plane for each resulting y \
-value (== split on the second dimension):
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -x :,::2,: \\
-        -o rsub_y{d1}_{shape}.{format} \\
-        --split 1 -v
-reading 800 'float32' elements (3200 bytes) from 'raw' file 'r_8x10x20.raw'[:, ::2, :]...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y0_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y1_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y2_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y3_8x20.raw'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
-$
-
-### 9. Compute a linear combination of two input files:
-
-$ rubik -i r_{shape}.{format} \\
-        -i l_{shape}.{format} \\
-        -s 8x10x20 \\
-        -e '0.5 * i0 - i1 / 0.5' \\
-        -o res0_{shape}.{format} -v
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
-evaluating expression '0.5 * i0 - i1 / 0.5'...
-writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res0_8x10x20.raw'...
-$
-
-or:
-
-$ rubik -i r_{shape}.{format} \\
-        -i l_{shape}.{format} \\
-        -s 8x10x20 \\
-        -e f=0.5 \\
-        -e 'f * i0 - i1 / f' \\
-        -o res1_{shape}.{format} -v
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'r_8x10x20.raw'...
-reading 1600 'float32' elements (6400 bytes) from 'raw' file 'l_8x10x20.raw'...
-evaluating expression 'f=0.5'...
-evaluating expression 'f * i0 - i1 / f'...
-writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
-$
-
-### 10. Compute a linear combination with a portion of a file:
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
-        -i rsub_y2_{shape}.{format} -s 8x20 \\
-        -e 'i1 - i0' \\
-        -o rdiff_{shape}.{format} -v
-reading 160 'float32' elements (640 bytes) from 'raw' file 'r_8x10x20.raw'[:, 4, :]...
-reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y2_8x20.raw'...
-evaluating expression 'i1 - i0'...
-writing 160 'float32' elements (640 bytes) to 'raw' file 'rdiff_8x20.raw'...
-$
-
-### 11. Show statistics about a cube:
-
-$ rubik -i rdiff_8x20.raw -s 8x20 --stats
-shape         = 8x20
-#elements     = 160
-min           = 0.0
-max           = 0.0
-sum           = 0.0
-ave           = 0.0
-#zero         = 160 [100.00%]
-#nonzero      = 0 [0.00%]
-#nan          = 0 [0.00%]
-#inf          = 0 [0.00%]
-$
-
-### 12. Check if two cubes are equal content within a given tolerance '1e-5':
-
-$ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
-        -i rsub_y2_{shape}.{format} -s 8x20 \\
-        -e 'cb.equals(i1, i0, 1e-5)' \\
-        --print
-True
-$
-
-## 13. Print a random cube with integer values between -5 and +5:
-
-$ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
-        --dtype int32 \\
-        --random-seed 100 \\
-        --print
-[[ 0 -2  0  3 -4]
- [-3  1  3 -3  0]
- [ 3 -2 -3 -3 -2]]
-$
-
-The '--random-seed 100' option sets the random seed; it has been added to make
-the result reproducible.
-
-## 14. Setting a single value on a cube:
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -e '_r[0, 0, 0] = 4' \\
-        -o o_{shape}.{format}
-$
-
-The '_r' variable is the current result; in this case, the cube just read. In
-this case, it is 'i0', but in general it can be the result of a previos
-expression; for instance:
-
-$ rubik -t int32 \\
-        --random-seed 100 \\
-        -e 'cb.random_cube("3x4x5", min=0.0, max=10.0)' \\
-        -e '_r[:, 1, :] = -5' \\
-        --print
-[[[ 5  2  4  8  0]
-  [-5 -5 -5 -5 -5]
-  [ 8  2  1  1  2]
-  [ 9  8  1  8  2]]
-
- [[ 4  9  8  3  1]
-  [-5 -5 -5 -5 -5]
-  [ 5  6  1  3  0]
-  [ 8  9  0  8  5]]
-
- [[ 7  6  5  0  2]
-  [-5 -5 -5 -5 -5]
-  [ 9  8  3  5  3]
-  [ 3  1  2  0  5]]]
-$
-
-## 15. Setting multiple values on a cube:
-$ rubik -i r_{shape}.{format} -s 8x10x20 \\
-        -e '_r[0, :, 3] = 4' \\
-        -o o_{shape}.{format}
-$
-
-
-
-""")
-        example.show(test=True)
+        example = Example(_DEMO_TEXT)
+        example.show(test=True, interactive=True)

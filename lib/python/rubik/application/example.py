@@ -39,17 +39,18 @@ class TestVisitor(Visitor):
         node.test()
 
 class OutVisitor(Visitor):
-    def __init__(self, test=False, writer=PRINT):
+    def __init__(self, test=False, interactive=False, writer=PRINT):
         self.test = test
         self.writer = writer
+        self.interactive = interactive
 
 class ShowVisitor(OutVisitor):
     def visit(self, node):
-        node.show(test=self.test, writer=self.writer)
+        node.show(test=self.test, interactive=self.interactive, writer=self.writer)
 
 class DumpVisitor(OutVisitor):
     def visit(self, node):
-        node.dump(test=self.test, writer=self.writer)
+        node.dump(test=self.test, interactive=self.interactive, writer=self.writer)
 
 class ExampleError(RubikError):
     pass
@@ -72,12 +73,12 @@ class Example(object):
         test_visitor = TestVisitor()
         self._root.accept(test_visitor)
 
-    def dump(self, test=False, writer=None):
-        dump_visitor = DumpVisitor(test=test, writer=writer)
+    def dump(self, test=False, interactive=False, writer=None):
+        dump_visitor = DumpVisitor(test=test, interactive=interactive, writer=writer)
         self._root.accept(dump_visitor)
 
-    def show(self, test=False, writer=None):
-        show_visitor = ShowVisitor(test=test, writer=writer)
+    def show(self, test=False, interactive=False, writer=None):
+        show_visitor = ShowVisitor(test=test, interactive=interactive, writer=writer)
         self._root.accept(show_visitor)
 
     def pop(self):
@@ -127,10 +128,13 @@ class Node(object):
     def test(self):
         pass
 
-    def dump(self, test=False, writer=None):
+    def render(self, interactive=False):
+        return self.get_text()
+
+    def dump(self, test=False, interactive=False, writer=None):
         if writer is None:
             writer = PRINT
-        text = self.get_text()
+        text = self.render(interactive=interactive)
         indentation = "  "
         if text is None:
             text = ''
@@ -140,10 +144,10 @@ class Node(object):
         if test:
             self.test()
 
-    def show(self, test=False, writer=None):
+    def show(self, test=False, interactive=False, writer=None):
         if writer is None:
             writer = PRINT
-        text = self.get_text()
+        text = self.render(interactive=interactive)
         if text is not None:
             writer(text)
         if test:
@@ -367,15 +371,29 @@ class Paragraph(WrappedText):
         self.add_line(line_number, match_result.match.groups()[-1])
         return self._default_node()
     
-Node.set_default_node_class(Paragraph)
-Header.add_post_node_classes(Paragraph, Command)
+class Break(WrappedText):
+    __pre_node_classes__ = []
+    __post_node_classes__ = []
+    __res__ = {
+        'break': re.compile(r"(<<<BREAK>>>)\s*"),
+    }
+    def render(self, interactive=False):
+        if interactive:
+            py23.get_input("Press ENTER to continue...")
+            return "=" * 70
 
-Paragraph.add_pre_node_classes(Header, Command)
+    def parse_match_result(self, line_number, line, match_result):
+        return self._default_node()
+
+Node.set_default_node_class(Paragraph)
+Header.add_post_node_classes(Paragraph, Command, Break)
+
+Paragraph.add_pre_node_classes(Header, Command, Break)
 Paragraph.add_post_node_classes(Paragraph, Header, Command)
 
-Command.add_post_node_classes(Result, Command)
+Command.add_post_node_classes(Result, Command, Break)
 Command.set_default_node_class(Result)
 
-Result.add_post_node_classes(Command, Header, Paragraph)
+Result.add_post_node_classes(Command, Header, Paragraph, Break)
 
 
