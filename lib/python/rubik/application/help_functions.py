@@ -21,7 +21,7 @@ import sys
 import numpy
 
 from .log import PRINT
-from .demo import demo_runner
+from .example import Example
 from .tempdir import chtempdir
 from .. import conf
 from .. import cubes
@@ -625,10 +625,12 @@ $ rubik -i r_{shape}.{format} -s 8x10x20 \\
 
 def help_demo():
     with chtempdir():
-        demo_runner("""\
+        example = Example("""\
 ## 1. Create a random cube with a given shape:
 
 $ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
+$ echo ciao
+ciao
 $
 
 This will create 'r_8x10x20.raw'.
@@ -813,3 +815,4 @@ $
 
 
 """)
+        example.show(test=True)
