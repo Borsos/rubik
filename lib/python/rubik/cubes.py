@@ -177,7 +177,7 @@ def equals(cube_0, cube_1, tolerance=0.0):
     """equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1
            within the given tolerance, False otherwise
     """
-    return equals_num(cube_0, cube_1, tolerance) == cube_0.size()
+    return equals_num(cube_0, cube_1, tolerance) == cube_0.size
 
 def threshold_cube(cube, threshold=0.0, value=0.0):
     """threshold_cube(cube, threshold=0.0, value=0.0) : sets to 'value' all elements <= 'threshold'
