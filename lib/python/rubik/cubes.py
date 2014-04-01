@@ -22,6 +22,8 @@ __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals',
            'reldiff_cube', 'threshold_cube',
+           'absdiff_cube', 'abs_threshold_cube',
+           'where_indices',
            'nonzero_cube']
 
 import numpy as np
@@ -177,12 +179,33 @@ def equals(cube_0, cube_1, tolerance=0.0):
     """equals(cube_0, cube_1, tolerance=0.0) -> True if cube_0 == cube_1
            within the given tolerance, False otherwise
     """
-    return equals_num(cube_0, cube_1, tolerance) == cube_0.size
+    return not_equals_num(cube_0, cube_1, tolerance) == 0
 
 def threshold_cube(cube, threshold=0.0, value=0.0):
     """threshold_cube(cube, threshold=0.0, value=0.0) : sets to 'value' all elements <= 'threshold'
     """
     return np.where(cube > threshold, cube, value)
+
+def abs_threshold_cube(cube, threshold=0.0, value=0.0):
+    """abs_threshold_cube(cube, threshold=0.0, value=0.0) : sets to 'value' all elements 
+    whose absolute value <= 'threshold'
+    """
+    return np.where(np.abs(cube) > threshold, cube, value)
+
+def absdiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
+    """absdiff(cube_0, cube_1, in_threshold=None, out_threshold=None) ->
+    cube of absolute difference
+    | a - b |
+    'in_threshold': if passed, this absolute threshold is applied to 'a' and 'b';
+    'out_threshold': if passed, this absolute threshold is applied to the output (the absdiff)
+    """
+    if in_threshold is not None:
+        cube_0 = abs_threshold_cube(cube_0, threshold=in_threshold)
+        cube_1 = abs_threshold_cube(cube_1, threshold=in_threshold)
+    cube_out = np.nan_to_num(np.abs(cube_0 - cube_1))
+    if out_threshold is not None:
+        cube_out = abs_threshold_cube(cube_out, threshold=out_threshold)
+    return cube_out
 
 def reldiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
     """reldiff(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False) ->
@@ -190,16 +213,16 @@ def reldiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percenta
     | a - b |
     _________
        |a|
-    'in_threshold': if passed, this threshold is applied to 'a' and 'b';
-    'out_threshold': if passed, this threshold is applied to the output (the reldiff)
+    'in_threshold': if passed, this absolute threshold is applied to 'a' and 'b';
+    'out_threshold': if passed, this absolute threshold is applied to the output (the reldiff)
     'percentage': if True, the output is multiplied by 100.0
     """
     if in_threshold is not None:
-        cube_0 = threshold_cube(cube_0, threshold=in_threshold)
-        cube_1 = threshold_cube(cube_1, threshold=in_threshold)
+        cube_0 = abs_threshold_cube(cube_0, threshold=in_threshold)
+        cube_1 = abs_threshold_cube(cube_1, threshold=in_threshold)
     cube_out = np.nan_to_num(np.abs(cube_0 - cube_1) / np.abs(cube_0))
     if out_threshold is not None:
-        cube_out = threshold_cube(cube_out, threshold=out_threshold)
+        cube_out = abs_threshold_cube(cube_out, threshold=out_threshold)
     if percentage:
         cube_out *= 100.0
     return cube_out
@@ -212,6 +235,30 @@ def nonzero_cube(cube, tolerance=0.0):
     else:
         return (cube != 0).astype(DEFAULT_DTYPE)
 
+def where_indices(cube, condition=None):
+    """where_indices(cube, condition=None) -> returns an array containing of all the coordinates and
+    the value where the cube 'condition' evaluates to True; if 'condition' is None, it is set to
+    cube:
+    >>> a = np.eye(3)
+    >>> print cb.where_indices(a)
+    [[ 0.  0.  1.]
+     [ 1.  1.  1.]
+     [ 2.  2.  1.]]
+    >>> print cb.where_indices(a, a == 0)
+    [[ 0.  1.  0.]
+     [ 0.  2.  0.]
+     [ 1.  0.  0.]
+     [ 1.  2.  0.]
+     [ 2.  0.  0.]
+     [ 2.  1.  0.]]
+    >>> 
+    """
+    if condition is None:
+        condition = cube
+    indices = np.where(condition)
+    result = np.array(indices + (np.fromiter((cube[index] for index in zip(*indices)), cube.dtype), ))
+    return result.T
+    
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_size):
         self.dtype = dtype

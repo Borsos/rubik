@@ -351,8 +351,8 @@ class Command(Node):
             for line in difflib.unified_diff(
                     expected_output.split('\n'),
                     actual_output.split('\n'),
-                    fromfile='excected_output',
-                    tofile='actual_output',
+                    fromfile='Expected output',
+                    tofile='Actual output',
                     n=max(len(expected_output),
                     len(actual_output)), lineterm=''):
                 PRINT(line)
@@ -387,10 +387,12 @@ class Break(WrappedText):
 
 Node.set_default_node_class(Paragraph)
 Header.add_post_node_classes(Paragraph, Command, Break)
+Header.add_pre_node_classes(Paragraph)
 
 Paragraph.add_pre_node_classes(Header, Command, Break)
 Paragraph.add_post_node_classes(Paragraph, Header, Command)
 
+Command.add_pre_node_classes(Command)
 Command.add_post_node_classes(Result, Command, Break)
 Command.set_default_node_class(Result)
 

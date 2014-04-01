@@ -246,6 +246,23 @@ $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -o o_{shape}.{format}
 $
 
+<<<BREAK>>>
+## 16. Findinig indices where a given condition is True:
+$ rubik -o l_{shape}.{format} \\
+        -e 'cb.linear_cube("3x5")'
+$ rubik -i l_{shape}.{format} \\
+        -s 3x5 \\
+        -e 'cb.where_indices(i0, i0 % 2 == 0)' \\
+        --print
+[[  0.   0.   0.]
+ [  0.   2.   2.]
+ [  0.   4.   4.]
+ [  1.   1.   6.]
+ [  1.   3.   8.]
+ [  2.   0.  10.]
+ [  2.   2.  12.]
+ [  2.   4.  14.]]
+$
 
 
 """
@@ -672,6 +689,8 @@ file is less than 1gb. By default, the optimized min size is 100mb.
 def help_usage():
     with chtempdir():
         example = Example(_DEMO_TEXT)
+        #example.dump(test=True, interactive=False)
+        #raw_input("...")
         example.show(test=True, interactive=False)
 
 def help_demo():
