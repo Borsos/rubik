@@ -18,7 +18,7 @@ function print_help {
 [options]
     --tmpdir, -t TEMPDIR        set tmp dir to TEMPDIR
     --list-tests, -l            list available tests
-    --test, -t TEST             execute test TEST
+    --test, -T TEST             execute test TEST
     --prepend OPTION            prepend OPTION to rubik options
     --append OPTION             append OPTION to rubik options
     --help, -h                  show this help

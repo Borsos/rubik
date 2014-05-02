@@ -34,6 +34,7 @@ from ..application.argdict import InputArgDict, OutputArgDict
 from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
+from ..format_filename import format_filename
 from .. import conf
 from .. import cubes
 
@@ -155,27 +156,6 @@ class Rubik(object):
             self._cache_dtype_bytes[dtype] = dtype().itemsize
         return self._cache_dtype_bytes[dtype]
 
-    def format_filename(self, filename, shape, file_format, file_dtype, dlabels=None):
-        if dlabels is None:
-            dlabels = {}
-        count = 0
-        if shape:
-            count = 1
-            for i in shape:
-                count *= i
-        else:
-            count = 0
-        if not isinstance(shape, Shape):
-            shape = Shape(shape)
-        return filename.format(
-            shape=shape, #"x".join(str(i) for i in shape),
-            rank=len(shape),
-            count=count,
-            format=file_format,
-            dtype=file_dtype.__name__,
-            **dlabels
-        )
-
     def register_input_cube(self, input_label, input_filename, cube):
         self.input_cubes[input_label] = cube
 
@@ -273,7 +253,7 @@ class Rubik(object):
                 numpy_function_nargs['delimiter'] = text_delimiter
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
-        input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
+        input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
         self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
             c=expected_input_count,
@@ -357,7 +337,7 @@ class Rubik(object):
                 numpy_function_nargs['delimiter'] = text_delimiter
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
-        input_filename = self.format_filename(input_filename, shape.shape(), input_format, input_dtype)
+        input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
         if extractor is None:
             extractor_msg = ''
@@ -440,7 +420,7 @@ class Rubik(object):
         numpy_function = None
         numpy_function_pargs = []
         numpy_function_nargs = {}
-        output_filename = self.format_filename(output_filename, cube.shape, output_format, output_dtype, dlabels=dlabels)
+        output_filename = format_filename(output_filename, cube.shape, output_format, output_dtype, keywords=dlabels)
         self._check_output_filename(output_filename)
         if output_format == conf.FILE_FORMAT_RAW:
             num_bytes = cube.size * output_dtype_bytes

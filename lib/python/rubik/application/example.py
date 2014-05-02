@@ -259,6 +259,7 @@ class Node(object):
         
 
 class WrappedText(Node):
+    EOL = '\n'
     def get_text(self):
         for extr in 0, -1:
             while self._lines:
@@ -268,7 +269,7 @@ class WrappedText(Node):
                     break
         if self._lines:
             text = self.remove_escaped_newlines(super(WrappedText, self).get_text())
-            return self.fill_text(text) + '\n'
+            return self.fill_text(text) + self.EOL
         else:
             return None
 
@@ -280,6 +281,22 @@ class Header(WrappedText):
     }
     def __init__(self, parent):
         super(Header, self).__init__(parent)
+        self._heading = None
+
+    def parse_match_result(self, line_number, line, match_result):
+        self._heading, line = match_result.match.groups()
+        self.add_line(line_number, self._heading + ' ' + line)
+        return self._default_node()
+
+class ListItem(WrappedText):
+    __pre_node_classes__ = []
+    __post_node_classes__ = []
+    __res__ = {
+        'list_item': re.compile(r"(^\s*\*+)\s+(.*)"),
+    }
+    #EOL = ''
+    def __init__(self, parent):
+        super(ListItem, self).__init__(parent)
         self._heading = None
 
     def parse_match_result(self, line_number, line, match_result):
@@ -386,16 +403,20 @@ class Break(WrappedText):
         return self._default_node()
 
 Node.set_default_node_class(Paragraph)
-Header.add_post_node_classes(Paragraph, Command, Break)
+
+ListItem.add_post_node_classes(Paragraph, Header, Command, Break)
+ListItem.add_pre_node_classes(Paragraph)
+
+Header.add_post_node_classes(Paragraph, ListItem, Command, Break)
 Header.add_pre_node_classes(Paragraph)
 
-Paragraph.add_pre_node_classes(Header, Command, Break)
-Paragraph.add_post_node_classes(Paragraph, Header, Command)
+Paragraph.add_pre_node_classes(Header, ListItem, Command, Break)
+Paragraph.add_post_node_classes(Paragraph, Header, ListItem, Command)
 
 Command.add_pre_node_classes(Command)
 Command.add_post_node_classes(Result, Command, Break)
 Command.set_default_node_class(Result)
 
-Result.add_post_node_classes(Command, Header, Paragraph, Break)
+Result.add_post_node_classes(Command, Header, ListItem, Paragraph, Break)
 
 

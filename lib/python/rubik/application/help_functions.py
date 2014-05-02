@@ -264,6 +264,32 @@ $ rubik -i l_{shape}.{format} \\
  [  2.   4.  14.]]
 $
 
+<<<BREAK>>>
+## 17. Create a big cube out of core:
+
+Two functions are available to create big cubes out of core:
+* write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None)
+* write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None)
+
+
+$ rubik 'cb.write_linear_cube("l.{shape}.raw", "3x4x5", buffer_size=2, start=-1, increment=0.5)'
+$ rubik -i l.{shape}.raw -s 3x4x5 -v --print
+reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
+[[[ -1.   -0.5   0.    0.5   1. ]
+  [  1.5   2.    2.5   3.    3.5]
+  [  4.    4.5   5.    5.5   6. ]
+  [  6.5   7.    7.5   8.    8.5]]
+
+ [[  9.    9.5  10.   10.5  11. ]
+  [ 11.5  12.   12.5  13.   13.5]
+  [ 14.   14.5  15.   15.5  16. ]
+  [ 16.5  17.   17.5  18.   18.5]]
+
+ [[ 19.   19.5  20.   20.5  21. ]
+  [ 21.5  22.   22.5  23.   23.5]
+  [ 24.   24.5  25.   25.5  26. ]
+  [ 26.5  27.   27.5  28.   28.5]]]
+$ 
 
 """
 def help_cubes():

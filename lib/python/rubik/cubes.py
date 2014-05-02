@@ -18,6 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
+           'write_linear_cube', 'write_random_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals',
@@ -34,6 +35,8 @@ from .units import Memory
 from .errors import RubikError
 from .shape import Shape
 from .extractor import Extractor
+from .asfile import asfile
+from .format_filename import format_filename
 
 DEFAULT_DTYPE = np.float32
 
@@ -58,6 +61,63 @@ def linear_cube(shape, start=0.0, increment=1.0):
     count = shape.count()
     return np.array(np.linspace(start, start + increment * (count - 1), count), dtype=DEFAULT_DTYPE).reshape(shape.shape())
 
+class CubeWriter(object):
+    def __init__(self, file, shape, buffer_size):
+        if buffer_size is None:
+            buffer_size = 1024 ** 3
+        buffer_count = buffer_size // DEFAULT_DTYPE().itemsize
+        shape = Shape(shape)
+        count = shape.count()
+        if isinstance(file, str):
+            file = format_filename(file, shape=shape, file_format='raw', file_dtype=DEFAULT_DTYPE)
+        self.buffer_size = buffer_size
+        self.buffer_count = buffer_count
+        self.count = count
+        self.shape = shape
+        self.file = file
+
+    def write(self):
+        rem = self.count
+        with asfile(self.file, 'wb') as f_out:
+            while rem:
+                par_count = max(1, min(rem, self.buffer_count))
+                np_array = self.create_subcube(par_count)
+                np_array.tofile(f_out)
+                rem -= par_count
+        
+    def create_subcube(self, par_count):
+       raise NotImplementedError()
+
+class LinearCubeWriter(CubeWriter):
+    def __init__(self, file, shape, buffer_size, start, increment):
+       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size)
+       self.start = start
+       self.increment = increment
+
+    def create_subcube(self, par_count):
+       np_array = linear_cube((par_count, ), start=self.start, increment=self.increment)
+       self.start += self.increment * par_count
+       return np_array
+    
+def write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None):
+    """write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None) -> write
+       a cube with the given shape to the file 'file', with elements in linear sequence,
+       starting from 'start', with increment 'increment'.
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
+    """
+    lcw = LinearCubeWriter(file=file, shape=shape, buffer_size=buffer_size, start=start, increment=increment)
+    lcw.write()
+        
+class RandomCubeWriter(CubeWriter):
+    def __init__(self, file, shape, buffer_size, min, max):
+       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size)
+       self.min = min
+       self.max = max
+
+    def create_subcube(self, par_count):
+        return random_cube(shape=(par_count, ), min=self.min, max=self.max)
+    
 def random_cube(shape, min=0.0, max=1.0):
     """random_cube(shape, min=0.0, max=1.0) -> create a cube with random elements
        between 'min' and 'max'.
@@ -71,6 +131,16 @@ def random_cube(shape, min=0.0, max=1.0):
         cube = min + cube * (max - min)
     return _as_default_dtype(cube)
 
+def write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None):
+    """write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None) -> write
+       a cube with the given shape to the file 'file', with random elements
+       between 'min' and 'max'.
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
+    """
+    rcw = RandomCubeWriter(file=file, shape=shape, buffer_size=buffer_size, min=min, max=max)
+    rcw.write()
+        
 def const_cube(shape, value=0.0):
     """const_cube(shape, value=0.0) -> create a cube with all elements == 'value'
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
