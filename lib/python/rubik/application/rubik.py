@@ -94,7 +94,7 @@ class Rubik(object):
 
     def set_dtype(self, dtype):
         self.dtype = dtype
-        cubes.set_default_dtype(self.dtype)
+        cubes.settings.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
         self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
 
