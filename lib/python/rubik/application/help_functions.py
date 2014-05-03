@@ -344,6 +344,7 @@ Inside an expression/source you can access:
 * the cubes module, as 'cubes' or 'cb';
 * all the used defined variables (variables set in previous expressions);
 * all the input cubes (by default 'i0', 'i1', ..., 'iN');
+* the list of the input cubes '_i';
 * the current result '_r' (which is generally a cube, but not necessarily).
 
 The 'cubes' module provides some numpy-based functions to operate with

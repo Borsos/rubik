@@ -613,6 +613,7 @@ ave           = {ave}
             'cb': cubes,
             'cubes': cubes,
         }
+        globals_d['_i'] = list(self.input_cubes.values())
         globals_d.update(self.input_cubes)
         locals_d = {
             '_r': self._result,
