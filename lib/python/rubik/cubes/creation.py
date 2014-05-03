@@ -18,6 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
+           'join',
           ]
 
 import numpy as np
@@ -120,3 +121,13 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
           
     next_start, cube = _make_cube(0, shape, start, increment, const_dims)
     return cube
+
+def join(cubes):
+    """join(cubes) -> join cubes
+    Input cubes must have all the same shape"""
+    if cubes:
+        s0 = cubes[0].shape
+        for cube in cubes[1:]:
+            if s0 != cube.shape:
+                raise RubikError("join: input cubes with different shapes: {} and {}".format(s0, cube.shape))
+    return np.array(cubes)

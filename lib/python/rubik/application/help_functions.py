@@ -125,7 +125,28 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rsub_y4_8x20.raw'...
 $
 
 <<<BREAK>>>
-### 9. Compute a linear combination of two input files:
+### 9. Join two or more files
+
+$ rubik -i rsub_y0_{shape}.raw \
+        -i rsub_y1_{shape}.raw \
+        -i rsub_y2_{shape}.raw \
+        -i rsub_y3_{shape}.raw \
+        -i rsub_y4_{shape}.raw \
+        -s 8x20 \
+        'cb.join(_i)' \
+        -o rj.{shape}.raw \
+        -v
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y0_8x20.raw'...
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y1_8x20.raw'...
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y2_8x20.raw'...
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y3_8x20.raw'...
+reading 160 'float32' elements (640 bytes) from 'raw' file 'rsub_y4_8x20.raw'...
+evaluating expression 'cb.join(_i)'...
+writing 800 'float32' elements (3200 bytes) to 'raw' file 'rj.5x8x20.raw'...
+$
+
+<<<BREAK>>>
+### 10. Compute a linear combination of two input files:
 
 $ rubik -i r_{shape}.{format} \\
         -i l_{shape}.{format} \\
@@ -154,7 +175,7 @@ writing 1600 'float32' elements (6400 bytes) to 'raw' file 'res1_8x10x20.raw'...
 $
 
 <<<BREAK>>>
-### 10. Compute a linear combination with a portion of a file:
+### 11. Compute a linear combination with a portion of a file:
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
         -i rsub_y2_{shape}.{format} -s 8x20 \\
@@ -167,7 +188,7 @@ writing 160 'float32' elements (640 bytes) to 'raw' file 'rdiff_8x20.raw'...
 $
 
 <<<BREAK>>>
-### 11. Show statistics about a cube:
+### 12. Show statistics about a cube:
 
 $ rubik -i rdiff_8x20.raw -s 8x20 --stats
 shape         = 8x20
@@ -183,7 +204,7 @@ ave           = 0.0
 $
 
 <<<BREAK>>>
-### 12. Check if two cubes are equal content within a given tolerance '1e-5':
+### 13. Check if two cubes are equal content within a given tolerance '1e-5':
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
         -i rsub_y2_{shape}.{format} -s 8x20 \\
@@ -193,7 +214,7 @@ True
 $
 
 <<<BREAK>>>
-## 13. Print a random cube with integer values between -5 and +5:
+## 14. Print a random cube with integer values between -5 and +5:
 
 $ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
         --dtype int32 \\
@@ -208,7 +229,7 @@ The '--random-seed 100' option sets the random seed; it has been added to make
 the result reproducible.
 
 <<<BREAK>>>
-## 14. Setting a single value on a cube:
+## 15. Setting a single value on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, 0, 0] = 4' \\
         -o o_{shape}.{format}
@@ -240,14 +261,14 @@ $ rubik -t int32 \\
 $
 
 <<<BREAK>>>
-## 15. Setting multiple values on a cube:
+## 16. Setting multiple values on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, :, 3] = 4' \\
         -o o_{shape}.{format}
 $
 
 <<<BREAK>>>
-## 16. Findinig indices where a given condition is True:
+## 17. Findinig indices where a given condition is True:
 $ rubik -o l_{shape}.{format} \\
         -e 'cb.linear_cube("3x5")'
 $ rubik -i l_{shape}.{format} \\
@@ -265,7 +286,7 @@ $ rubik -i l_{shape}.{format} \\
 $
 
 <<<BREAK>>>
-## 17. Create a big cube out of core:
+## 18. Create a big cube out of core:
 
 Two functions are available to create big cubes out of core:
 * write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None)

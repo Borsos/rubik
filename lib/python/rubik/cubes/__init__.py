@@ -26,10 +26,12 @@ __all__ = [
            'reldiff_cube', 'threshold_cube',
            'absdiff_cube', 'abs_threshold_cube',
            'where_indices',
-           'nonzero_cube'
+           'nonzero_cube',
+           'join',
           ]
 
-from .creation import linear_cube, random_cube, const_cube, const_blocks_cube
+from .creation import linear_cube, random_cube, const_cube, const_blocks_cube, \
+                      join
 
 from .io import fromfile_generic, fromfile_raw, fromfile_text, fromfile_csv, \
                 write_linear_cube, write_random_cube, write_const_cube
