@@ -187,6 +187,7 @@ see --help-labeled-options for more information.""")
     input_group.add_argument("--input-filename", "-i",
         metavar='I',
         dest="input_filenames",
+        nargs='+',
         type=rubik.input_filenames.store,
         help="input filename (--help-filename/-hf for an explanation about filenames)")
 
