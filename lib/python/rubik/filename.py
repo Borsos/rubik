@@ -52,3 +52,26 @@ class InputFilename(Filename):
 
 class OutputFilename(Filename):
     pass
+
+class Mode(object):
+    MODES = set()
+    DEFAULT_MODE = 'rb'
+    def __init__(self, mode=None):
+        if mode is None:
+            mode = self.DEFAULT_MODE
+        mode = mode.lower()
+        if not mode in self.MODES:
+            raise ValueError("invalid {} {!r}: allowed modes are {}".format(
+                self.__class__.__name__,
+                mode,
+                ', '.join(repr(m) for m in self.MODES)))
+        self.mode = mode
+
+class InputMode(Mode):
+    MODES = {'r', 'rb'}
+    DEFAULT_MODE = 'rb'
+    
+class OutputMode(Mode):
+    MODES = {'w', 'wb', 'a', 'ab'}
+    DEFAULT_MODE = 'wb'
+    

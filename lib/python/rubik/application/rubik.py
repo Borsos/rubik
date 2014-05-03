@@ -29,7 +29,7 @@ from ..py23 import irange
 from ..units import Memory
 from ..errors import RubikError, RubikMemoryError
 from ..shape import Shape
-from ..filename import InputFilename, OutputFilename
+from ..filename import InputFilename, OutputFilename, InputMode, OutputMode
 from ..application.argdict import InputArgDict, OutputArgDict
 from ..application.arglist import ArgList
 from ..application.logo import RUBIK
@@ -41,6 +41,7 @@ from .. import cubes
 class Rubik(object):
     def __init__(self):
         self.input_filenames = InputArgDict(InputFilename)
+        self.input_modes = InputArgDict(InputMode)
         self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
         self.input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
         self.input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
@@ -49,6 +50,7 @@ class Rubik(object):
         self.extractors = InputArgDict(Extractor, default=None)
 
         self.output_filenames = OutputArgDict(OutputFilename)
+        self.output_modes = OutputArgDict(OutputMode)
         self.output_dtypes = OutputArgDict(conf.get_dtype, default=None)
         self.output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
         self.output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
@@ -219,6 +221,11 @@ class Rubik(object):
         input_format = self.input_formats.get(input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
+        input_mode = self.input_modes.get(input_label, input_ordinal)
+        if input_mode is None:
+            input_mode = 'rb'
+        else:
+            input_mode = input_mode.mode
         input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
@@ -261,7 +268,8 @@ class Rubik(object):
             b=msg_bytes,
             f=input_format,
             i=input_filename))
-        array = numpy_function(input_filename, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
+        with open(input_filename, input_mode) as f_in:
+            array = numpy_function(f_in, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
         input_count = array.size
         if array.size != expected_input_count:
             if input_count < expected_input_count:
@@ -306,6 +314,11 @@ class Rubik(object):
         input_format = self.input_formats.get(input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
+        input_mode = self.input_modes.get(input_label, input_ordinal)
+        if input_mode is None:
+            input_mode = 'rb'
+        else:
+            input_mode = input_mode.mode
         input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
@@ -350,7 +363,8 @@ class Rubik(object):
             f=input_format,
             i=input_filename,
             x=extractor_msg))
-        cube = numpy_function(input_format, input_filename, shape=shape, extractor=extractor, dtype=input_dtype, min_size=self.optimized_min_size, *numpy_function_pargs, **numpy_function_nargs)
+        with open(input_filename, input_mode) as f_in:
+            cube = numpy_function(input_format, f_in, shape=shape, extractor=extractor, dtype=input_dtype, min_size=self.optimized_min_size, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
@@ -409,6 +423,11 @@ class Rubik(object):
         output_format = self.output_formats.get(output_label, output_ordinal)
         if output_format is None:
             output_format = conf.DEFAULT_FILE_FORMAT
+        output_mode = self.output_modes.get(output_label, output_ordinal)
+        if output_mode is None:
+            output_mode = 'wb'
+        else:
+            output_mode = output_mode.mode
         output_dtype = self.output_dtypes.get(output_label, output_ordinal)
         if output_dtype is None:
             output_dtype = self.dtype
@@ -426,16 +445,16 @@ class Rubik(object):
             num_bytes = cube.size * output_dtype_bytes
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
             numpy_function = cube.tofile
-            numpy_function_pargs.append(output_filename)
+            #numpy_function_pargs.append(output_filename)
         elif output_format == conf.FILE_FORMAT_CSV:
             msg_bytes = ''
             numpy_function = cube.tofile
             numpy_function_nargs['sep'] = self.output_csv_separators.get(output_label, output_ordinal)
-            numpy_function_pargs.append(output_filename)
+            #numpy_function_pargs.append(output_filename)
         elif output_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
             numpy_function = np.savetxt
-            numpy_function_pargs.append(output_filename)
+            #numpy_function_pargs.append(output_filename)
             if len(cube.shape) <= 2:
                 c2d = cube
             else:
@@ -458,7 +477,8 @@ class Rubik(object):
             b=msg_bytes,
             f=output_format,
             o=output_filename))
-        numpy_function(*numpy_function_pargs, **numpy_function_nargs)
+        with open(output_filename, output_mode) as f_out:
+            numpy_function(f_out, *numpy_function_pargs, **numpy_function_nargs)
 
     def _log_dlabels(self, dlabels):
         if dlabels:

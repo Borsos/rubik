@@ -185,3 +185,19 @@ check_file_exists_and_has_size d2_d0=${D0f}_d2=${D2f}_d4=${D4f}_d5=${D5f}_${D2_S
 ## --- multiple expressions ---
 test_prex "-e 'a10=10' 'b30=a10 * 3' -e 'c50=b30 + 20' --random-seed 100 'd100=c50 * 2' 'd100 - 10' --print > c.out"
 check_file_exists_and_has_content c.out '90'
+
+## --- append ---
+typeset -i x=3
+typeset -i y=2
+typeset -i z=4
+test_prex "-e 'cb.const_cube(\"${y}x${z}\", 10)' -o cc.${x}x{shape}.{format}"
+check_file_exists_and_has_size cc.${x}x${y}x${z}.raw $(( $y * $z * $bytes_float32 ))
+
+test_prex "-e 'cb.const_cube(\"${y}x${z}\", 20)' -o cc.${x}x{shape}.{format} -Om ab"
+check_file_exists_and_has_size cc.${x}x${y}x${z}.raw $(( 2 * $y * $z * $bytes_float32 ))
+
+test_prex "-e 'cb.const_cube(\"${y}x${z}\", 30)' -o cc.${x}x{shape}.{format} -Om ab"
+check_file_exists_and_has_size cc.${x}x${y}x${z}.raw $(( 3 * $y * $z * $bytes_float32 ))
+
+test_prex "-i cc.{shape}.{format} -s ${x}x${y}x${z} -e 'i0.sum()' -P > cc.sum"
+check_file_exists_and_has_content cc.sum $(( ( 10 * $y * $z ) + ( 20 * $y * $z ) + ( 30 * $y * $z ) )).0
