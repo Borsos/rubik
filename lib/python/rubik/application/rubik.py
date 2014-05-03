@@ -425,9 +425,7 @@ class Rubik(object):
             output_format = conf.DEFAULT_FILE_FORMAT
         output_mode = self.output_modes.get(output_label, output_ordinal)
         if output_mode is None:
-            output_mode = 'wb'
-        else:
-            output_mode = output_mode.mode
+            output_mode = OutputMode()
         output_dtype = self.output_dtypes.get(output_label, output_ordinal)
         if output_dtype is None:
             output_dtype = self.dtype
@@ -471,13 +469,18 @@ class Rubik(object):
                 numpy_function_nargs['fmt'] = text_convert
         else:
             raise RubikError("invalid file format {0!r}".format(output_format))
-        self.logger.info("writing {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
+        if output_mode.is_append_mode():
+            omode = 'appending'
+        else:
+            omode = 'writing'
+        self.logger.info("{m} {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
+            m=omode,
             c=cube.size,
             t=output_dtype.__name__,
             b=msg_bytes,
             f=output_format,
             o=output_filename))
-        with open(output_filename, output_mode) as f_out:
+        with open(output_filename, output_mode.mode) as f_out:
             numpy_function(f_out, *numpy_function_pargs, **numpy_function_nargs)
 
     def _log_dlabels(self, dlabels):

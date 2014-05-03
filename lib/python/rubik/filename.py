@@ -74,4 +74,6 @@ class InputMode(Mode):
 class OutputMode(Mode):
     MODES = {'w', 'wb', 'a', 'ab'}
     DEFAULT_MODE = 'wb'
+    def is_append_mode(self):
+        return 'a' in self.mode
     
