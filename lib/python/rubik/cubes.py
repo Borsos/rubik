@@ -18,7 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
-           'write_linear_cube', 'write_random_cube',
+           'write_linear_cube', 'write_random_cube', 'write_const_cube',
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals',
@@ -158,6 +158,24 @@ def const_cube(shape, value=0.0):
     cube = cube.reshape(shape.shape())
     return _as_default_dtype(cube)
 
+class ConstCubeWriter(CubeWriter):
+    def __init__(self, file, shape, buffer_size, value):
+       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size)
+       self.value = value
+
+    def create_subcube(self, par_count):
+        return const_cube(shape=(par_count, ), value=self.value)
+    
+def write_const_cube(file, shape, value=0.0, buffer_size=None):
+    """write_const_cube(file, shape, min=0.0, max=1.0, buffer_size=None) -> write
+       a cube with the given shape to the file 'file', with all elements
+       equals to 'value'.
+       The 'shape' can be a tuple (for instance, '(8, 10)') or a string
+       (for instance, "8x10")
+    """
+    rcw = ConstCubeWriter(file=file, shape=shape, buffer_size=buffer_size, value=value)
+    rcw.write()
+        
 def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     """const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None) ->
        create a cube with the given shape; each subblock on the given list

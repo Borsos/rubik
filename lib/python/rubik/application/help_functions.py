@@ -270,6 +270,7 @@ $
 Two functions are available to create big cubes out of core:
 * write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None)
 * write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None)
+* write_const_cube(file, shape, value=0.0, buffer_size=None)
 
 
 $ rubik 'cb.write_linear_cube("l.{shape}.raw", "3x4x5", buffer_size=2, start=-1, increment=0.5)'
