@@ -73,6 +73,7 @@ class Rubik(object):
         self.set_clobber(conf.DEFAULT_CLOBBER)
         self.set_print_cube(False)
         self.set_print_stats(False)
+        self.set_print_report(False)
         self.set_in_place(False)
         self.set_dtype(default_dtype)
 
@@ -133,28 +134,34 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
+    def set_print_report(self, print_report):
+        self.print_report = print_report
+
     def run(self):
-        self.read()
-        if self.expressions:
-            self.evaluate_expressions(*self.expressions)
+        if self.print_report:
+            self._print_report()
         else:
-            if self.input_filenames is None or len(self.input_filenames) == 0:
-                #self.show_logo_once()
-                self.logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
-                return
-            elif len(self.input_filenames) == 0:
-                self.logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
-
-        if self.in_place:
-            if self.output_filenames:
-                raise RubikError("--in-place/-Oi is not compatible with --output-filename/-o")
+            self.read()
+            if self.expressions:
+                self.evaluate_expressions(*self.expressions)
             else:
-                for input_filename in self.input_filenames.values():
-                    self.output_filenames.add(input_filename.filename())
-        #print "I", InputFilename.__filenames__
-        #print "O", OutputFilename.__filenames__
-        self.output()
-
+                if self.input_filenames is None or len(self.input_filenames) == 0:
+                    #self.show_logo_once()
+                    self.logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
+                    return
+                elif len(self.input_filenames) == 0:
+                    self.logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
+    
+            if self.in_place:
+                if self.output_filenames:
+                    raise RubikError("--in-place/-Oi is not compatible with --output-filename/-o")
+                else:
+                    for input_filename in self.input_filenames.values():
+                        self.output_filenames.add(input_filename.filename())
+            #print "I", InputFilename.__filenames__
+            #print "O", OutputFilename.__filenames__
+            self.output()
+    
     def get_dtype_bytes(self, dtype):
         if not dtype in self._cache_dtype_bytes:
             self._cache_dtype_bytes[dtype] = dtype().itemsize
@@ -694,3 +701,51 @@ ave           = {ave}
             #if result.dtype != self.dtype:
             #    result = result.astype(self.dtype)
         
+    def _print_report(self):
+        for input_label, input_filename in self.input_filenames.items():
+            input_mode = self.input_modes.get(input_filename, input_label)
+            input_offset = self.input_offsets.get(input_filename, input_label)
+            input_dtype = self.input_dtypes.get(input_filename, input_label)
+            if input_dtype is not None:
+                input_dtype = input_dtype.__name__
+            input_format = self.input_formats.get(input_filename, input_label)
+            input_csv_separator = self.input_csv_separators.get(input_filename, input_label)
+            input_text_delimiter = self.input_text_delimiters.get(input_filename, input_label)
+            input_shape = self.shapes.get(input_filename, input_label)
+            input_extractor = self.extractors.get(input_filename, input_label)
+            log.PRINT("Input file {!r} [{}]".format(input_filename, input_label))
+            log.PRINT("  shape = {!s}".format(input_shape))
+            log.PRINT("  extractor = {!s}".format(input_extractor))
+            log.PRINT("  mode = {!s}".format(input_mode))
+            log.PRINT("  offset = {!s}".format(input_offset))
+            log.PRINT("  dtype = {!s}".format(input_dtype))
+            log.PRINT("  format = {!s}".format(input_format))
+            log.PRINT("    csv separator = {!r}".format(input_csv_separator))
+            log.PRINT("    text delimiter = {!r}".format(input_text_delimiter))
+
+        for output_label, output_filename in self.output_filenames.items():
+            output_mode = self.output_modes.get(output_filename, output_label)
+            output_offset = self.output_offsets.get(output_filename, output_label)
+            output_dtype = self.output_dtypes.get(output_filename, output_label)
+            if output_dtype is not None:
+                output_dtype = output_dtype.__name__
+            output_format = self.output_formats.get(output_filename, output_label)
+            output_csv_separator = self.output_csv_separators.get(output_filename, output_label)
+            output_text_delimiter = self.output_text_delimiters.get(output_filename, output_label)
+            output_text_newline = self.output_text_newlines.get(output_filename, output_label)
+            output_text_converter = self.output_text_converters.get(output_filename, output_label)
+            log.PRINT("Output file {!r} [{}]".format(output_filename, output_label))
+            log.PRINT("  mode = {!s}".format(output_mode))
+            log.PRINT("  offset = {!s}".format(output_offset))
+            log.PRINT("  dtype = {!s}".format(output_dtype))
+            log.PRINT("  format = {!s}".format(output_format))
+            log.PRINT("    csv separator = {!r}".format(output_csv_separator))
+            log.PRINT("    text delimiter = {!r}".format(output_text_delimiter))
+            log.PRINT("    text newline = {!r}".format(output_text_newline))
+            log.PRINT("    text converter = {!r}".format(output_text_converter))
+
+        for expression_num, expression in enumerate(self.expressions):
+            log.PRINT("Expression[{}]: {!r}".format(expression_num, expression))
+
+        log.PRINT("Print: {}".format(self.print_cube))
+        log.PRINT("Stats: {}".format(self.print_stats))

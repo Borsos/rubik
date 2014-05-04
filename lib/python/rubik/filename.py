@@ -70,6 +70,12 @@ class Mode(object):
                 ', '.join(repr(m) for m in self.MODES)))
         self.mode = mode
 
+    def __str__(self):
+        return self.mode
+
+    def __repr__(self):
+        return "{}({!r})".format(self.__class__.__name__, self.mode)
+
 class InputMode(Mode):
     MODES = {'r', 'rb'}
     DEFAULT_MODE = 'rb'

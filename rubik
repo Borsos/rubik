@@ -265,6 +265,12 @@ see --help-labeled-options for more information.""")
         default=False,
         help="print statistics about the result cube")
 
+    output_group.add_argument('--report', '-R',
+        dest="print_report",
+        action="store_true",
+        default=False,
+        help="print report")
+
     output_group.add_argument("--split", "-l",
         metavar="D",
         dest="split_dimensions",
@@ -433,6 +439,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
+    rubik.set_print_report(args.print_report)
     rubik.set_dtype(args.dtype)
 
     conf.enable_warnings(*args.warnings)
