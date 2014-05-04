@@ -316,13 +316,13 @@ $
 <<<BREAK>>>
 ## 19. Reading a portion of a file
 
-$ rubik 'cb.linear_cube("3x4x5")' \
+$ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
 evaluating expression 'cb.linear_cube("3x4x5")'...
 writing 60 'float32' elements (240 bytes) to 'raw' file 'l.3x4x5.raw'...
-$ rubik -i l.3x{shape}.{format} \
-        -s 4x5 \
-        -Io 80b \
+$ rubik -i l.3x{shape}.{format} \\
+        -s 4x5 \\
+        -Io 80b \\
         --print -v
 reading 20 'float32' elements (80 bytes) from 'raw' file 'l.3x4x5.raw'...
 seeking 'l.3x4x5.raw'@80...
@@ -333,16 +333,16 @@ seeking 'l.3x4x5.raw'@80...
 $
 
 <<<BREAK>>>
-## 20. Changing a part of a file
+## 20. Changing part of a file
 
-$ rubik 'cb.linear_cube("3x4x5")' \
+$ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
 evaluating expression 'cb.linear_cube("3x4x5")'...
 writing 60 'float32' elements (240 bytes) to 'raw' file 'l.3x4x5.raw'...
-$ rubik 'cb.const_cube("4x5", value=1.5)' \
-        -o l.3x4x5.{format} \
+$ rubik 'cb.const_cube("4x5", value=1.5)' \\
+        -o l.3x4x5.{format} \\
         -Oo 80b
-$ rubik -i l.{shape}.{format} \
+$ rubik -i l.{shape}.{format} \\
         -s 3x4x5 \
         --print -v
 reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
