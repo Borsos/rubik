@@ -38,7 +38,7 @@ setup(
     author = "Simone Campagna",
     author_email = "simone.campagna@tiscali.it",
     url="https://github.com/simone-campagna/rubik",
-    packages = ["rubik", "rubik.application"],
+    packages = ["rubik", "rubik.application", "rubik.cubes"],
     package_dir = {"rubik": "lib/python/rubik"},
     scripts = scripts,
     package_data = {},

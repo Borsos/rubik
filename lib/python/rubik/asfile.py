@@ -24,7 +24,7 @@ from contextlib import contextmanager
 
 @contextmanager
 def asfile(f, mode='r'):
-    if isinstance(f, basestring):
+    if isinstance(f, str):
         with open(f, mode) as fh:
             yield fh
     else:
