@@ -81,7 +81,19 @@ Global options""")
         dest="verbose_level",
         action="count",
         default=0,
-        help="set verbose level")
+        help="increase verbose level")
+
+    global_group.add_argument("--report", "-R",
+        dest="report_level",
+        action="count",
+        default=0,
+        help="increase report level")
+
+    global_group.add_argument("--dry-run", "-d",
+        dest="dry_run",
+        action="store_true",
+        default=False,
+        help="dry run")
 
     global_group.add_argument("--version", "-V",
         action='version',
@@ -265,12 +277,6 @@ see --help-labeled-options for more information.""")
         default=False,
         help="print statistics about the result cube")
 
-    output_group.add_argument('--report', '-R',
-        dest="print_report",
-        action="store_true",
-        default=False,
-        help="print only a report (commands will not be executed)")
-
     output_group.add_argument('--histogram', '-H',
         dest="print_histogram",
         action="store_true",
@@ -451,7 +457,9 @@ Options to show help on specific topics """)
         sys.exit(1)
 
     logger = log.set_logger(args.verbose_level)
-    rubik.set_logger(logger)
+    report_logger = log.set_report_logger(args.report_level)
+    rubik.set_dry_run(args.dry_run)
+    rubik.set_logger(logger, report_logger)
     rubik.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
     rubik.set_read_mode(args.read_mode)
     rubik.set_in_place(args.in_place)
@@ -461,7 +469,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
-    rubik.set_print_report(args.print_report)
+    rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,
         range=args.histogram_range,

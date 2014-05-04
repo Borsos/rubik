@@ -814,13 +814,16 @@ def help_output():
     PRINT("""\
 Output modes
 ============
-There are three output modes:
+These are the available output modes:
 * writing the result to a file (--output-filename/-o); you can specify the file
   format, dtype, etc...
 * print the result to a file (--print/-P)
 * print statistics about the resulting cube to a file (--stats/-S)
 * print an histogram of the resulting cube to a file (--histogram/-H)
-* print a report (--report/-R)
+If the --dry-run/-d option is set, the previous mode are ignored, and no command
+is executed.
+It is possible to have a report of the rubik configuration, using the flag
+--report/-R; it can be repeated to increase the report level.
 """)
 
 def help_memory_usage():

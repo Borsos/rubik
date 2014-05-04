@@ -21,6 +21,12 @@ import sys
 import logging
 import traceback
 
+__all__ = ['create_logger', 'set_logger', 'get_logger',
+           'set_report_logger', 'get_report_logger',
+           'LOGGER', 'REPORT_LOGGER',
+           'trace_errors',
+          ]
+
 def create_logger(logger_name, verbose_level, stream=None):
     if stream is None:
         stream = sys.stderr
@@ -36,20 +42,28 @@ def create_logger(logger_name, verbose_level, stream=None):
     logger.addHandler(stream_handler)
     logger.setLevel(log_level)
     stream_handler.setLevel(logging.DEBUG)
-
     return logger
 
 LOGGER = None
+REPORT_LOGGER = None
 
 PRINT = create_logger('PRINT', 10, stream=sys.stdout).info
 
 def set_logger(verbose_level):
     global LOGGER
-    LOGGER = create_logger("SUBCUBE", verbose_level)
+    LOGGER = create_logger("RUBIK", verbose_level)
     return LOGGER
 
 def get_logger():
     return LOGGER
+
+def set_report_logger(report_level):
+    global REPORT_LOGGER
+    REPORT_LOGGER = create_logger("REPORT", report_level)
+    return REPORT_LOGGER
+
+def get_report_logger():
+    return REPORT_LOGGER
 
 def trace_error(trace):
     err_type, err, tb = sys.exc_info()

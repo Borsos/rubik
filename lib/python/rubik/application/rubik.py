@@ -76,6 +76,7 @@ class Rubik(object):
         self.set_print_report(False)
         self.set_in_place(False)
         self.set_histogram(False)
+        self.set_dry_run(False)
         self.set_dtype(default_dtype)
 
         self.total_read_bytes = 0
@@ -96,14 +97,20 @@ class Rubik(object):
             self.show_logo()
             setattr(self, attr_name, True)
 
+    def set_dry_run(self, dry_run):
+        self.dry_run = dry_run
+
     def set_dtype(self, dtype):
         self.dtype = dtype
         cubes.settings.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
         self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
 
-    def set_logger(self, logger):
+    def set_logger(self, logger, report_logger=None):
+        if report_logger is None:
+            report_logger = logger
         self.logger = logger
+        self.report_logger = report_logger
 
     def set_accept_bigger_raw_files(self, accept_bigger_raw_files):
         self.accept_bigger_raw_files = accept_bigger_raw_files
@@ -147,7 +154,7 @@ class Rubik(object):
     def run(self):
         if self.print_report:
             self._print_report()
-        else:
+        if not self.dry_run:
             self.read()
             if self.expressions:
                 self.evaluate_expressions(*self.expressions)
@@ -752,12 +759,18 @@ ave           = {ave}
             #    result = result.astype(self.dtype)
         
     def _print_report(self):
-        log.PRINT("### Settings")
-        log.PRINT("Internal dtype: {}".format(self.dtype.__name__))
-        log.PRINT("  bytes: {}".format(self.dtype_bytes))
-        log.PRINT("")
+        def _log(condition):
+            if condition:
+                return self.report_logger.info
+            else:
+                return self.report_logger.debug
+        logger = self.report_logger
+        logger.info("### Settings")
+        logger.info("Internal dtype: {}".format(self.dtype.__name__))
+        logger.info("  bytes: {}".format(self.dtype_bytes))
+        logger.info("")
         if self.input_filenames:
-            log.PRINT("### Input files")
+            logger.info("### Input files")
             for input_label, input_filename in self.input_filenames.items():
                 input_mode = self.input_modes.get(input_filename, input_label)
                 input_offset = self.input_offsets.get(input_filename, input_label)
@@ -769,19 +782,19 @@ ave           = {ave}
                 input_text_delimiter = self.input_text_delimiters.get(input_filename, input_label)
                 input_shape = self.shapes.get(input_filename, input_label)
                 input_extractor = self.extractors.get(input_filename, input_label)
-                log.PRINT("Input file {!r} [{}]".format(input_filename, input_label))
-                log.PRINT("  shape = {!s} [{}]".format(input_shape, input_shape.count()))
-                log.PRINT("  extractor = {!r}".format(str(input_extractor)))
-                log.PRINT("  mode = {!s}".format(input_mode))
-                log.PRINT("  offset = {!s}".format(input_offset))
-                log.PRINT("  dtype = {!s}".format(input_dtype))
-                log.PRINT("  format = {!s}".format(input_format))
-                log.PRINT("    csv separator = {!r}".format(input_csv_separator))
-                log.PRINT("    text delimiter = {!r}".format(input_text_delimiter))
-            log.PRINT("")
+                logger.info("Input file {!r} [{}]".format(input_filename, input_label))
+                logger.info("  shape = {!s} [{}]".format(input_shape, input_shape.count()))
+                _log(input_extractor)("  extractor = {!r}".format(str(input_extractor)))
+                _log(input_mode)("  mode = {!s}".format(input_mode))
+                _log(input_offset)("  offset = {!s}".format(input_offset))
+                _log(input_dtype)("  dtype = {!s}".format(input_dtype))
+                _log(input_format)("  format = {!s}".format(input_format))
+                _log(input_format == conf.FILE_FORMAT_CSV) ("    csv separator = {!r}".format(input_csv_separator))
+                _log(input_format == conf.FILE_FORMAT_TEXT)("    text delimiter = {!r}".format(input_text_delimiter))
+            logger.info("")
     
         if self.output_filenames:
-            log.PRINT("### Output files")
+            logger.info("### Output files")
             for output_label, output_filename in self.output_filenames.items():
                 output_mode = self.output_modes.get(output_filename, output_label)
                 output_offset = self.output_offsets.get(output_filename, output_label)
@@ -793,27 +806,27 @@ ave           = {ave}
                 output_text_delimiter = self.output_text_delimiters.get(output_filename, output_label)
                 output_text_newline = self.output_text_newlines.get(output_filename, output_label)
                 output_text_converter = self.output_text_converters.get(output_filename, output_label)
-                log.PRINT("Output file {!r} [{}]".format(output_filename, output_label))
-                log.PRINT("  mode = {!s}".format(output_mode))
-                log.PRINT("  offset = {!s}".format(output_offset))
-                log.PRINT("  dtype = {!s}".format(output_dtype))
-                log.PRINT("  format = {!s}".format(output_format))
-                log.PRINT("    csv separator = {!r}".format(output_csv_separator))
-                log.PRINT("    text delimiter = {!r}".format(output_text_delimiter))
-                log.PRINT("    text newline = {!r}".format(output_text_newline))
-                log.PRINT("    text converter = {!r}".format(output_text_converter))
-            log.PRINT("")
+                logger.info("Output file {!r} [{}]".format(output_filename, output_label))
+                _log(output_mode)("  mode = {!s}".format(output_mode))
+                _log(output_offset)("  offset = {!s}".format(output_offset))
+                _log(output_dtype)("  dtype = {!s}".format(output_dtype))
+                _log(output_format)("  format = {!s}".format(output_format))
+                _log(output_format == conf.FILE_FORMAT_CSV) ("    csv separator = {!r}".format(output_csv_separator))
+                _log(output_format == conf.FILE_FORMAT_TEXT)("    text delimiter = {!r}".format(output_text_delimiter))
+                _log(output_format == conf.FILE_FORMAT_TEXT)("    text newline = {!r}".format(output_text_newline))
+                _log(output_format == conf.FILE_FORMAT_TEXT)("    text converter = {!r}".format(output_text_converter))
+            logger.info("")
 
         if self.expressions:
-            log.PRINT("### Expressions")
+            logger.info("### Expressions")
             for expression_num, expression in enumerate(self.expressions):
-                log.PRINT("Expression[{}]: {!r}".format(expression_num, expression))
-            log.PRINT("")
+                logger.info("Expression[{}]: {!r}".format(expression_num, expression))
+            logger.info("")
     
-        log.PRINT("### Commands")
-        log.PRINT("Print: {}".format(self.print_cube))
-        log.PRINT("Stats: {}".format(self.print_stats))
-        log.PRINT("Histogram: {}".format(self.print_histogram))
-        log.PRINT("  bins = {}".format(self.histogram_bins))
-        log.PRINT("  range = {}".format(self.histogram_range))
-        log.PRINT("  length = {}".format(self.histogram_length))
+        logger.info("### Commands")
+        logger.info("Print: {}".format(self.print_cube))
+        logger.info("Stats: {}".format(self.print_stats))
+        logger.info("Histogram: {}".format(self.print_histogram))
+        logger.debug("  bins = {}".format(self.histogram_bins))
+        logger.debug("  range = {}".format(self.histogram_range))
+        logger.debug("  length = {}".format(self.histogram_length))
