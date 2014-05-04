@@ -313,6 +313,55 @@ reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
   [ 26.5  27.   27.5  28.   28.5]]]
 $ 
 
+<<<BREAK>>>
+## 19. Reading a portion of a file
+
+$ rubik 'cb.linear_cube("3x4x5")' \
+        -o l.{shape}.{format} -v
+evaluating expression 'cb.linear_cube("3x4x5")'...
+writing 60 'float32' elements (240 bytes) to 'raw' file 'l.3x4x5.raw'...
+$ rubik -i l.3x{shape}.{format} \
+        -s 4x5 \
+        -Io 80b \
+        --print -v
+reading 20 'float32' elements (80 bytes) from 'raw' file 'l.3x4x5.raw'...
+seeking 'l.3x4x5.raw'@80...
+[[ 20.  21.  22.  23.  24.]
+ [ 25.  26.  27.  28.  29.]
+ [ 30.  31.  32.  33.  34.]
+ [ 35.  36.  37.  38.  39.]]
+$
+
+<<<BREAK>>>
+## 20. Changing a part of a file
+
+$ rubik 'cb.linear_cube("3x4x5")' \
+        -o l.{shape}.{format} -v
+evaluating expression 'cb.linear_cube("3x4x5")'...
+writing 60 'float32' elements (240 bytes) to 'raw' file 'l.3x4x5.raw'...
+$ rubik 'cb.const_cube("4x5", value=1.5)' \
+        -o l.3x4x5.{format} \
+        -Oo 80b
+$ rubik -i l.{shape}.{format} \
+        -s 3x4x5 \
+        --print -v
+reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
+[[[  0.    1.    2.    3.    4. ]
+  [  5.    6.    7.    8.    9. ]
+  [ 10.   11.   12.   13.   14. ]
+  [ 15.   16.   17.   18.   19. ]]
+
+ [[  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]]
+
+ [[ 40.   41.   42.   43.   44. ]
+  [ 45.   46.   47.   48.   49. ]
+  [ 50.   51.   52.   53.   54. ]
+  [ 55.   56.   57.   58.   59. ]]]
+$
+
 """
 def help_cubes():
     help(cubes)
