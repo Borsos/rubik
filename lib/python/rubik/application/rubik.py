@@ -702,6 +702,9 @@ ave           = {ave}
             #    result = result.astype(self.dtype)
         
     def _print_report(self):
+        log.PRINT("Internal dtype: {}".format(self.dtype.__name__))
+        log.PRINT("  bytes: {}".format(self.dtype_bytes))
+        log.PRINT("")
         for input_label, input_filename in self.input_filenames.items():
             input_mode = self.input_modes.get(input_filename, input_label)
             input_offset = self.input_offsets.get(input_filename, input_label)
@@ -714,14 +717,15 @@ ave           = {ave}
             input_shape = self.shapes.get(input_filename, input_label)
             input_extractor = self.extractors.get(input_filename, input_label)
             log.PRINT("Input file {!r} [{}]".format(input_filename, input_label))
-            log.PRINT("  shape = {!s}".format(input_shape))
-            log.PRINT("  extractor = {!s}".format(input_extractor))
+            log.PRINT("  shape = {!s} [{}]".format(input_shape, input_shape.count()))
+            log.PRINT("  extractor = {!r}".format(str(input_extractor)))
             log.PRINT("  mode = {!s}".format(input_mode))
             log.PRINT("  offset = {!s}".format(input_offset))
             log.PRINT("  dtype = {!s}".format(input_dtype))
             log.PRINT("  format = {!s}".format(input_format))
             log.PRINT("    csv separator = {!r}".format(input_csv_separator))
             log.PRINT("    text delimiter = {!r}".format(input_text_delimiter))
+        log.PRINT("")
 
         for output_label, output_filename in self.output_filenames.items():
             output_mode = self.output_modes.get(output_filename, output_label)
@@ -743,9 +747,11 @@ ave           = {ave}
             log.PRINT("    text delimiter = {!r}".format(output_text_delimiter))
             log.PRINT("    text newline = {!r}".format(output_text_newline))
             log.PRINT("    text converter = {!r}".format(output_text_converter))
+        log.PRINT("")
 
         for expression_num, expression in enumerate(self.expressions):
             log.PRINT("Expression[{}]: {!r}".format(expression_num, expression))
+        log.PRINT("")
 
         log.PRINT("Print: {}".format(self.print_cube))
         log.PRINT("Stats: {}".format(self.print_stats))

@@ -269,7 +269,7 @@ see --help-labeled-options for more information.""")
         dest="print_report",
         action="store_true",
         default=False,
-        help="print report")
+        help="print only a report (commands will not be executed)")
 
     output_group.add_argument("--split", "-l",
         metavar="D",

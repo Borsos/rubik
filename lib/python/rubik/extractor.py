@@ -25,7 +25,7 @@ from .values import Values
 from .index_picker import IndexPicker
 
 class Extractor(Values):
-    __default_separator__ = ', '
+    __default_separator__ = ','
     def rank(self):
         return len(self._values)
 
