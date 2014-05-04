@@ -190,6 +190,10 @@ check_file_exists_and_has_content c.out '90'
 typeset -i x=3
 typeset -i y=2
 typeset -i z=4
+typeset -i t=$(( $x * $y * $z ))
+typeset    s="${x}x${y}x${z}"
+typeset -i yz=$(( $y * $z ))
+typeset -i yz_bytes=$(( $yz * $bytes_float32 ))
 test_prex "-e 'cb.const_cube(\"${y}x${z}\", 10)' -o cc.${x}x{shape}.{format}"
 check_file_exists_and_has_size cc.${x}x${y}x${z}.raw $(( $y * $z * $bytes_float32 ))
 
@@ -201,3 +205,27 @@ check_file_exists_and_has_size cc.${x}x${y}x${z}.raw $(( 3 * $y * $z * $bytes_fl
 
 test_prex "-i cc.{shape}.{format} -s ${x}x${y}x${z} -e 'i0.sum()' -P > cc.sum"
 check_file_exists_and_has_content cc.sum $(( ( 10 * $y * $z ) + ( 20 * $y * $z ) + ( 30 * $y * $z ) )).0
+
+## --- offsets ---
+test_prex "'cb.linear_cube(\"$s\", start=1.0)' -o l.{shape}.{format}"
+check_file_exists_and_has_size l.${s}.raw $(( $x * $y * $z * $bytes_float32 ))
+
+test_prex "-i l.{shape}.{format} -s $s 'i0.sum()' --print > l.sum"
+typeset -i ts=$(( ( $t * ( $t + 1 ) ) / 2 ))
+check_file_exists_and_has_content l.sum ${ts}.0
+
+test_prex "-i l.${s}.{format} -s ${y}x${z} -Io ${yz_bytes}b -o l.{shape}.{format}"
+check_file_exists_and_has_size l.${y}x${z}.raw $(( $yz_bytes ))
+
+test_prex "-i l.{shape}.{format} -s ${y}x${z} 'i0.sum()' --print > lyz.sum"
+typeset -i t1=$(( 2 * ${y} * ${z} ))
+typeset -i t0=$(( 1 * ${y} * ${z} ))
+typeset -i t1s=$(( ( $t1 * ( $t1 + 1 ) ) / 2 ))
+typeset -i t0s=$(( ( $t0 * ( $t0 + 1 ) ) / 2 ))
+typeset -i tds=$(( $t1s - $t0s ))
+check_file_exists_and_has_content lyz.sum ${tds}.0
+
+test_prex "'cb.const_cube(\"${y}x${z}\", 1.0)' -o l.${s}.{format} -Oo $(( ${yz_bytes} ))b"
+test_prex "-i l.{shape}.{format} -s $s 'i0.sum()' --print > ll.sum"
+check_file_exists_and_has_content ll.sum $(( $ts - $tds + $yz )).0
+
