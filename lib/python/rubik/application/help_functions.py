@@ -333,7 +333,7 @@ seeking 'l.3x4x5.raw'@80...
 $
 
 <<<BREAK>>>
-## 20. Changing part of a file
+## 20. Overrifing part of a file
 
 $ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
@@ -346,6 +346,54 @@ $ rubik -i l.{shape}.{format} \\
         -s 3x4x5 \
         --print -v
 reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
+[[[  0.    1.    2.    3.    4. ]
+  [  5.    6.    7.    8.    9. ]
+  [ 10.   11.   12.   13.   14. ]
+  [ 15.   16.   17.   18.   19. ]]
+
+ [[  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]]
+
+ [[ 40.   41.   42.   43.   44. ]
+  [ 45.   46.   47.   48.   49. ]
+  [ 50.   51.   52.   53.   54. ]
+  [ 55.   56.   57.   58.   59. ]]]
+$
+
+This is equivalent to
+
+$ rubik 'cb.linear_cube("3x4x5")' \\
+        -o l2.{shape}.{format} -v
+evaluating expression 'cb.linear_cube("3x4x5")'...
+writing 60 'float32' elements (240 bytes) to 'raw' file 'l2.3x4x5.raw'...
+$ rubik -i l2.3x4x5.raw \\
+        -s 3x4x5 \\
+        'i0[1] = cb.const_cube("4x5", value=1.5)' \\
+        -P
+[[[  0.    1.    2.    3.    4. ]
+  [  5.    6.    7.    8.    9. ]
+  [ 10.   11.   12.   13.   14. ]
+  [ 15.   16.   17.   18.   19. ]]
+
+ [[  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]
+  [  1.5   1.5   1.5   1.5   1.5]]
+
+ [[ 40.   41.   42.   43.   44. ]
+  [ 45.   46.   47.   48.   49. ]
+  [ 50.   51.   52.   53.   54. ]
+  [ 55.   56.   57.   58.   59. ]]]
+$
+
+Or also
+
+$ rubik -i l2.3x4x5.raw \\
+        -s 3x4x5 \\
+        'i0[1] = 1.5' \\
+        -P
 [[[  0.    1.    2.    3.    4. ]
   [  5.    6.    7.    8.    9. ]
   [ 10.   11.   12.   13.   14. ]
