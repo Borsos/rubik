@@ -60,7 +60,10 @@ class Mode(object):
         if mode is None:
             mode = self.DEFAULT_MODE
         mode = mode.lower()
-        if not mode in self.MODES:
+        for m in self.MODES:
+            if set(mode) == set(m):
+                break
+        else:
             raise ValueError("invalid {} {!r}: allowed modes are {}".format(
                 self.__class__.__name__,
                 mode,
@@ -72,7 +75,7 @@ class InputMode(Mode):
     DEFAULT_MODE = 'rb'
     
 class OutputMode(Mode):
-    MODES = {'w', 'wb', 'a', 'ab'}
+    MODES = {'w', 'wb', 'a', 'ab', 'w+b', 'r+b', 'a+b'}
     DEFAULT_MODE = 'wb'
     def is_append_mode(self):
         return 'a' in self.mode

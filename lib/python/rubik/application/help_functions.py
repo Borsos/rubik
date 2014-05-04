@@ -578,6 +578,8 @@ read from the second file, and so on.
 These labels can be used to
 * set specific parameters for each input file, like:
   - the format
+  - the file operation mode
+  - the offset
   - the dtype
   - the shape
   - an extractor

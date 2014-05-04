@@ -42,6 +42,7 @@ class Rubik(object):
     def __init__(self):
         self.input_filenames = InputArgDict(InputFilename)
         self.input_modes = InputArgDict(InputMode)
+        self.input_offsets = InputArgDict(Memory)
         self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
         self.input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
         self.input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
@@ -51,6 +52,7 @@ class Rubik(object):
 
         self.output_filenames = OutputArgDict(OutputFilename)
         self.output_modes = OutputArgDict(OutputMode)
+        self.output_offsets = OutputArgDict(Memory)
         self.output_dtypes = OutputArgDict(conf.get_dtype, default=None)
         self.output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
         self.output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
@@ -226,6 +228,7 @@ class Rubik(object):
             input_mode = 'rb'
         else:
             input_mode = input_mode.mode
+        input_offset = self.input_offsets.get(input_label, input_ordinal)
         input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
@@ -261,7 +264,7 @@ class Rubik(object):
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
-        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
+        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype, input_offset)
         self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
             c=expected_input_count,
             t=input_dtype.__name__,
@@ -269,6 +272,13 @@ class Rubik(object):
             f=input_format,
             i=input_filename))
         with open(input_filename, input_mode) as f_in:
+            if input_offset is not None:
+                offset = input_offset.get_bytes()
+                self.logger.info("seeking {f!r}@{o}...".format(
+                    f=input_filename,
+                    o=offset,
+                ))
+                f_in.seek(offset)
             array = numpy_function(f_in, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
         input_count = array.size
         if array.size != expected_input_count:
@@ -319,6 +329,7 @@ class Rubik(object):
             input_mode = 'rb'
         else:
             input_mode = input_mode.mode
+        input_offset = self.input_offsets.get(input_label, input_ordinal)
         input_dtype = self.input_dtypes.get(input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
@@ -351,7 +362,7 @@ class Rubik(object):
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
-        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype)
+        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype, input_offset)
         if extractor is None:
             extractor_msg = ''
         else:
@@ -364,6 +375,13 @@ class Rubik(object):
             i=input_filename,
             x=extractor_msg))
         with open(input_filename, input_mode) as f_in:
+            if input_offset is not None:
+                offset = input_offset.get_bytes()
+                self.logger.info("seeking {f!r}@{o}...".format(
+                    f=input_filename,
+                    o=offset,
+                ))
+                f_in.seek(offset)
             cube = numpy_function(input_format, f_in, shape=shape, extractor=extractor, dtype=input_dtype, min_size=self.optimized_min_size, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
@@ -423,9 +441,13 @@ class Rubik(object):
         output_format = self.output_formats.get(output_label, output_ordinal)
         if output_format is None:
             output_format = conf.DEFAULT_FILE_FORMAT
+        output_offset = self.output_offsets.get(output_label, output_ordinal)
         output_mode = self.output_modes.get(output_label, output_ordinal)
         if output_mode is None:
-            output_mode = OutputMode()
+            if output_offset is None:
+                output_mode = OutputMode("wb")
+            else:
+                output_mode = OutputMode("r+b")
         output_dtype = self.output_dtypes.get(output_label, output_ordinal)
         if output_dtype is None:
             output_dtype = self.dtype
@@ -481,6 +503,13 @@ class Rubik(object):
             f=output_format,
             o=output_filename))
         with open(output_filename, output_mode.mode) as f_out:
+            if output_offset is not None:
+                offset = output_offset.get_bytes()
+                self.logger.info("seeking {f!r}@{o}...".format(
+                    f=output_filename,
+                    o=offset,
+                ))
+                f_out.seek(offset)
             numpy_function(f_out, *numpy_function_pargs, **numpy_function_nargs)
 
     def _log_dlabels(self, dlabels):
@@ -560,10 +589,16 @@ ave           = {ave}
             self.logger.warning("warning: output filename {0!r} already written".format(output_filename))
         self._used_output_filenames.add(output_filename)
 
-    def _check_input_filename(self, shape, input_format, input_filename, input_dtype):
+    def _check_input_filename(self, shape, input_format, input_filename, input_dtype, input_offset):
         if input_filename in self._used_input_filenames:
             self.logger.warning("warning: input filename {0!r} already read".format(input_filename))
         self._used_input_filenames.add(input_filename)
+        if input_offset is not None:
+            accept_bigger_raw_files = True
+            offset = input_offset.get_bytes()
+        else:
+            accept_bigger_raw_files = self.accept_bigger_raw_files
+            offset = 0
 
         if not isinstance(shape, Shape):
             shape = Shape(shape)
@@ -573,7 +608,7 @@ ave           = {ave}
             expected_input_count = shape.count()
             expected_input_bytes = expected_input_count * self.get_dtype_bytes(input_dtype)
             input_stat_result = os.stat(input_filename)
-            input_bytes = input_stat_result.st_size
+            input_bytes = input_stat_result.st_size - offset
             if input_bytes < expected_input_bytes:
                 raise RubikError("input file {0} is not big enough: it contains {1} bytes, expected {2} bytes".format(
                     input_filename,
@@ -586,7 +621,7 @@ ave           = {ave}
                     input_bytes,
                     expected_input_bytes,
                 )
-                if self.accept_bigger_raw_files:
+                if accept_bigger_raw_files:
                     warnings.warn(RuntimeWarning(message))
                     #self.logger.warning("warning: " + message)
                 else:
