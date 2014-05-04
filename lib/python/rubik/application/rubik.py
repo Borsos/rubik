@@ -752,56 +752,68 @@ ave           = {ave}
             #    result = result.astype(self.dtype)
         
     def _print_report(self):
+        log.PRINT("### Settings")
         log.PRINT("Internal dtype: {}".format(self.dtype.__name__))
         log.PRINT("  bytes: {}".format(self.dtype_bytes))
         log.PRINT("")
-        for input_label, input_filename in self.input_filenames.items():
-            input_mode = self.input_modes.get(input_filename, input_label)
-            input_offset = self.input_offsets.get(input_filename, input_label)
-            input_dtype = self.input_dtypes.get(input_filename, input_label)
-            if input_dtype is not None:
-                input_dtype = input_dtype.__name__
-            input_format = self.input_formats.get(input_filename, input_label)
-            input_csv_separator = self.input_csv_separators.get(input_filename, input_label)
-            input_text_delimiter = self.input_text_delimiters.get(input_filename, input_label)
-            input_shape = self.shapes.get(input_filename, input_label)
-            input_extractor = self.extractors.get(input_filename, input_label)
-            log.PRINT("Input file {!r} [{}]".format(input_filename, input_label))
-            log.PRINT("  shape = {!s} [{}]".format(input_shape, input_shape.count()))
-            log.PRINT("  extractor = {!r}".format(str(input_extractor)))
-            log.PRINT("  mode = {!s}".format(input_mode))
-            log.PRINT("  offset = {!s}".format(input_offset))
-            log.PRINT("  dtype = {!s}".format(input_dtype))
-            log.PRINT("  format = {!s}".format(input_format))
-            log.PRINT("    csv separator = {!r}".format(input_csv_separator))
-            log.PRINT("    text delimiter = {!r}".format(input_text_delimiter))
-        log.PRINT("")
+        if self.input_filenames:
+            log.PRINT("### Input files")
+            for input_label, input_filename in self.input_filenames.items():
+                input_mode = self.input_modes.get(input_filename, input_label)
+                input_offset = self.input_offsets.get(input_filename, input_label)
+                input_dtype = self.input_dtypes.get(input_filename, input_label)
+                if input_dtype is not None:
+                    input_dtype = input_dtype.__name__
+                input_format = self.input_formats.get(input_filename, input_label)
+                input_csv_separator = self.input_csv_separators.get(input_filename, input_label)
+                input_text_delimiter = self.input_text_delimiters.get(input_filename, input_label)
+                input_shape = self.shapes.get(input_filename, input_label)
+                input_extractor = self.extractors.get(input_filename, input_label)
+                log.PRINT("Input file {!r} [{}]".format(input_filename, input_label))
+                log.PRINT("  shape = {!s} [{}]".format(input_shape, input_shape.count()))
+                log.PRINT("  extractor = {!r}".format(str(input_extractor)))
+                log.PRINT("  mode = {!s}".format(input_mode))
+                log.PRINT("  offset = {!s}".format(input_offset))
+                log.PRINT("  dtype = {!s}".format(input_dtype))
+                log.PRINT("  format = {!s}".format(input_format))
+                log.PRINT("    csv separator = {!r}".format(input_csv_separator))
+                log.PRINT("    text delimiter = {!r}".format(input_text_delimiter))
+            log.PRINT("")
+    
+        if self.output_filenames:
+            log.PRINT("### Output files")
+            for output_label, output_filename in self.output_filenames.items():
+                output_mode = self.output_modes.get(output_filename, output_label)
+                output_offset = self.output_offsets.get(output_filename, output_label)
+                output_dtype = self.output_dtypes.get(output_filename, output_label)
+                if output_dtype is not None:
+                    output_dtype = output_dtype.__name__
+                output_format = self.output_formats.get(output_filename, output_label)
+                output_csv_separator = self.output_csv_separators.get(output_filename, output_label)
+                output_text_delimiter = self.output_text_delimiters.get(output_filename, output_label)
+                output_text_newline = self.output_text_newlines.get(output_filename, output_label)
+                output_text_converter = self.output_text_converters.get(output_filename, output_label)
+                log.PRINT("Output file {!r} [{}]".format(output_filename, output_label))
+                log.PRINT("  mode = {!s}".format(output_mode))
+                log.PRINT("  offset = {!s}".format(output_offset))
+                log.PRINT("  dtype = {!s}".format(output_dtype))
+                log.PRINT("  format = {!s}".format(output_format))
+                log.PRINT("    csv separator = {!r}".format(output_csv_separator))
+                log.PRINT("    text delimiter = {!r}".format(output_text_delimiter))
+                log.PRINT("    text newline = {!r}".format(output_text_newline))
+                log.PRINT("    text converter = {!r}".format(output_text_converter))
+            log.PRINT("")
 
-        for output_label, output_filename in self.output_filenames.items():
-            output_mode = self.output_modes.get(output_filename, output_label)
-            output_offset = self.output_offsets.get(output_filename, output_label)
-            output_dtype = self.output_dtypes.get(output_filename, output_label)
-            if output_dtype is not None:
-                output_dtype = output_dtype.__name__
-            output_format = self.output_formats.get(output_filename, output_label)
-            output_csv_separator = self.output_csv_separators.get(output_filename, output_label)
-            output_text_delimiter = self.output_text_delimiters.get(output_filename, output_label)
-            output_text_newline = self.output_text_newlines.get(output_filename, output_label)
-            output_text_converter = self.output_text_converters.get(output_filename, output_label)
-            log.PRINT("Output file {!r} [{}]".format(output_filename, output_label))
-            log.PRINT("  mode = {!s}".format(output_mode))
-            log.PRINT("  offset = {!s}".format(output_offset))
-            log.PRINT("  dtype = {!s}".format(output_dtype))
-            log.PRINT("  format = {!s}".format(output_format))
-            log.PRINT("    csv separator = {!r}".format(output_csv_separator))
-            log.PRINT("    text delimiter = {!r}".format(output_text_delimiter))
-            log.PRINT("    text newline = {!r}".format(output_text_newline))
-            log.PRINT("    text converter = {!r}".format(output_text_converter))
-        log.PRINT("")
-
-        for expression_num, expression in enumerate(self.expressions):
-            log.PRINT("Expression[{}]: {!r}".format(expression_num, expression))
-        log.PRINT("")
-
+        if self.expressions:
+            log.PRINT("### Expressions")
+            for expression_num, expression in enumerate(self.expressions):
+                log.PRINT("Expression[{}]: {!r}".format(expression_num, expression))
+            log.PRINT("")
+    
+        log.PRINT("### Commands")
         log.PRINT("Print: {}".format(self.print_cube))
         log.PRINT("Stats: {}".format(self.print_stats))
+        log.PRINT("Histogram: {}".format(self.print_histogram))
+        log.PRINT("  bins = {}".format(self.histogram_bins))
+        log.PRINT("  range = {}".format(self.histogram_range))
+        log.PRINT("  length = {}".format(self.histogram_length))

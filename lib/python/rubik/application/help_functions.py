@@ -819,6 +819,8 @@ There are three output modes:
   format, dtype, etc...
 * print the result to a file (--print/-P)
 * print statistics about the resulting cube to a file (--stats/-S)
+* print an histogram of the resulting cube to a file (--histogram/-H)
+* print a report (--report/-R)
 """)
 
 def help_memory_usage():
