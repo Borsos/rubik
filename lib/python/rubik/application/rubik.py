@@ -75,6 +75,7 @@ class Rubik(object):
         self.set_print_stats(False)
         self.set_print_report(False)
         self.set_in_place(False)
+        self.set_histogram(False)
         self.set_dtype(default_dtype)
 
         self.total_read_bytes = 0
@@ -133,6 +134,12 @@ class Rubik(object):
 
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
+
+    def set_histogram(self, print_histogram, bins=10, length=80, range=None):
+        self.print_histogram = print_histogram
+        self.histogram_bins = bins
+        self.histogram_range = range
+        self.histogram_length = length
 
     def set_print_report(self, print_report):
         self.print_report = print_report
@@ -423,6 +430,9 @@ class Rubik(object):
             if self.print_stats:
                 self._print_stats(cube=subcube)
                 useless_run = False
+            if self.print_histogram:
+                self._print_histogram(cube=subcube)
+                useless_run = False
             if self.output_filenames:
                 useless_run = False
                 self._write_cube(cube=subcube, dlabels=dlabels)
@@ -591,6 +601,43 @@ ave           = {ave}
             fraction_inf=cube_fraction_inf,
         )
         log.PRINT(stat)
+
+    def _print_histogram(self, cube):
+        if not isinstance(cube, np.ndarray):
+            raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        histogram, bins = np.histogram(cube, bins=self.histogram_bins, range=self.histogram_range)
+        start = bins[0]
+        l = []
+        num_max = 0
+        l_num, l_start, l_end = 0, 0, 0
+        for num, end in zip(histogram, bins[1:]):
+            s_num = str(num)
+            s_start = str(start)
+            s_end = str(end)
+            if len(s_num) > l_num:
+                l_num = len(s_num)
+            if len(s_start) > l_start:
+                l_start = len(s_start)
+            if len(s_end) > l_end:
+                l_end = len(s_end)
+            l.append((num, s_num, s_start, s_end))
+            if num > num_max:
+                num_max = num
+            start = end
+        
+        h_max = self.histogram_length - (l_num + 1 + l_start + 1 + l_end + 1)
+        for num, s_num, s_start, s_end in l:
+            l_h = int(round(h_max * float(num) / num_max, 0))
+            h = '*' * l_h
+            log.PRINT("{s_num:>{l_num}s} {s_start:{l_start}s}:{s_end:{l_end}s} {h}".format(
+                s_num=s_num,
+                l_num=l_num,
+                s_start=s_start,
+                l_start=l_start,
+                s_end=s_end,
+                l_end=l_end,
+                h=h,
+            ))
 
     def _check_output_filename(self, output_filename):
         if (not self.clobber) and os.path.exists(output_filename):

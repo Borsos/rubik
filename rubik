@@ -271,6 +271,28 @@ see --help-labeled-options for more information.""")
         default=False,
         help="print only a report (commands will not be executed)")
 
+    output_group.add_argument('--histogram', '-H',
+        dest="print_histogram",
+        action="store_true",
+        default=False,
+        help="print an histogram")
+
+    output_group.add_argument('--histogram-bins', '-Hb',
+        type=int,
+        default=10,
+        help="num of histogram bins")
+
+    output_group.add_argument('--histogram-range', '-Hr',
+        type=float,
+        nargs=2,
+        default=None,
+        help="range of the histogram")
+
+    output_group.add_argument('--histogram-length', '-Hl',
+        type=int,
+        default=80,
+        help="length of the histogram lines")
+
     output_group.add_argument("--split", "-l",
         metavar="D",
         dest="split_dimensions",
@@ -440,6 +462,10 @@ Options to show help on specific topics """)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
     rubik.set_print_report(args.print_report)
+    rubik.set_histogram(args.print_histogram,
+        bins=args.histogram_bins,
+        range=args.histogram_range,
+        length=args.histogram_length)
     rubik.set_dtype(args.dtype)
 
     conf.enable_warnings(*args.warnings)
