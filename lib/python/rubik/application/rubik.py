@@ -41,8 +41,8 @@ from .. import cubes
 class Rubik(object):
     def __init__(self):
         self.input_filenames = InputArgDict(InputFilename)
-        self.input_modes = InputArgDict(InputMode)
-        self.input_offsets = InputArgDict(Memory)
+        self.input_modes = InputArgDict(InputMode, default=InputMode("rb"))
+        self.input_offsets = InputArgDict(Memory, default=None)
         self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
         self.input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
         self.input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
@@ -52,7 +52,7 @@ class Rubik(object):
 
         self.output_filenames = OutputArgDict(OutputFilename)
         self.output_modes = OutputArgDict(OutputMode)
-        self.output_offsets = OutputArgDict(Memory)
+        self.output_offsets = OutputArgDict(Memory, default=None)
         self.output_dtypes = OutputArgDict(conf.get_dtype, default=None)
         self.output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
         self.output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
@@ -448,13 +448,6 @@ class Rubik(object):
         output_format = self.output_formats.get(output_label, output_ordinal)
         if output_format is None:
             output_format = conf.DEFAULT_FILE_FORMAT
-        output_offset = self.output_offsets.get(output_label, output_ordinal)
-        output_mode = self.output_modes.get(output_label, output_ordinal)
-        if output_mode is None:
-            if output_offset is None:
-                output_mode = OutputMode("wb")
-            else:
-                output_mode = OutputMode("r+b")
         output_dtype = self.output_dtypes.get(output_label, output_ordinal)
         if output_dtype is None:
             output_dtype = self.dtype
@@ -467,6 +460,16 @@ class Rubik(object):
         numpy_function_pargs = []
         numpy_function_nargs = {}
         output_filename = format_filename(output_filename, cube.shape, output_format, output_dtype, keywords=dlabels)
+        output_offset = self.output_offsets.get(output_label, output_ordinal)
+        output_mode = self.output_modes.get(output_label, output_ordinal)
+        if output_mode is None:
+            if output_offset is not None:
+                if os.path.lexists(output_filename):
+                    output_mode = OutputMode("r+b")
+                else:
+                    output_mode = OutputMode("w+b")
+            else:
+                output_mode = OutputMode("wb")
         self._check_output_filename(output_filename)
         if output_format == conf.FILE_FORMAT_RAW:
             num_bytes = cube.size * output_dtype_bytes

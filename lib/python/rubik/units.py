@@ -46,9 +46,9 @@ class UnitsValue(object):
         assert default_units in self.__units__, "{0!r} is not a valid default_unis for {1}".format(default_units, self.__class__.__name__)
         self._units = default_units
         if units is None:
-            units = self.default_units
+            units = default_units
         assert units in self.__units__, "{0!r} is not a valid unis for {1}".format(default_units, self.__class__.__name__)
-        self._units = default_units
+        self._units = units
         self._value = self.convert_units(value, units, default_units)
 
     @classmethod
@@ -92,6 +92,10 @@ class UnitsValue(object):
 
     def __repr__(self):
         return "{0}({1!r})".format(self.__class__.__name__, str(self))
+
+    def __nonzero__(self):
+        return bool(self._value)
+    __bool__ = __nonzero__
 
 class Memory(UnitsValue):
     __units__ = {
