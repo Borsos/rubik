@@ -632,11 +632,13 @@ ave           = {ave}
                 num_max = num
             start = end
         
-        h_max = self.histogram_length - (l_num + 1 + l_start + 1 + l_end + 1)
+        text_length = (l_start + 1 + l_end + 1 + 1 + l_num)
+        h_max = max(0, self.histogram_length - text_length)
         for num, s_num, s_start, s_end in l:
-            l_h = int(round(h_max * float(num) / num_max, 0))
-            h = '*' * l_h
-            log.PRINT("{s_num:>{l_num}s} {s_start:{l_start}s}:{s_end:{l_end}s} {h}".format(
+            l_l = int(round(h_max * float(num) / num_max, 0))
+            l_r = h_max - l_l
+            h = '*' * l_l + ' ' * l_r
+            log.PRINT("{s_start:{l_start}s}:{s_end:{l_end}s}|{h}|{s_num:>{l_num}s}".format(
                 s_num=s_num,
                 l_num=l_num,
                 s_start=s_start,
