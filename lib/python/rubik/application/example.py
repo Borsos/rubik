@@ -331,7 +331,7 @@ class Result(Node):
             text = self.get_result()
             if not isinstance(self._child, Command):
                 text += '\n$'
-            return text + '\n'
+            return text #+ '\n'
 
 class Command(Node):
     __pre_node_classes__ = []

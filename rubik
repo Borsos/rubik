@@ -299,6 +299,20 @@ see --help-labeled-options for more information.""")
         default=80,
         help="length of the histogram lines")
 
+    output_group.add_argument('--histogram-percentage', '-Hp',
+        dest="histogram_mode",
+        action="store_const",
+        const="percentage",
+        default="num",
+        help="show percentage of elements per bin")
+
+    output_group.add_argument('--histogram-num', '-Hn',
+        dest="histogram_mode",
+        action="store_const",
+        const="num",
+        default="num",
+        help="show number of elements per bin")
+
     output_group.add_argument("--split", "-l",
         metavar="D",
         dest="split_dimensions",
@@ -473,7 +487,8 @@ Options to show help on specific topics """)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,
         range=args.histogram_range,
-        length=args.histogram_length)
+        length=args.histogram_length,
+        mode=args.histogram_mode)
     rubik.set_dtype(args.dtype)
 
     conf.enable_warnings(*args.warnings)

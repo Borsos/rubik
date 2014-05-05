@@ -142,11 +142,23 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
-    def set_histogram(self, print_histogram, bins=10, length=80, range=None):
+    def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None):
         self.print_histogram = print_histogram
         self.histogram_bins = bins
         self.histogram_range = range
         self.histogram_length = length
+        fmt_base = "{b}{s_start:{l_start}s}, {s_end:{l_end}s}{k}|{h}|"
+        fmt_num = fmt_base + "{s_num:>{l_num}s}"
+        fmt_percentage = fmt_base + "{s_percentage:>{l_percentage}s}"
+        if mode is None:
+            mode = 'num'
+        self.histogram_mode = mode
+        if self.histogram_mode == "num":
+            self.histogram_fmt = fmt_num
+        elif self.histogram_mode == "percentage":
+            self.histogram_fmt = fmt_percentage
+        else:
+            raise ValueError("invalid histogram mode {!r}".format(mode))
 
     def set_print_report(self, print_report):
         self.print_report = print_report
@@ -616,37 +628,63 @@ ave           = {ave}
         start = bins[0]
         l = []
         num_max = 0
-        l_num, l_start, l_end = 0, 0, 0
+        l_num, l_percentage, l_start, l_end = 0, 0, 0, 0
+        num_tot = histogram.sum()
         for num, end in zip(histogram, bins[1:]):
             s_num = str(num)
+            fraction = float(num) / num_tot
+            s_percentage = "{:.2%}".format(fraction)
             s_start = str(start)
             s_end = str(end)
             if len(s_num) > l_num:
                 l_num = len(s_num)
+            if len(s_percentage) > l_percentage:
+                l_percentage = len(s_percentage)
             if len(s_start) > l_start:
                 l_start = len(s_start)
             if len(s_end) > l_end:
                 l_end = len(s_end)
-            l.append((num, s_num, s_start, s_end))
+            l.append((num, s_num, s_percentage, s_start, s_end))
             if num > num_max:
                 num_max = num
             start = end
         
-        text_length = (l_start + 1 + l_end + 1 + 1 + l_num)
+        fixed_text = self.histogram_fmt.format(
+            b='[',
+            s_start='',
+            l_start=l_start,
+            s_end='',
+            l_end=l_end,
+            k=']',
+            h='',
+            s_num='',
+            l_num=l_num,
+            s_percentage='',
+            l_percentage=l_percentage)
+        text_length = len(fixed_text)
         h_max = max(0, self.histogram_length - text_length)
-        for num, s_num, s_start, s_end in l:
+        b = '['
+        for c, (num, s_num, s_percentage, s_start, s_end) in enumerate(l):
+            if c == len(l) - 1:
+                k = ']'
+            else:
+                k = ')'
             l_l = int(0.5 + (h_max * num) / float(num_max))
             l_r = h_max - l_l
             #log.PRINT("@@@ h_max={}, num={}, num_max={}, l_l={}, l_r={}".format(h_max, num, num_max, l_l, l_r))
             h = '*' * l_l + ' ' * l_r
-            log.PRINT("{s_start:{l_start}s}:{s_end:{l_end}s}|{h}|{s_num:>{l_num}s}".format(
+            log.PRINT(self.histogram_fmt.format(
                 s_num=s_num,
                 l_num=l_num,
+                s_percentage=s_percentage,
+                l_percentage=l_percentage,
                 s_start=s_start,
                 l_start=l_start,
                 s_end=s_end,
                 l_end=l_end,
                 h=h,
+                b=b,
+                k=k,
             ))
 
     def _check_output_filename(self, output_filename):
@@ -833,3 +871,4 @@ ave           = {ave}
         logger.debug("  bins = {}".format(self.histogram_bins))
         logger.debug("  range = {}".format(self.histogram_range))
         logger.debug("  length = {}".format(self.histogram_length))
+        logger.debug("  mode = {}".format(self.histogram_mode))
