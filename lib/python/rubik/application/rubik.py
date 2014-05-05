@@ -142,7 +142,7 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
-    def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None):
+    def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None, decimals=None):
         self.print_histogram = print_histogram
         self.histogram_bins = bins
         self.histogram_range = range
@@ -159,6 +159,7 @@ class Rubik(object):
             self.histogram_fmt = fmt_percentage
         else:
             raise ValueError("invalid histogram mode {!r}".format(mode))
+        self.histogram_decimals = decimals
 
     def set_print_report(self, print_report):
         self.print_report = print_report
@@ -626,6 +627,28 @@ ave           = {ave}
             raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         histogram, bins = np.histogram(cube, bins=self.histogram_bins, range=self.histogram_range)
         start = bins[0]
+        d_min = None
+        for end in bins[1:]:
+            d = abs(end - start)
+            if d_min is None or d < d_min:
+                d_min = d
+        if self.histogram_decimals is None:
+            power = 0
+            f_d_min = d_min - int(d_min)
+            if f_d_min > 0:
+                while True:
+                    if int(f_d_min * 10 ** power) > 0:
+                        break
+                    power += 1
+            else:
+                power = 0
+        else:
+            power = self.histogram_decimals
+        if power:
+            fmt_float = "{{:.{power}f}}".format(power=power)
+        else:
+            fmt_float = "{{:f}}".format()
+        start = bins[0]
         l = []
         num_max = 0
         l_num, l_percentage, l_start, l_end = 0, 0, 0, 0
@@ -634,8 +657,8 @@ ave           = {ave}
             s_num = str(num)
             fraction = float(num) / num_tot
             s_percentage = "{:.2%}".format(fraction)
-            s_start = str(start)
-            s_end = str(end)
+            s_start = fmt_float.format(start)
+            s_end = fmt_float.format(end)
             if len(s_num) > l_num:
                 l_num = len(s_num)
             if len(s_percentage) > l_percentage:
@@ -872,3 +895,4 @@ ave           = {ave}
         logger.debug("  range = {}".format(self.histogram_range))
         logger.debug("  length = {}".format(self.histogram_length))
         logger.debug("  mode = {}".format(self.histogram_mode))
+        logger.debug("  decimals = {}".format(self.histogram_decimals))

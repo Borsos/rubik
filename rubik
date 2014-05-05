@@ -294,6 +294,11 @@ see --help-labeled-options for more information.""")
         default=None,
         help="range of the histogram")
 
+    output_group.add_argument('--histogram-decimals', '-Hd',
+        type=int,
+        default=None,
+        help="number of decimals for bins")
+
     output_group.add_argument('--histogram-length', '-Hl',
         type=int,
         default=80,
@@ -488,7 +493,8 @@ Options to show help on specific topics """)
         bins=args.histogram_bins,
         range=args.histogram_range,
         length=args.histogram_length,
-        mode=args.histogram_mode)
+        mode=args.histogram_mode,
+        decimals=args.histogram_decimals)
     rubik.set_dtype(args.dtype)
 
     conf.enable_warnings(*args.warnings)
