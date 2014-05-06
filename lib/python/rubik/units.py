@@ -20,6 +20,11 @@ __author__ = "Simone Campagna"
 import re
 import itertools
 
+__all__ = [
+              'Memory',
+              'Time',
+              'Bandwidth',
+          ]
 class UnitsError(Exception):
     pass
 
@@ -212,7 +217,7 @@ class AggregateUnits(Units):
     def _split_units(cls, units):
         raise NotImplementedError("AggregateUnits.split_units(...)")
 
-class BandWidth(AggregateUnits):
+class Bandwidth(AggregateUnits):
     @classmethod
     def get_available_units(cls):
         for _uml, _usl in itertools.product(Memory.get_available_units(), Time.get_available_units()):
