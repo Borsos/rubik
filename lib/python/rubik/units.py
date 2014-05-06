@@ -18,11 +18,13 @@
 __author__ = "Simone Campagna"
 
 import re
+import itertools
 
-from .errors import RubikUnitsError
+class UnitsError(Exception):
+    pass
 
 class UnitsValue(object):
-    __re_split_string__ = re.compile("^([\d]+)\s*(.*)$")
+    __re_split_string__ = re.compile(r"([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*(.*)$")
     __units__ = {}
     __default_units__ = None
     def __init__(self, init, default_units=None):
@@ -35,37 +37,54 @@ class UnitsValue(object):
             try:
                 value, units = self.from_string(init)
             except Exception as err:
-                raise RubikUnitsError("cannot make a {0} from {1!r}: {2}: {3}".format(self.__class__.__name__, init, err.__class__.__name__, err))
+                raise UnitsError("cannot make a {0} from {1!r}: {2}: {3}".format(self.__class__.__name__, init, err.__class__.__name__, err))
         else:
-            raise RubikUnitsError("cannot make a {0} from {1!r} of type {2}".format(self.__class__.__name__, init, type(init).__name__))
+            raise UnitsError("cannot make a {0} from {1!r} of type {2}".format(self.__class__.__name__, init, type(init).__name__))
         if default_units is None:
             if units is not None:
                 default_units = units
             else:
                 default_units = self.__default_units__
-        assert default_units in self.__units__, "{0!r} is not a valid default_unis for {1}".format(default_units, self.__class__.__name__)
+        if not default_units in self.__units__:
+            raise UnitsError("invalid default units {2}".format(self.__class__.__name__, init, default_units))
         self._units = default_units
         if units is None:
             units = default_units
-        assert units in self.__units__, "{0!r} is not a valid unis for {1}".format(default_units, self.__class__.__name__)
+        if not units in self.__units__:
+            raise UnitsError("cannot make a {0} from {1!r}: invalid units {2}".format(self.__class__.__name__, init, units))
         self._units = units
         self._value = self.convert_units(value, units, default_units)
+
+    @classmethod
+    def try_create(cls, s):
+        try:
+            return cls(s)
+        except UnitsError:
+            return None
 
     @classmethod
     def from_string(cls, s):
         m = cls.__re_split_string__.match(s)
         if not m:
-            raise RubikUnitsError("cannot make a {0} from {1!r}".format(cls.__name__, s))
+            raise UnitsError("cannot make a {0} from {1!r}".format(cls.__name__, s))
         v_s, u_s = m.groups()
         if not u_s:
             u_s = cls.__default_units__
         if u_s is None:
-            raise RubikUnitsError("cannot make a {0} from {1!r}: missing units".format(cls.__name__, s))
+            raise UnitsError("cannot make a {0} from {1!r}: missing units".format(cls.__name__, s))
         return cls.value_from_string(v_s), cls.units_from_string(u_s)
         
     @classmethod
     def value_from_string(cls, v_s):
-        return int(v_s)
+        try:
+            fv = float(v_s)
+        except:
+            raise UnitsError("cannot make a float from {0}".format(v_s))
+        iv = int(fv)
+        if iv == fv:
+            return iv
+        else:
+            return fv
 
     @classmethod
     def units_from_string(cls, u_s):
@@ -119,3 +138,34 @@ class Memory(UnitsValue):
     @classmethod
     def units_from_string(cls, u_s):
         return u_s.lower()
+
+class Time(UnitsValue):
+    __units__ = {
+        's': 1,
+        'm': 60,
+        'h': 3600,
+        'd': 86400,
+        'w': 7 * 86400,
+    }
+    __default_units__ = 's'
+
+    def get_seconds(self):
+        return self.convert('s')
+
+    @classmethod
+    def units_from_string(cls, u_s):
+        return u_s.lower()
+
+_ub = {}
+for (_uml, _umf), (_usl, _usf) in itertools.product(Memory.__units__.items(), Time.__units__.items()):
+    _ub["{}/{}".format(_uml, _usl)] = float(_umf)/(_usf)
+
+class BandWidth(UnitsValue):
+    __units__ = _ub
+    __default_units__ = 'b/s'
+
+    @classmethod
+    def units_from_string(cls, u_s):
+        return u_s.lower()
+
+del _ub
