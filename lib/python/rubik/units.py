@@ -23,44 +23,38 @@ import itertools
 class UnitsError(Exception):
     pass
 
-class UnitsValue(object):
+class Units(object):
     __re_split_string__ = re.compile(r"([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*(.*)$")
-    __units__ = {}
-    __default_units__ = None
-    def __init__(self, init, default_units=None):
+    def __init__(self, init, units=None):
         if isinstance(init, self.__class__):
-            value, units = init._value, init._units
+            current_value, current_units = init._value, init._units
         elif isinstance(init, (int, float)):
-            value = init
-            units = None
+            current_value = init
+            current_units = None
         elif isinstance(init, str):
             try:
-                value, units = self.from_string(init)
+                current_value, current_units = self.from_string(init)
             except Exception as err:
                 raise UnitsError("cannot make a {0} from {1!r}: {2}: {3}".format(self.__class__.__name__, init, err.__class__.__name__, err))
         else:
             raise UnitsError("cannot make a {0} from {1!r} of type {2}".format(self.__class__.__name__, init, type(init).__name__))
-        if default_units is None:
-            if units is not None:
-                default_units = units
-            else:
-                default_units = self.__default_units__
-        if not default_units in self.__units__:
-            raise UnitsError("invalid default units {2}".format(self.__class__.__name__, init, default_units))
-        self._units = default_units
         if units is None:
-            units = default_units
-        if not units in self.__units__:
-            raise UnitsError("cannot make a {0} from {1!r}: invalid units {2}".format(self.__class__.__name__, init, units))
-        self._units = units
-        self._value = self.convert_units(value, units, default_units)
+            if current_units is not None:
+                units = current_units
+            else:
+                units = self.__default_units__
+        if not self.is_valid_unit(units):
+            raise UnitsError("cannot make a {0} from {1!r}: invalid units {2!r}".format(self.__class__.__name__, init, units))
+     
+        if current_units is None:
+            current_units = units
+        else:
+            if not self.is_valid_unit(current_units):
+                raise UnitsError("cannot make a {0} from {1!r}: invalid units {2}".format(self.__class__.__name__, init, current_units))
 
-    @classmethod
-    def try_create(cls, s):
-        try:
-            return cls(s)
-        except UnitsError:
-            return None
+        value = self.convert_units(current_value, current_units, units)
+        self._units = units
+        self._value = value
 
     @classmethod
     def from_string(cls, s):
@@ -75,11 +69,30 @@ class UnitsValue(object):
         return cls.value_from_string(v_s), cls.units_from_string(u_s)
         
     @classmethod
-    def value_from_string(cls, v_s):
-        try:
-            fv = float(v_s)
-        except:
-            raise UnitsError("cannot make a float from {0}".format(v_s))
+    def get_available_units(cls):
+        raise NotImplementedError("Units.get_available_units()")
+        
+    @classmethod
+    def get_units_factor(cls, units):
+        raise NotImplementedError("Units.get_units_factor(...)")
+
+    @classmethod
+    def is_valid_unit(cls, u_s):
+        raise NotImplementedError("Units.is_valid_unit(...)")
+
+    @classmethod
+    def convert_units(cls, value, from_units, to_units):
+        if not cls.is_valid_unit(from_units):
+            raise UnitsError("{}: invalid units {}".format(cls.__name__, from_units))
+        if not cls.is_valid_unit(to_units):
+            raise UnitsError("{}: invalid units {}".format(cls.__name__, to_units))
+        if from_units == to_units:
+            return value
+        else:
+            return cls.convert_value((float(value) * cls.get_units_factor(from_units)) / cls.get_units_factor(to_units))
+
+    @classmethod
+    def convert_value(cls, fv):
         iv = int(fv)
         if iv == fv:
             return iv
@@ -87,18 +100,33 @@ class UnitsValue(object):
             return fv
 
     @classmethod
+    def value_from_string(cls, v_s):
+        try:
+            fv = float(v_s)
+        except:
+            raise UnitsError("cannot make a float from {0}".format(v_s))
+        return cls.convert_value(fv)
+
+    def change_units(self, new_units):
+        self._value = self.convert_units(self._value, self._units, new_units)
+        self._units = new_units
+
+    def get_value(self, to_units=None):
+        if to_units is None:
+            return self._value
+        else:
+            return self.convert_units(self._value, self._units, to_units)
+
+    @classmethod
     def units_from_string(cls, u_s):
         return u_s
 
     @classmethod
-    def convert_units(cls, value, from_units, to_units):
-        if from_units == to_units:
-            return value
-        else:
-            return value * cls.__units__[from_units] / cls.__units__[to_units]
-
-    def convert(self, to_units):
-        return self.convert_units(self._value, self._units, to_units)
+    def try_create(cls, s):
+        try:
+            return cls(s)
+        except UnitsError:
+            return None
 
     def value(self):
         return self._value
@@ -116,7 +144,28 @@ class UnitsValue(object):
         return bool(self._value)
     __bool__ = __nonzero__
 
-class Memory(UnitsValue):
+class SimpleUnits(Units):
+    __units__ = {}
+    __default_units__ = None
+
+    @classmethod
+    def get_available_units(cls):
+        return cls.__units__.keys()
+
+    @classmethod
+    def get_units_factor(cls, units):
+        return cls.__units__[units]
+
+    @classmethod
+    def is_valid_unit(cls, units):
+        return units in cls.__units__
+
+    @classmethod
+    def units_from_string(cls, u_s):
+        return u_s.lower()
+
+
+class Memory(SimpleUnits):
     __units__ = {
         'b': 1,
         'k': 1024,
@@ -133,13 +182,10 @@ class Memory(UnitsValue):
     __default_units__ = 'b'
 
     def get_bytes(self):
-        return self.convert('b')
+        return self.get_value('b')
 
-    @classmethod
-    def units_from_string(cls, u_s):
-        return u_s.lower()
 
-class Time(UnitsValue):
+class Time(SimpleUnits):
     __units__ = {
         's': 1,
         'm': 60,
@@ -150,22 +196,51 @@ class Time(UnitsValue):
     __default_units__ = 's'
 
     def get_seconds(self):
-        return self.convert('s')
+        return self.get_value('s')
+
+class AggregateUnits(Units):
+    CACHE = {}
 
     @classmethod
-    def units_from_string(cls, u_s):
-        return u_s.lower()
-
-_ub = {}
-for (_uml, _umf), (_usl, _usf) in itertools.product(Memory.__units__.items(), Time.__units__.items()):
-    _ub["{}/{}".format(_uml, _usl)] = float(_umf)/(_usf)
-
-class BandWidth(UnitsValue):
-    __units__ = _ub
-    __default_units__ = 'b/s'
+    def _get_cache(cls, units):
+        cache = cls.CACHE.setdefault(cls, {})
+        if not units in cache:
+            cache[units] = cls.split_units(units)
+        return cache[units]
 
     @classmethod
-    def units_from_string(cls, u_s):
-        return u_s.lower()
+    def _split_units(cls, units):
+        raise NotImplementedError("AggregateUnits.split_units(...)")
 
-del _ub
+class BandWidth(AggregateUnits):
+    @classmethod
+    def get_available_units(cls):
+        for _uml, _usl in itertools.product(Memory.get_available_units(), Time.get_available_units()):
+            yield "{}/{}".format(_uml, _usl)
+
+    @classmethod
+    def split_units(cls, units):
+        l = units.split('/', 1)
+        if len(l) != 2:
+            raise UnitsError("{}: invalid units {}".format(cls.__name__, units))
+        um, ut = l
+        if not Memory.is_valid_unit(um):
+            raise UnitsError("{}: invalid units {}: invalid {} units {}".format(cls.__name__, units, Memory.__name__, um))
+        if not Time.is_valid_unit(ut):
+            raise UnitsError("{}: invalid units {}: invalid {} units {}".format(cls.__name__, units, Time.__name__, ut))
+        un = '{}/{}'.format(um, ut) 
+        uf = Memory.get_units_factor(um) / Time.get_units_factor(ut)
+        return un, uf
+        
+    @classmethod
+    def is_valid_unit(cls, units):
+        try:
+            un, uf = cls._get_cache(units)
+            return True
+        except:
+            return False
+
+    @classmethod
+    def get_units_factor(cls, units):
+        un, uf = cls._get_cache(units)
+        return uf
