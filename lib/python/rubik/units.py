@@ -187,7 +187,7 @@ class Memory(SimpleUnits):
     __default_units__ = 'b'
 
     def get_bytes(self):
-        return self.get_value('b')
+        return int(self.get_value('b'))
 
 
 class Time(SimpleUnits):
