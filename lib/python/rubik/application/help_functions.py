@@ -738,7 +738,7 @@ Filename interpolation
 Filenames are interpolated; the following keywords are substituted:
 * shape: the cube shape, for instance '3x2x4';
 * rank: the cube shape rank, for instance '3' if the shape is '3x2x4';
-* count: the number of elements, for instance '2x4';
+* count: the number of elements, for instance '24' if the shape is '3x2x4';
 * dtype: the data type, for instance 'float32';
 * format: the file format ({ff})
 
