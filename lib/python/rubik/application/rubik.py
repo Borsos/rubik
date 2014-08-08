@@ -35,6 +35,7 @@ from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
 from ..format_filename import format_filename
+from ..viewer import getViewerClass
 from .. import conf
 from .. import cubes
 
@@ -73,6 +74,7 @@ class Rubik(object):
         self.set_clobber(conf.DEFAULT_CLOBBER)
         self.set_print_cube(False)
         self.set_print_stats(False)
+        self.set_view(False)
         self.set_print_report(False)
         self.set_in_place(False)
         self.set_histogram(False)
@@ -141,6 +143,9 @@ class Rubik(object):
 
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
+
+    def set_view(self, view):
+        self.view = view
 
     def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None, decimals=None):
         self.print_histogram = print_histogram
@@ -456,6 +461,9 @@ class Rubik(object):
             if self.output_filenames:
                 useless_run = False
                 self._write_cube(cube=subcube, dlabels=dlabels)
+            if self.view:
+                self._view(cube=subcube)
+                useless_run = False
         if useless_run:
             #self.show_logo_once()
             #self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
@@ -896,3 +904,15 @@ ave           = {ave}
         logger.debug("  length = {}".format(self.histogram_length))
         logger.debug("  mode = {}".format(self.histogram_mode))
         logger.debug("  decimals = {}".format(self.histogram_decimals))
+
+    def _view(self, cube):
+        if not isinstance(cube, np.ndarray):
+            raise RubikError("cannot view result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        if len(cube.shape) != 3:
+            raise RubikError("cannot view result with shape {0} (only 3D cubes can be shown)".format(len(cube.shape)))
+        ViewerClass = getViewerClass()
+        if ViewerClass is None:
+            raise RubikError("cannot view result: no Viewer available (probably mayavi module is not installed)")
+        viewer = ViewerClass(data=cube)
+        viewer.configure_traits()
+      

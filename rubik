@@ -95,7 +95,7 @@ Global options""")
         default=False,
         help="dry run")
 
-    global_group.add_argument("--version", "-V",
+    global_group.add_argument("--version",
         action='version',
         version='%(prog)s {version}'.format(version=conf.VERSION))
 
@@ -318,6 +318,12 @@ see --help-labeled-options for more information.""")
         default="num",
         help="show number of elements per bin")
 
+    output_group.add_argument('--view', '-V',
+        dest="view",
+        action="store_true",
+        default=False,
+        help="view the 3d cube")
+
     output_group.add_argument("--split", "-l",
         metavar="D",
         dest="split_dimensions",
@@ -488,6 +494,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
+    rubik.set_view(args.view)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,
