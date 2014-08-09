@@ -18,19 +18,14 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'VolumeSlicer',
+    'ViewerWrapper',
 ]
 
 class ViewerWrapper(object):
-    def __init__(self, data, **n_args):
+    def __init__(self, data, **viewer_args):
         self.data = data
         self.viewer_args = viewer_args
 
-def viewerBuilder():
-    VolumeSlicer = None
-    try:
-        # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
-        from .volume_slicer_advanced import VolumeSlicer
-    except ImportError:
+    def run(self):
         pass
-    return VolumeSlicer
+

@@ -220,5 +220,6 @@ class VolumeSlicer(HasTraits):
                 )
 
 
-m = VolumeSlicer(data=data)
-m.configure_traits()
+if __name__ == "__main__":
+    m = VolumeSlicer(data=data)
+    m.configure_traits()

@@ -322,7 +322,28 @@ see --help-labeled-options for more information.""")
         dest="view",
         action="store_true",
         default=False,
-        help="view the 3d cube")
+        help="view the result")
+
+    output_group.add_argument('--view-volume-slicer', '-Vs',
+        dest="viewer_type",
+        action="store_const",
+        const="VolumeSlicer",
+        default="auto",
+        help="view the 3d cube with VolumeSlicer class")
+
+    output_group.add_argument('--view-advanced-volume-slicer', '-Va',
+        dest="viewer_type",
+        action="store_const",
+        const="AdvancedVolumeSlicer",
+        default="auto",
+        help="view the 3d cube with AdvancedVolumeSlicer class")
+
+    output_group.add_argument('--view-auto', '-VA',
+        dest="viewer_type",
+        action="store_const",
+        const="auto",
+        default="auto",
+        help="view the result with default viewer")
 
     output_group.add_argument("--split", "-l",
         metavar="D",
@@ -481,6 +502,8 @@ Options to show help on specific topics """)
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
         sys.exit(1)
 
+    viewer_args = {}
+
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
     rubik.set_dry_run(args.dry_run)
@@ -494,7 +517,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
-    rubik.set_view(args.view)
+    rubik.set_view(args.view, args.viewer_type, viewer_args)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,

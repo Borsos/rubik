@@ -35,7 +35,7 @@ from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
 from ..format_filename import format_filename
-from ..viewer import getViewerClass
+from ..viewer.viewer_builder import viewerBuilder
 from .. import conf
 from .. import cubes
 
@@ -144,8 +144,10 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
-    def set_view(self, view):
+    def set_view(self, view, viewer_type=None, viewer_args=None):
         self.view = view
+        self.viewer_type = viewer_type
+        self.viewer_args = viewer_args
 
     def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None, decimals=None):
         self.print_histogram = print_histogram
@@ -906,13 +908,10 @@ ave           = {ave}
         logger.debug("  decimals = {}".format(self.histogram_decimals))
 
     def _view(self, cube):
-        if not isinstance(cube, np.ndarray):
-            raise RubikError("cannot view result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-        if len(cube.shape) != 3:
-            raise RubikError("cannot view result with shape {0} (only 3D cubes can be shown)".format(len(cube.shape)))
-        ViewerClass = getViewerClass()
-        if ViewerClass is None:
-            raise RubikError("cannot view result: no Viewer available (probably mayavi module is not installed)")
-        viewer = ViewerClass(data=cube)
-        viewer.configure_traits()
+        viewer = viewerBuilder(
+            logger=self.logger,
+            viewer_type=self.viewer_type,
+            data=cube,
+            viewer_args=self.viewer_args)
+        viewer.run()
       

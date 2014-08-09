@@ -18,19 +18,23 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'VolumeSlicer',
+    'ConcreteVolumeSlicerViewer',
 ]
 
-class ViewerWrapper(object):
-    def __init__(self, data, **n_args):
-        self.data = data
-        self.viewer_args = viewer_args
+from .volume_slicer_viewer import VolumeSlicerViewer
 
-def viewerBuilder():
-    VolumeSlicer = None
-    try:
-        # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
-        from .volume_slicer_advanced import VolumeSlicer
-    except ImportError:
-        pass
-    return VolumeSlicer
+# from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
+from .impl.volume_slicer import VolumeSlicer
+
+try:
+    # disable vtk warnings
+    import vtk 
+    vtk.vtkObject.GlobalWarningDisplayOff()
+except:
+    import traceback
+    traceback.print_exc()
+    pass
+
+class ConcreteVolumeSlicerViewer(VolumeSlicerViewer):
+    ConcreteVolumeSlicerClass = VolumeSlicer
+        
