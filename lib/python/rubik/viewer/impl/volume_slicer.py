@@ -178,6 +178,10 @@ class VolumeSlicer(HasTraits):
                                  tvtk.InteractorStyleImage()
         scene.scene.background = (0, 0, 0)
 
+        # Some text:
+        mlab.text(0.01, 0.9, axis_name, width=0.04)
+
+
 
     @on_trait_change('scene_x.activated')
     def display_scene_x(self):

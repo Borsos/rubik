@@ -40,7 +40,7 @@ def viewerBuilder(logger, viewer_type, data, **viewer_args):
             if isinstance(data, np.ndarray):
                 if len(data.shape) == 3:
                     # volume
-                    viewer_types.extend(("AdvancedVolumeSlicer", "VolumeSlicer"))
+                    viewer_types.extend(("VolumeSlicer", "AdvancedVolumeSlicer"))
                 else:
                     raise RubikError("cannot find a valid viewer for {} object with rank {}".format(type(data, len(data.shape))))
             if viewer_type is None:

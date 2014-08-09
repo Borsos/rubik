@@ -194,7 +194,7 @@ class VolumeSlicer(HasTraits):
         scene.scene.background = (0, 0, 0)
 
         # Some text:
-        mlab.text(0.01, 0.8, axis_name, width=0.08)
+        mlab.text(0.01, 0.9, axis_name, width=0.04)
 
         # Choose a view that makes sens
         views = dict(x=(0, 0), y=(90, 180), z=(0, 0))
