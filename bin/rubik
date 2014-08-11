@@ -218,7 +218,7 @@ see --help-labeled-options for more information.""")
     input_group.add_argument("--input-mode", "-Im",
         dest="input_modes",
         type=rubik.input_modes.store,
-        help="input mode")
+        help="input mode (e. g. \"r+b\")")
 
     input_group.add_argument("--input-offset", "-Io",
         dest="input_offsets",
@@ -254,6 +254,21 @@ see --help-labeled-options for more information.""")
 Options related to output files. All these options can be labeled;
 see --help-labeled-options for more information.""")
 
+    file_output_group = parser.add_argument_group(
+        "file output arguments",
+        description="""\
+Arguments for output to files""")
+
+    histogram_output_group = parser.add_argument_group(
+        "histogram output arguments",
+        description="""\
+Arguments for histogram generation""")
+
+    graphical_output_group = parser.add_argument_group(
+        "graphical viewer arguments",
+        description="""\
+Arguments for graphical visualization""")
+
     write_output_filename_group = output_group.add_mutually_exclusive_group()
     write_output_filename_group.add_argument("--in-place", "-Oi",
         action="store_true",
@@ -281,71 +296,77 @@ see --help-labeled-options for more information.""")
         dest="print_histogram",
         action="store_true",
         default=False,
-        help="print an histogram")
+        help="print an histogram; see histogram arguments below")
 
-    output_group.add_argument('--histogram-bins', '-Hb',
+    output_group.add_argument('--view', '-V',
+        dest="view",
+        action="store_true",
+        default=False,
+        help="view the result graphically; see graphical viewer arguments below")
+
+    histogram_output_group.add_argument('--histogram-bins', '-Hb',
+        metavar="Hb",
         type=int,
         default=10,
         help="num of histogram bins")
 
-    output_group.add_argument('--histogram-range', '-Hr',
+    histogram_output_group.add_argument('--histogram-range', '-Hr',
+        metavar="Hr",
         type=float,
         nargs=2,
         default=None,
         help="range of the histogram")
 
-    output_group.add_argument('--histogram-decimals', '-Hd',
+    histogram_output_group.add_argument('--histogram-decimals', '-Hd',
+        metavar="Hd",
         type=int,
         default=None,
         help="number of decimals for bins")
 
-    output_group.add_argument('--histogram-length', '-Hl',
+    histogram_output_group.add_argument('--histogram-length', '-Hl',
+        metavar="Hl",
         type=int,
         default=80,
         help="length of the histogram lines")
 
-    output_group.add_argument('--histogram-percentage', '-Hp',
+    histogram_output_group.add_argument('--histogram-percentage', '-Hp',
+        metavar="Hp",
         dest="histogram_mode",
         action="store_const",
         const="percentage",
         default="num",
         help="show percentage of elements per bin")
 
-    output_group.add_argument('--histogram-num', '-Hn',
+    histogram_output_group.add_argument('--histogram-num', '-Hn',
+        metavar="Hn",
         dest="histogram_mode",
         action="store_const",
         const="num",
         default="num",
         help="show number of elements per bin")
 
-    output_group.add_argument('--view', '-V',
-        dest="view",
-        action="store_true",
-        default=False,
-        help="view the result")
-
-    output_group.add_argument('--view-volume-slicer', '-Vs',
+    graphical_output_group.add_argument('--view-volume-slicer', '-Vs',
         dest="viewer_type",
         action="store_const",
         const="VolumeSlicer",
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    output_group.add_argument('--view-advanced-volume-slicer', '-Va',
+    graphical_output_group.add_argument('--view-advanced-volume-slicer', '-Va',
         dest="viewer_type",
         action="store_const",
         const="AdvancedVolumeSlicer",
         default="auto",
         help="view the 3d cube with AdvancedVolumeSlicer class")
 
-    output_group.add_argument('--view-volume-render', '-Vr',
+    graphical_output_group.add_argument('--view-volume-render', '-Vr',
         dest="viewer_type",
         action="store_const",
         const="VolumeRender",
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
-    output_group.add_argument('--view-auto', '-VA',
+    graphical_output_group.add_argument('--view-auto', '-VA',
         dest="viewer_type",
         action="store_const",
         const="auto",
@@ -360,46 +381,49 @@ see --help-labeled-options for more information.""")
         default=[],
         help="split dimension D (--help-split/-hl for more information)")
 
-    output_group.add_argument("--output-mode", "-Om",
+    file_output_group.add_argument("--output-mode", "-Om",
+        metavar="Om",
         dest="output_modes",
         type=rubik.output_modes.store,
-        help="output mode")
+        help="output mode (e. g. \"w+b\")")
 
-    output_group.add_argument("--output-offset", "-Oo",
+    file_output_group.add_argument("--output-offset", "-Oo",
+        metavar="Oo",
         dest="output_offsets",
         type=rubik.output_offsets.store,
         help="output offset")
 
-    output_group.add_argument("--output-dtype", "-Ot",
+    file_output_group.add_argument("--output-dtype", "-Ot",
         metavar="D",
         dest="output_dtypes",
         type=rubik.output_dtypes.store,
         help="output data type name (--help-data-types/-hd to show all available data types)")
 
-    output_group.add_argument("--output-format", "-Of",
+    file_output_group.add_argument("--output-format", "-Of",
+        metavar="Of",
         dest="output_formats",
         type=rubik.output_formats.store,
         help="output file format")
 
-    output_group.add_argument("--output-csv-separator", "-Os",
+    file_output_group.add_argument("--output-csv-separator", "-Os",
         metavar='S',
         dest="output_csv_separators",
         type=rubik.output_csv_separators.store,
         help="separator to be used with '{0}' output file format".format(conf.FILE_FORMAT_CSV))
 
-    output_group.add_argument("--output-text-delimiter", "-Od",
+    file_output_group.add_argument("--output-text-delimiter", "-Od",
         metavar='D',
         dest="output_text_delimiters",
         type=rubik.output_text_delimiters.store,
         help="delimiter to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
-    output_group.add_argument("--output-text-newline", "-On",
+    file_output_group.add_argument("--output-text-newline", "-On",
         metavar='N',
         dest="output_text_newlines",
         type=rubik.output_text_newlines.store,
         help="newline to be used with '{0}' output file format".format(conf.FILE_FORMAT_TEXT))
 
-    output_group.add_argument("--output-text-converter", "-Oc",
+    file_output_group.add_argument("--output-text-converter", "-Oc",
         metavar='C',
         dest="output_text_converters",
         type=rubik.output_text_converters.store,
