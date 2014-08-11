@@ -90,6 +90,7 @@ class VolumeRender(HasTraits):
         outline = mlab.pipeline.volume(self.data_src3d,
                         figure=self.scene3d.mayavi_scene,
                         )
+        self.scene3d.mlab.view(40, 50)
 
         self.scene3d.scene.background = (0, 0, 0)
         # Keep the view always pointing up

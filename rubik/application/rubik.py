@@ -74,7 +74,7 @@ class Rubik(object):
         self.set_clobber(conf.DEFAULT_CLOBBER)
         self.set_print_cube(False)
         self.set_print_stats(False)
-        self.set_view(False)
+        self.set_graphical_view(False)
         self.set_print_report(False)
         self.set_in_place(False)
         self.set_histogram(False)
@@ -144,7 +144,7 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
-    def set_view(self, view, viewer_type=None, viewer_args=None):
+    def set_graphical_view(self, view, viewer_type=None, viewer_args=None):
         self.view = view
         self.viewer_type = viewer_type
         self.viewer_args = viewer_args

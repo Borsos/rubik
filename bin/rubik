@@ -95,7 +95,7 @@ Global options""")
         default=False,
         help="dry run")
 
-    global_group.add_argument("--version",
+    global_group.add_argument("--version", "-V",
         action='version',
         version='%(prog)s {version}'.format(version=conf.VERSION))
 
@@ -298,11 +298,11 @@ Arguments for graphical visualization""")
         default=False,
         help="print an histogram; see histogram arguments below")
 
-    output_group.add_argument('--view', '-V',
+    output_group.add_argument('--graph', '-G',
         dest="view",
         action="store_true",
         default=False,
-        help="view the result graphically; see graphical viewer arguments below")
+        help="view the result graphically; see graphical graphical viewer arguments below")
 
     histogram_output_group.add_argument('--histogram-bins', '-Hb',
         metavar="Hb",
@@ -345,28 +345,28 @@ Arguments for graphical visualization""")
         default="num",
         help="show number of elements per bin")
 
-    graphical_output_group.add_argument('--view-volume-slicer', '-Vs',
+    graphical_output_group.add_argument('--graph-volume-slicer', '-Gs',
         dest="viewer_type",
         action="store_const",
         const="VolumeSlicer",
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    graphical_output_group.add_argument('--view-advanced-volume-slicer', '-Va',
+    graphical_output_group.add_argument('--graph-advanced-volume-slicer', '-Ga',
         dest="viewer_type",
         action="store_const",
         const="AdvancedVolumeSlicer",
         default="auto",
         help="view the 3d cube with AdvancedVolumeSlicer class")
 
-    graphical_output_group.add_argument('--view-volume-render', '-Vr',
+    graphical_output_group.add_argument('--graph-volume-render', '-Gr',
         dest="viewer_type",
         action="store_const",
         const="VolumeRender",
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
-    graphical_output_group.add_argument('--view-auto', '-VA',
+    graphical_output_group.add_argument('--graph-auto', '-GA',
         dest="viewer_type",
         action="store_const",
         const="auto",
@@ -548,7 +548,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
-    rubik.set_view(args.view, args.viewer_type, viewer_args)
+    rubik.set_graphical_view(args.view, args.viewer_type, viewer_args)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,
