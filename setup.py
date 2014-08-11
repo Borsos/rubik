@@ -21,7 +21,7 @@ import os
 import sys
 
 scripts = [
-	'rubik',
+	'bin/rubik',
 ]
 
 dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -39,7 +39,6 @@ setup(
     author_email = "simone.campagna@tiscali.it",
     url="https://github.com/simone-campagna/rubik",
     packages = ["rubik", "rubik.application", "rubik.cubes", "rubik.viewer", "rubik.viewer.impl"],
-    package_dir = {"rubik": "lib/python/rubik"},
     scripts = scripts,
     package_data = {},
 )

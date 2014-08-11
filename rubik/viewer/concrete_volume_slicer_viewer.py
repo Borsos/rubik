@@ -21,7 +21,7 @@ __all__ = [
     'ConcreteVolumeSlicerViewer',
 ]
 
-from .volume_slicer_viewer import VolumeSlicerViewer
+from .volume_viewer import VolumeViewer
 
 # from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
 from .impl.volume_slicer import VolumeSlicer
@@ -35,6 +35,6 @@ except:
     traceback.print_exc()
     pass
 
-class ConcreteVolumeSlicerViewer(VolumeSlicerViewer):
-    ConcreteVolumeSlicerClass = VolumeSlicer
+class ConcreteVolumeSlicerViewer(VolumeViewer):
+    ConcreteVolumeClass = VolumeSlicer
         

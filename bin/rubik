@@ -338,6 +338,13 @@ see --help-labeled-options for more information.""")
         default="auto",
         help="view the 3d cube with AdvancedVolumeSlicer class")
 
+    output_group.add_argument('--view-volume-render', '-Vr',
+        dest="viewer_type",
+        action="store_const",
+        const="VolumeRender",
+        default="auto",
+        help="view the 3d cube with VolumeRender class")
+
     output_group.add_argument('--view-auto', '-VA',
         dest="viewer_type",
         action="store_const",

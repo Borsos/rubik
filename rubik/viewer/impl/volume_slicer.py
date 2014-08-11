@@ -47,11 +47,6 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 ################################################################################
-# Create some data
-x, y, z = np.ogrid[-5:5:64j, -5:5:64j, -5:5:64j]
-data = np.sin(3*x)/x + 0.05*z**2 + np.cos(3*y)
-
-################################################################################
 # The object implementing the dialog
 class VolumeSlicer(HasTraits):
     # The data to plot
@@ -225,5 +220,10 @@ class VolumeSlicer(HasTraits):
 
 
 if __name__ == "__main__":
+    ################################################################################
+    # Create some data
+    x, y, z = np.ogrid[-5:5:64j, -5:5:64j, -5:5:64j]
+    data = np.sin(3*x)/x + 0.05*z**2 + np.cos(3*y)
+    
     m = VolumeSlicer(data=data)
     m.configure_traits()

@@ -18,7 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'volumeSlicerBuilder',
+    'VolumeViewer',
 ]
 
 import numpy as np
@@ -26,16 +26,16 @@ import numpy as np
 from ..errors import RubikError
 from .viewer_wrapper import ViewerWrapper
 
-class VolumeSlicerViewer(ViewerWrapper):
-    ConcreteVolumeSlicerClass = None
+class VolumeViewer(ViewerWrapper):
+    ConcreteVolumeClass = None
     def __init__(self, data, **viewer_args):
         if not isinstance(data, np.ndarray):
             raise RubikError("cannot create a {} for object of type {}".format(self.__class__.__name__, type(data).__name__))
         elif len(data.shape) != 3:
             raise RubikError("cannot create a {} for {} with shape {}".format(self.__class__.__name__, type(data).__name__, len(data.shape)))
-        super(VolumeSlicerViewer, self).__init__(data=data, viewer_args=viewer_args)
-        self.volume_slicer = self.ConcreteVolumeSlicerClass(data=data)
+        super(VolumeViewer, self).__init__(data=data, viewer_args=viewer_args)
+        self.volume_viewer = self.ConcreteVolumeClass(data=data)
 
     def run(self):
-        self.volume_slicer.configure_traits()
+        self.volume_viewer.configure_traits()
         
