@@ -35,6 +35,7 @@ confused with too rich interaction.
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
+    Float, Property, Range, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group
 
@@ -66,6 +67,20 @@ class VolumeSlicer(HasTraits):
     ipw_3d_y = Instance(PipelineBase)
     ipw_3d_z = Instance(PipelineBase)
 
+    # The index selectors
+    x_low = Float(0.0)
+    x_high = Float(0.0)
+    x_value = Float(0.0)
+    x_range = Range(low='x_low', high='x_high', value='x_value')
+    y_low = Float(0.0)
+    y_high = Float(0.0)
+    y_value = Float(0.0)
+    y_range = Range(low='y_low', high='y_high', value='y_value')
+    z_low = Float(0.0)
+    z_high = Float(0.0)
+    z_value = Float(0.0)
+    z_range = Range(low='z_low', high='z_high', value='z_value')
+
     _axis_names = dict(x=0, y=1, z=2)
 
 
@@ -76,6 +91,8 @@ class VolumeSlicer(HasTraits):
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
+        self.x_low, self.y_low, self.z_low = 0, 0, 0
+        self.x_high, self.y_high, self.z_high = self.data.shape
 
 
     #---------------------------------------------------------------------------
@@ -154,6 +171,7 @@ class VolumeSlicer(HasTraits):
                     continue
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
+                setattr(self, "%s_value" % other_axis, position[axis_number])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -212,6 +230,9 @@ class VolumeSlicer(HasTraits):
                             editor=SceneEditor(scene_class=MayaviScene),
                             height=250, width=300),
                        show_labels=False,
+                  ),
+                  Group(
+                       '_', 'x_range', 'y_range', 'z_range',
                   ),
                 ),
                 resizable=True,
