@@ -35,10 +35,10 @@ confused with too rich interaction.
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Float, Str, Range, \
+    Float, Str, Range, Enum, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label, RangeEditor
+    Label, RangeEditor, EnumEditor
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -47,6 +47,70 @@ from mayavi import mlab
 from mayavi.core.api import PipelineBase, Source
 from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
+
+colormaps = [
+	'Accent',
+	'Blues',
+	'BrBG',
+	'BuGn',
+	'BuPu',
+	'Dark2',
+	'GnBu',
+	'Greens',
+	'Greys',
+	'OrRd',
+	'Oranges',
+	'PRGn',
+	'Paired',
+	'Pastel1',
+	'Pastel2',
+	'PiYG',
+	'PuBu',
+	'PuBuGn',
+	'PuOr',
+	'PuRd',
+	'Purples',
+	'RdBu',
+	'RdGy',
+	'RdPu',
+	'RdYlBu',
+	'RdYlGn',
+	'Reds',
+	'Set1',
+	'Set2',
+	'Set3',
+	'Spectral',
+	'YlGn',
+	'YlGnBu',
+	'YlOrBr',
+	'YlOrRd',
+	'autumn',
+	'binary',
+	'black-white',
+	'blue-red',
+	'bone',
+	'cool',
+	'copper',
+	'file',
+	'flag',
+	'gist_earth',
+	'gist_gray',
+	'gist_heat',
+	'gist_ncar',
+	'gist_rainbow',
+	'gist_stern',
+	'gist_yarg',
+	'gray',
+	'hot',
+	'hsv',
+	'jet',
+	'pink',
+	'prism',
+	'spectral',
+	'spring',
+	'summer',
+	'winter'
+]
 
 ################################################################################
 # The object implementing the dialog
@@ -71,17 +135,19 @@ class VolumeSlicer(HasTraits):
     # The index selectors
     x_low = Float
     x_high = Float
-    x_value = Float
-    x_range = Range(low='x_low', high='x_high', value='x_value')
+    x_index = Float
+    x_range = Range(low='x_low', high='x_high', value='x_index')
     y_low = Float(0.0)
     y_high = Float(0.0)
-    y_value = Float(0.0)
-    y_range = Range(low='y_low', high='y_high', value='y_value')
+    y_index = Float(0.0)
+    y_range = Range(low='y_low', high='y_high', value='y_index')
     z_low = Float(0.0)
     z_high = Float(0.0)
-    z_value = Float(0.0)
-    z_range = Range(low='z_low', high='z_high', value='z_value')
+    z_index = Float(0.0)
+    z_range = Range(low='z_low', high='z_high', value='z_index')
     data_value = Str("")
+
+    lut_mode = Enum(*colormaps)
 
     _axis_names = dict(x=0, y=1, z=2)
 
@@ -95,7 +161,11 @@ class VolumeSlicer(HasTraits):
         self.ipw_3d_z
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         self.x_high, self.y_high, self.z_high = self.data.shape
+        self.colormap = "blue-red"
 
+    def set_attributes(self, **attributes):
+        for attribute_name, attribute_value in attributes.items():
+            setattr(self, attribute_name, attribute_value)
 
     #---------------------------------------------------------------------------
     # Default values
@@ -110,13 +180,16 @@ class VolumeSlicer(HasTraits):
                         plane_orientation='%s_axes' % axis_name)
         return ipw
 
-    def _x_value_default(self):
+    def _lut_mode_default(self):
+        return self.colormap
+
+    def _x_index_default(self):
         return self.x_high // 2
 
-    def _y_value_default(self):
+    def _y_index_default(self):
         return self.y_high // 2
 
-    def _z_value_default(self):
+    def _z_index_default(self):
         return self.z_high // 2
 
     def _ipw_3d_x_default(self):
@@ -129,7 +202,7 @@ class VolumeSlicer(HasTraits):
         return self.make_ipw_3d('z')
 
     def _make_range(self, axis_name):
-        return Range('{}_low'.format(axis_name), '{}_high'.format(axis_name), '{}.value'.format(axis_name))
+        return Range('{}_low'.format(axis_name), '{}_high'.format(axis_name), '{}_index'.format(axis_name))
 
     def _x_range_default(self):
         return self._make_range('x')
@@ -141,36 +214,42 @@ class VolumeSlicer(HasTraits):
         return self._make_range('z')
 
     def _set_data_value(self):
-        self.data_value = str(self.data[self.x_value, self.y_value, self.z_value])
+        self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
 
-    @on_trait_change('x_value')
-    def change_x_value(self):
-        #print "RX", self.x_value
-        self.ipw_3d_x.ipw.slice_position = self.x_value
+    @on_trait_change('lut_mode')
+    def change_lut_mode(self):
+        self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.ipw_x.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.ipw_y.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.ipw_z.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+
+    @on_trait_change('x_index')
+    def change_x_index(self):
+        self.ipw_3d_x.ipw.slice_position = self.x_index
         self._set_data_value()
         
-    @on_trait_change('y_value')
-    def change_y_value(self):
-        #print "RY", self.y_value
-        self.ipw_3d_y.ipw.slice_position = self.y_value
+    @on_trait_change('y_index')
+    def change_y_index(self):
+        self.ipw_3d_y.ipw.slice_position = self.y_index
         self._set_data_value()
         
-    @on_trait_change('z_value')
-    def change_z_value(self):
-        #print "RZ", self.z_value
-        self.ipw_3d_z.ipw.slice_position = self.z_value
+    @on_trait_change('z_index')
+    def change_z_index(self):
+        self.ipw_3d_z.ipw.slice_position = self.z_index
         self._set_data_value()
         
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('scene3d.activated,x_value,y_value,z_value')
+    @on_trait_change('scene3d.activated') #,x_index,y_index,z_index')
     def display_scene3d(self):
-        outline = mlab.pipeline.outline(self.data_src3d,
+        self.view3d = mlab.pipeline.outline(self.data_src3d,
                         figure=self.scene3d.mayavi_scene,
                         )
         self.scene3d.mlab.view(40, 50)
+
+
         # Interaction properties can only be changed after the scene
         # has been created, and thus the interactor exists
         for ipw in (self.ipw_3d_x, self.ipw_3d_y, self.ipw_3d_z):
@@ -180,9 +259,9 @@ class VolumeSlicer(HasTraits):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        #print "B"
-        #self.x_value = self.x_high // 1.5
         self._set_data_value()
+        self.lut_mode = self.colormap
+        self.change_lut_mode()
 
 
     def make_side_view(self, axis_name):
@@ -207,6 +286,7 @@ class VolumeSlicer(HasTraits):
         ipw.ipw.sync_trait('slice_position',
                             getattr(self, 'ipw_3d_%s'% axis_name).ipw)
 
+
         # Make left-clicking create a crosshair
         ipw.ipw.left_button_action = 0
         # Add a callback on the image plane widget interaction to
@@ -218,24 +298,15 @@ class VolumeSlicer(HasTraits):
                     continue
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
-                axis_value_name = "{}_value".format(other_axis)
-                #print axis_value_name, getattr(self, axis_value_name), position[axis_number],
-                setattr(self, axis_value_name, position[axis_number])
-                #setattr(self, "{}_low".format(other_axis), position[axis_number] - 10)
-                #setattr(self, "{}_high".format(other_axis), position[axis_number] + 10)
-                #print id(self), getattr(self, axis_value_name)
+                axis_index_name = "{}_index".format(other_axis)
+                setattr(self, axis_index_name, position[axis_number])
             self.data_value = str(self.data[position])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
 
-        ## Center the image plane widget
-        #ipw.ipw.slice_position = 0.5*self.data.shape[
-        #            self._axis_names[axis_name]]
-        #setattr(self, '{}_value'.format(axis_name), ipw.ipw.slice_position)
-
         # Center the image plane widget
-        ipw.ipw.slice_position = getattr(self, '{}_value'.format(axis_name))
+        ipw.ipw.slice_position = getattr(self, '{}_index'.format(axis_name))
 
         # Position the view for the scene
         views = dict(x=( 0, 90),
@@ -274,25 +345,29 @@ class VolumeSlicer(HasTraits):
             Group(
                 Item('scene_y',
                     editor=SceneEditor(scene_class=Scene),
-                    height=250, width=300),
+                    height=250, width=300
+                ),
                 Item('scene_z',
                     editor=SceneEditor(scene_class=Scene),
-                    height=250, width=300),
-                    show_labels=False,
+                    height=250, width=300
                 ),
+                show_labels=False,
+            ),
             Group(
                 Item('scene_x',
                     editor=SceneEditor(scene_class=Scene),
-                    height=250, width=300),
+                    height=250, width=300
+                ),
                 Item('scene3d',
                     editor=SceneEditor(scene_class=MayaviScene),
-                    height=250, width=300),
-                    show_labels=False,
+                    height=250, width=300
                 ),
+                show_labels=False,
+            ),
             Group(
                 '_',
                 Item(
-                    'x_value',
+                    'x_index',
                     editor=RangeEditor(
                         low_name='x_low',
                         high_name='x_high',
@@ -300,9 +375,10 @@ class VolumeSlicer(HasTraits):
                         label_width=10,
                         mode="auto",
                     ),
+                    format_str="%<8s",
                 ),
                 Item(
-                    'y_value',
+                    'y_index',
                     editor=RangeEditor(
                         low_name='y_low',
                         high_name='y_high',
@@ -312,7 +388,7 @@ class VolumeSlicer(HasTraits):
                     ),
                 ),
                 Item(
-                    'z_value',
+                    'z_index',
                     editor=RangeEditor(
                         low_name='z_low',
                         high_name='z_high',
@@ -326,6 +402,15 @@ class VolumeSlicer(HasTraits):
                     label="Value",
                     style="readonly",
                 ),
+                Item(
+                    'lut_mode',
+                    editor=EnumEditor(
+                        values=colormaps,
+
+                    ),
+                    label="Colormap",
+                ),
+                show_labels=True,
             ),
         ),
         resizable=True,

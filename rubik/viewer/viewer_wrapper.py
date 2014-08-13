@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 class ViewerWrapper(object):
-    def __init__(self, data, **viewer_args):
+    def __init__(self, data, viewer_args):
         self.data = data
         self.viewer_args = viewer_args
 

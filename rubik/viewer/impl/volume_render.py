@@ -61,10 +61,10 @@ class VolumeRender(HasTraits):
     def __init__(self, **traits):
         super(VolumeRender, self).__init__(**traits)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
-        # Force the creation of the image_plane_widgets:
-        #self.ipw_3d_x
-        #self.ipw_3d_y
-        #self.ipw_3d_z
+
+    def set_attributes(self, **attributes):
+        for attribute_name, attribute_value in attributes.items():
+            setattr(self, attribute_name, attribute_value)
 
     def _vmin_default(self):
         return np.min(self.data)

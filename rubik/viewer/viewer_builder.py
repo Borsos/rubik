@@ -26,7 +26,7 @@ import numpy as np
 from ..errors import RubikError
 from .viewer_wrapper import ViewerWrapper
 
-def viewerBuilder(logger, viewer_type, data, **viewer_args):
+def viewerBuilder(logger, viewer_type, data, viewer_args):
     # to viewer_types:
     if isinstance(viewer_type, (list, tuple)):
         orig_viewer_types = tuple(viewer_type)
