@@ -48,69 +48,7 @@ from mayavi.core.api import PipelineBase, Source
 from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
-colormaps = [
-	'Accent',
-	'Blues',
-	'BrBG',
-	'BuGn',
-	'BuPu',
-	'Dark2',
-	'GnBu',
-	'Greens',
-	'Greys',
-	'OrRd',
-	'Oranges',
-	'PRGn',
-	'Paired',
-	'Pastel1',
-	'Pastel2',
-	'PiYG',
-	'PuBu',
-	'PuBuGn',
-	'PuOr',
-	'PuRd',
-	'Purples',
-	'RdBu',
-	'RdGy',
-	'RdPu',
-	'RdYlBu',
-	'RdYlGn',
-	'Reds',
-	'Set1',
-	'Set2',
-	'Set3',
-	'Spectral',
-	'YlGn',
-	'YlGnBu',
-	'YlOrBr',
-	'YlOrRd',
-	'autumn',
-	'binary',
-	'black-white',
-	'blue-red',
-	'bone',
-	'cool',
-	'copper',
-	'file',
-	'flag',
-	'gist_earth',
-	'gist_gray',
-	'gist_heat',
-	'gist_ncar',
-	'gist_rainbow',
-	'gist_stern',
-	'gist_yarg',
-	'gray',
-	'hot',
-	'hsv',
-	'jet',
-	'pink',
-	'prism',
-	'spectral',
-	'spring',
-	'summer',
-	'winter'
-]
+from .mayavi_data import COLORMAPS
 
 ################################################################################
 # The object implementing the dialog
@@ -147,7 +85,7 @@ class VolumeSlicer(HasTraits):
     z_range = Range(low='z_low', high='z_high', value='z_index')
     data_value = Str("")
 
-    lut_mode = Enum(*colormaps)
+    lut_mode = Enum(*COLORMAPS)
 
     _axis_names = dict(x=0, y=1, z=2)
 
@@ -218,6 +156,7 @@ class VolumeSlicer(HasTraits):
 
     @on_trait_change('lut_mode')
     def change_lut_mode(self):
+        print self.lut_mode
         self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_x.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_y.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
@@ -260,7 +199,7 @@ class VolumeSlicer(HasTraits):
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
         self._set_data_value()
-        self.lut_mode = self.colormap
+        #self.lut_mode = self.colormap
         self.change_lut_mode()
 
 
@@ -405,7 +344,7 @@ class VolumeSlicer(HasTraits):
                 Item(
                     'lut_mode',
                     editor=EnumEditor(
-                        values=colormaps,
+                        values=COLORMAPS,
 
                     ),
                     label="Colormap",

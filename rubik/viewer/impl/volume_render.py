@@ -24,9 +24,9 @@ __all__ = [
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Range, Float, on_trait_change
+    Range, Float, Enum, on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    RangeEditor
+    RangeEditor, EnumEditor
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -35,6 +35,8 @@ from mayavi import mlab
 from mayavi.core.api import PipelineBase, Source
 from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
+
+from .mayavi_data import COLORMAPS
 
 ################################################################################
 # The object implementing the dialog
@@ -57,14 +59,20 @@ class VolumeRender(HasTraits):
     vmin_range = Range('data_min', 'data_max', 'vmin')
     vmax_range = Range('data_min', 'data_max', 'vmax')
 
+    lut_mode = Enum(*COLORMAPS)
+
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeRender, self).__init__(**traits)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
+        self.colormap = "blue-red"
 
     def set_attributes(self, **attributes):
         for attribute_name, attribute_value in attributes.items():
             setattr(self, attribute_name, attribute_value)
+
+    def _lut_mode_default(self):
+        return self.colormap
 
     def _vmin_default(self):
         return np.min(self.data)
@@ -109,9 +117,14 @@ class VolumeRender(HasTraits):
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
+    @on_trait_change('lut_mode')
+    def change_lut_mode(self):
+        self.view3d.module_manager.vector_lut_manager.lut_mode = self.lut_mode
+        self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+
     @on_trait_change('scene3d.activated,vmin,vmax')
     def display_scene3d(self):
-        outline = mlab.pipeline.volume(self.data_src3d,
+        self.view3d = mlab.pipeline.volume(self.data_src3d,
             figure=self.scene3d.mayavi_scene,
             vmin=self.vmin,
             vmax=self.vmax,
@@ -122,6 +135,7 @@ class VolumeRender(HasTraits):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
+        self.change_lut_mode()
 
 
     #---------------------------------------------------------------------------
@@ -154,6 +168,15 @@ class VolumeRender(HasTraits):
                         mode="slider",
                     ),
                 ),
+                Item(
+                    'lut_mode',
+                    editor=EnumEditor(
+                        values=COLORMAPS,
+
+                    ),
+                    label="Colormap",
+                ),
+                show_labels=True,
             ),
         ),
         resizable=True,
