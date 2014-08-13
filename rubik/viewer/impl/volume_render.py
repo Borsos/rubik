@@ -24,8 +24,9 @@ __all__ = [
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    on_trait_change
-from traitsui.api import View, Item, HGroup, Group
+    Range, Float, on_trait_change
+from traitsui.api import View, Item, HGroup, Group, \
+    RangeEditor
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -49,15 +50,38 @@ class VolumeRender(HasTraits):
 
     _axis_names = dict(x=0, y=1, z=2)
 
+    data_min = Float()
+    data_max = Float()
+    vmin = Float()
+    vmax = Float()
+    vmin_range = Range('data_min', 'data_max', 'vmin')
+    vmax_range = Range('data_min', 'data_max', 'vmax')
 
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeRender, self).__init__(**traits)
+        self.data_min, self.data_max = np.min(self.data), np.max(self.data)
         # Force the creation of the image_plane_widgets:
         #self.ipw_3d_x
         #self.ipw_3d_y
         #self.ipw_3d_z
 
+    def _vmin_default(self):
+        return np.min(self.data)
+
+    def _vmax_default(self):
+        return np.max(self.data)
+
+    @on_trait_change('vmin')
+    def change_vmin(self):
+        if self.vmin > self.vmax:
+            self.vmax = self.vmin
+        
+    @on_trait_change('vmax')
+    def change_vmax(self):
+        if self.vmax < self.vmin:
+            self.vmin = self.vmax
+        
 
     #---------------------------------------------------------------------------
     # Default values
@@ -85,11 +109,13 @@ class VolumeRender(HasTraits):
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('scene3d.activated')
+    @on_trait_change('scene3d.activated,vmin,vmax')
     def display_scene3d(self):
         outline = mlab.pipeline.volume(self.data_src3d,
-                        figure=self.scene3d.mayavi_scene,
-                        )
+            figure=self.scene3d.mayavi_scene,
+            vmin=self.vmin,
+            vmax=self.vmax,
+        )
         self.scene3d.mlab.view(40, 50)
 
         self.scene3d.scene.background = (0, 0, 0)
@@ -101,17 +127,38 @@ class VolumeRender(HasTraits):
     #---------------------------------------------------------------------------
     # The layout of the dialog created
     #---------------------------------------------------------------------------
-    view = View(HGroup(
-                  Group(
-                       Item('scene3d',
-                            editor=SceneEditor(scene_class=MayaviScene),
-                            height=500, width=600),
-                       show_labels=False,
-                  ),
+    view = View(
+        HGroup(
+            Group(
+                Item('scene3d',
+                    editor=SceneEditor(scene_class=MayaviScene),
+                    height=500, width=600),
+                show_labels=False,
+            ),
+            Group(
+                Item('vmin',
+                    editor=RangeEditor(
+                        low_name='data_min',
+                        high_name='data_max',
+                        format="%.1f",
+                        label_width=10,
+                        mode="slider",
+                    ),
                 ),
-                resizable=True,
-                title='Volume Render',
-                )
+                Item('vmax',
+                    editor=RangeEditor(
+                        low_name='data_min',
+                        high_name='data_max',
+                        format="%.1f",
+                        label_width=10,
+                        mode="slider",
+                    ),
+                ),
+            ),
+        ),
+        resizable=True,
+        title='Volume Render',
+    )
 
 
 if __name__ == "__main__":
