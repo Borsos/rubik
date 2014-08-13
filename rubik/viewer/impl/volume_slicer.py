@@ -35,9 +35,10 @@ confused with too rich interaction.
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Float, Property, Range, \
+    Float, Str, Range, \
     on_trait_change
-from traitsui.api import View, Item, HGroup, Group
+from traitsui.api import View, Item, HGroup, Group, \
+    Label
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -68,9 +69,9 @@ class VolumeSlicer(HasTraits):
     ipw_3d_z = Instance(PipelineBase)
 
     # The index selectors
-    x_low = Float(0.0)
-    x_high = Float(0.0)
-    x_value = Float(0.0)
+    x_low = Float
+    x_high = Float
+    x_value = Float
     x_range = Range(low='x_low', high='x_high', value='x_value')
     y_low = Float(0.0)
     y_high = Float(0.0)
@@ -80,6 +81,7 @@ class VolumeSlicer(HasTraits):
     z_high = Float(0.0)
     z_value = Float(0.0)
     z_range = Range(low='z_low', high='z_high', value='z_value')
+    data_value = Str("")
 
     _axis_names = dict(x=0, y=1, z=2)
 
@@ -91,8 +93,16 @@ class VolumeSlicer(HasTraits):
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
+        #self.x_low
+        #self.x_high
+        #self.x_value
+        #self.y_range
+        #self.z_range
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         self.x_high, self.y_high, self.z_high = self.data.shape
+        self.x_value, self.y_value, self.z_value = 0.0, 0.0, 0.0
+        print "A0", id(self.x_value), id(self)
+        print "A1", id(self.x_value), id(self)
 
 
     #---------------------------------------------------------------------------
@@ -117,6 +127,30 @@ class VolumeSlicer(HasTraits):
     def _ipw_3d_z_default(self):
         return self.make_ipw_3d('z')
 
+    def _make_range(self, axis_name):
+        return Range('{}_low'.format(axis_name), '{}_high'.format(axis_name), '{}.value'.format(axis_name))
+
+    def _x_low_default(self):
+        return 0.0
+
+    def _x_high_default(self):
+        return 0.0
+
+    def _x_value_default(self):
+        return 0.0
+
+    def _x_range_default(self):
+        return self._make_range('x')
+
+    def _y_range_default(self):
+        return self._make_range('y')
+
+    def _z_range_default(self):
+        return self._make_range('z')
+
+    @on_trait_change('x_range,y_range,z_range')
+    def change_pos(self):
+        print "RRR", self.x_range, self.y_range, self.z_range
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
@@ -136,6 +170,8 @@ class VolumeSlicer(HasTraits):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
+        #print "B"
+        #self.x_value = self.x_high // 1.5
 
 
     def make_side_view(self, axis_name):
@@ -171,7 +207,11 @@ class VolumeSlicer(HasTraits):
                     continue
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
-                setattr(self, "%s_value" % other_axis, position[axis_number])
+                axis_value_name = "{}_value".format(other_axis)
+                print axis_value_name, getattr(self, axis_value_name), position[axis_number],
+                setattr(self, axis_value_name, position[axis_number])
+                print id(self), getattr(self, axis_value_name)
+            self.data_value = str(self.data[position])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -232,7 +272,8 @@ class VolumeSlicer(HasTraits):
                        show_labels=False,
                   ),
                   Group(
-                       '_', 'x_range', 'y_range', 'z_range',
+                       '_', 'x_range', 'y_range', 'z_range', 
+                       Item('data_value', label="Value", style="readonly"),
                   ),
                 ),
                 resizable=True,

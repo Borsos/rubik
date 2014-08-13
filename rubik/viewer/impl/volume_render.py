@@ -105,7 +105,7 @@ class VolumeRender(HasTraits):
                   Group(
                        Item('scene3d',
                             editor=SceneEditor(scene_class=MayaviScene),
-                            height=250, width=300),
+                            height=500, width=600),
                        show_labels=False,
                   ),
                 ),
