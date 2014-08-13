@@ -38,7 +38,7 @@ from traits.api import HasTraits, Instance, Array, \
     Float, Str, Range, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label
+    Label, RangeEditor
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -93,16 +93,8 @@ class VolumeSlicer(HasTraits):
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
-        #self.x_low
-        #self.x_high
-        #self.x_value
-        #self.y_range
-        #self.z_range
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         self.x_high, self.y_high, self.z_high = self.data.shape
-        self.x_value, self.y_value, self.z_value = 0.0, 0.0, 0.0
-        print "A0", id(self.x_value), id(self)
-        print "A1", id(self.x_value), id(self)
 
 
     #---------------------------------------------------------------------------
@@ -118,6 +110,15 @@ class VolumeSlicer(HasTraits):
                         plane_orientation='%s_axes' % axis_name)
         return ipw
 
+    def _x_value_default(self):
+        return self.x_high // 2
+
+    def _y_value_default(self):
+        return self.y_high // 2
+
+    def _z_value_default(self):
+        return self.z_high // 2
+
     def _ipw_3d_x_default(self):
         return self.make_ipw_3d('x')
 
@@ -130,15 +131,6 @@ class VolumeSlicer(HasTraits):
     def _make_range(self, axis_name):
         return Range('{}_low'.format(axis_name), '{}_high'.format(axis_name), '{}.value'.format(axis_name))
 
-    def _x_low_default(self):
-        return 0.0
-
-    def _x_high_default(self):
-        return 0.0
-
-    def _x_value_default(self):
-        return 0.0
-
     def _x_range_default(self):
         return self._make_range('x')
 
@@ -148,14 +140,32 @@ class VolumeSlicer(HasTraits):
     def _z_range_default(self):
         return self._make_range('z')
 
-    @on_trait_change('x_range,y_range,z_range')
-    def change_pos(self):
-        print "RRR", self.x_range, self.y_range, self.z_range
+    def _set_data_value(self):
+        self.data_value = str(self.data[self.x_value, self.y_value, self.z_value])
+
+    @on_trait_change('x_value')
+    def change_x_value(self):
+        #print "RX", self.x_value
+        self.ipw_3d_x.ipw.slice_position = self.x_value
+        self._set_data_value()
+        
+    @on_trait_change('y_value')
+    def change_y_value(self):
+        #print "RY", self.y_value
+        self.ipw_3d_y.ipw.slice_position = self.y_value
+        self._set_data_value()
+        
+    @on_trait_change('z_value')
+    def change_z_value(self):
+        #print "RZ", self.z_value
+        self.ipw_3d_z.ipw.slice_position = self.z_value
+        self._set_data_value()
+        
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('scene3d.activated')
+    @on_trait_change('scene3d.activated,x_value,y_value,z_value')
     def display_scene3d(self):
         outline = mlab.pipeline.outline(self.data_src3d,
                         figure=self.scene3d.mayavi_scene,
@@ -172,6 +182,7 @@ class VolumeSlicer(HasTraits):
                                  tvtk.InteractorStyleTerrain()
         #print "B"
         #self.x_value = self.x_high // 1.5
+        self._set_data_value()
 
 
     def make_side_view(self, axis_name):
@@ -208,17 +219,23 @@ class VolumeSlicer(HasTraits):
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
                 axis_value_name = "{}_value".format(other_axis)
-                print axis_value_name, getattr(self, axis_value_name), position[axis_number],
+                #print axis_value_name, getattr(self, axis_value_name), position[axis_number],
                 setattr(self, axis_value_name, position[axis_number])
-                print id(self), getattr(self, axis_value_name)
+                #setattr(self, "{}_low".format(other_axis), position[axis_number] - 10)
+                #setattr(self, "{}_high".format(other_axis), position[axis_number] + 10)
+                #print id(self), getattr(self, axis_value_name)
             self.data_value = str(self.data[position])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
 
+        ## Center the image plane widget
+        #ipw.ipw.slice_position = 0.5*self.data.shape[
+        #            self._axis_names[axis_name]]
+        #setattr(self, '{}_value'.format(axis_name), ipw.ipw.slice_position)
+
         # Center the image plane widget
-        ipw.ipw.slice_position = 0.5*self.data.shape[
-                    self._axis_names[axis_name]]
+        ipw.ipw.slice_position = getattr(self, '{}_value'.format(axis_name))
 
         # Position the view for the scene
         views = dict(x=( 0, 90),
@@ -252,33 +269,68 @@ class VolumeSlicer(HasTraits):
     #---------------------------------------------------------------------------
     # The layout of the dialog created
     #---------------------------------------------------------------------------
-    view = View(HGroup(
-                  Group(
-                       Item('scene_y',
-                            editor=SceneEditor(scene_class=Scene),
-                            height=250, width=300),
-                       Item('scene_z',
-                            editor=SceneEditor(scene_class=Scene),
-                            height=250, width=300),
-                       show_labels=False,
-                  ),
-                  Group(
-                       Item('scene_x',
-                            editor=SceneEditor(scene_class=Scene),
-                            height=250, width=300),
-                       Item('scene3d',
-                            editor=SceneEditor(scene_class=MayaviScene),
-                            height=250, width=300),
-                       show_labels=False,
-                  ),
-                  Group(
-                       '_', 'x_range', 'y_range', 'z_range', 
-                       Item('data_value', label="Value", style="readonly"),
-                  ),
+    view = View(
+        HGroup(
+            Group(
+                Item('scene_y',
+                    editor=SceneEditor(scene_class=Scene),
+                    height=250, width=300),
+                Item('scene_z',
+                    editor=SceneEditor(scene_class=Scene),
+                    height=250, width=300),
+                    show_labels=False,
                 ),
-                resizable=True,
-                title='Volume Slicer',
-                )
+            Group(
+                Item('scene_x',
+                    editor=SceneEditor(scene_class=Scene),
+                    height=250, width=300),
+                Item('scene3d',
+                    editor=SceneEditor(scene_class=MayaviScene),
+                    height=250, width=300),
+                    show_labels=False,
+                ),
+            Group(
+                '_',
+                Item(
+                    'x_value',
+                    editor=RangeEditor(
+                        low_name='x_low',
+                        high_name='x_high',
+                        format="%.0f",
+                        label_width=10,
+                        mode="auto",
+                    ),
+                ),
+                Item(
+                    'y_value',
+                    editor=RangeEditor(
+                        low_name='y_low',
+                        high_name='y_high',
+                        format="%.0f",
+                        label_width=10,
+                        mode="auto",
+                    ),
+                ),
+                Item(
+                    'z_value',
+                    editor=RangeEditor(
+                        low_name='z_low',
+                        high_name='z_high',
+                        format="%.0f",
+                        label_width=10,
+                        mode="auto",
+                    ),
+                ),
+                Item(
+                    'data_value',
+                    label="Value",
+                    style="readonly",
+                ),
+            ),
+        ),
+        resizable=True,
+        title='Volume Slicer',
+    )
 
 
 if __name__ == "__main__":
