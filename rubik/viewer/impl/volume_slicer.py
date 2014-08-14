@@ -49,10 +49,15 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
+from .attributes import Colormap
+from ..base_viewer import BaseViewer
 
 ################################################################################
 # The object implementing the dialog
-class VolumeSlicer(HasTraits):
+class VolumeSlicer(HasTraits, BaseViewer):
+    ATTRIBUTES = {
+        'colormap': Colormap(),
+    }
     # The data to plot
     data = Array()
 
@@ -93,17 +98,13 @@ class VolumeSlicer(HasTraits):
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeSlicer, self).__init__(**traits)
+        BaseViewer.__init__(self)
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         self.x_high, self.y_high, self.z_high = self.data.shape
-        self.colormap = "blue-red"
-
-    def set_attributes(self, **attributes):
-        for attribute_name, attribute_value in attributes.items():
-            setattr(self, attribute_name, attribute_value)
 
     #---------------------------------------------------------------------------
     # Default values
@@ -119,7 +120,7 @@ class VolumeSlicer(HasTraits):
         return ipw
 
     def _lut_mode_default(self):
-        return self.colormap
+        return self.attributes["colormap"]
 
     def _x_index_default(self):
         return self.x_high // 2
@@ -156,7 +157,6 @@ class VolumeSlicer(HasTraits):
 
     @on_trait_change('lut_mode')
     def change_lut_mode(self):
-        print self.lut_mode
         self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_x.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_y.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
@@ -199,7 +199,6 @@ class VolumeSlicer(HasTraits):
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
         self._set_data_value()
-        #self.lut_mode = self.colormap
         self.change_lut_mode()
 
 

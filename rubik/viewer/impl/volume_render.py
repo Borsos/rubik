@@ -37,10 +37,16 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
+from .attributes import Colormap
+from ..base_viewer import BaseViewer
 
 ################################################################################
 # The object implementing the dialog
-class VolumeRender(HasTraits):
+class VolumeRender(HasTraits, BaseViewer):
+    ATTRIBUTES = {
+        'colormap': Colormap(),
+    }
+
     # The data to plot
     data = Array()
 
@@ -64,15 +70,11 @@ class VolumeRender(HasTraits):
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeRender, self).__init__(**traits)
+        BaseViewer.__init__(self)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
-        self.colormap = "blue-red"
-
-    def set_attributes(self, **attributes):
-        for attribute_name, attribute_value in attributes.items():
-            setattr(self, attribute_name, attribute_value)
 
     def _lut_mode_default(self):
-        return self.colormap
+        return self.attributes["colormap"]
 
     def _vmin_default(self):
         return np.min(self.data)

@@ -18,15 +18,21 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'ViewerWrapper',
+    'colormap',
 ]
 
-class ViewerWrapper(object):
-    def __init__(self, data, viewer_args):
-        self.data = data
-        self.viewer_args = viewer_args
+from .mayavi_data import COLORMAPS
+from ..attribute import Attribute
 
-    def run(self):
-        pass
+class Colormap(Attribute):
+    def __init__(self):
+        default = 'blue-red'
+        description = """\
+available values: {values}
+""".format(values=', '.join(repr(v) for v in COLORMAPS))
+        super(Colormap, self).__init__(default=default, description=description)
 
-
+    def validate(self, value):
+        if not value in COLORMAPS:
+            raise ValueError("invalid colormap {!r}".format(value))
+        return value

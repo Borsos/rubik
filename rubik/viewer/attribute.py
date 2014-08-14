@@ -18,15 +18,19 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'ViewerWrapper',
+    'Attribute',
 ]
 
-class ViewerWrapper(object):
-    def __init__(self, data, viewer_args):
-        self.data = data
-        self.viewer_args = viewer_args
+class Attribute(object):
+    def __init__(self, description, default=None):
+        self._description = description
+        self._default = default
 
-    def run(self):
-        pass
+    def validate(self, value):
+        return value
 
+    def description(self):
+        return self._description
 
+    def default(self):
+        return self._default
