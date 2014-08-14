@@ -166,7 +166,7 @@ Show 2D slices for the given 3D cube.
         self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
 
     @on_trait_change('lut_mode,colorbar')
-    def change_lut_mode(self):
+    def on_change_lut_mode(self):
         self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.view3d.module_manager.scalar_lut_manager.show_scalar_bar = self.colorbar
         self.ipw_x.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
@@ -174,17 +174,17 @@ Show 2D slices for the given 3D cube.
         self.ipw_z.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
 
     @on_trait_change('x_index')
-    def change_x_index(self):
+    def on_change_x_index(self):
         self.ipw_3d_x.ipw.slice_position = self.x_index
         self._set_data_value()
         
     @on_trait_change('y_index')
-    def change_y_index(self):
+    def on_change_y_index(self):
         self.ipw_3d_y.ipw.slice_position = self.y_index
         self._set_data_value()
         
     @on_trait_change('z_index')
-    def change_z_index(self):
+    def on_change_z_index(self):
         self.ipw_3d_z.ipw.slice_position = self.z_index
         self._set_data_value()
         
@@ -210,7 +210,7 @@ Show 2D slices for the given 3D cube.
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
         self._set_data_value()
-        self.change_lut_mode()
+        self.on_change_lut_mode()
 
 
     def make_side_view(self, axis_name):

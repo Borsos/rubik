@@ -144,24 +144,24 @@ Visualize iso surfaces for the given 3D cube.
     # Scene activation callbaks
     #---------------------------------------------------------------------------
     @on_trait_change('lut_mode')
-    def change_lut_mode(self):
+    def on_change_lut_mode(self):
         self.iso_surface.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
-        self.change_colorbar()
+        self.on_change_colorbar()
 
     @on_trait_change('colorbar')
-    def change_colorbar(self):
+    def on_change_colorbar(self):
         self.iso_surface.module_manager.scalar_lut_manager.show_scalar_bar = self.colorbar
 
     @on_trait_change('opacity')
-    def change_opacity(self):
+    def on_change_opacity(self):
         self.iso_surface.actor.property.opacity = self.opacity
 
     @on_trait_change('contours')
-    def change_vmax(self):
+    def on_change_contours(self):
         self.iso_surface.contour.number_of_contours = self.contours
 
     @on_trait_change('vmin')
-    def change_vmin(self):
+    def on_change_vmin(self):
         if not self._vmin_vmax_interaction:
             return
         vmin = self.vmin
@@ -178,7 +178,7 @@ Visualize iso surfaces for the given 3D cube.
         self.iso_surface.contour.minimum_contour = vmin
 
     @on_trait_change('vmax')
-    def change_vmax(self):
+    def on_change_vmax(self):
         if not self._vmin_vmax_interaction:
             return
         vmax = self.vmax
@@ -195,7 +195,7 @@ Visualize iso surfaces for the given 3D cube.
         self.iso_surface.contour.minimum_contour = vmax
 
     @on_trait_change('transparent')
-    def change_transparent(self):
+    def on_change_transparent(self):
         #??? don't know how to change transparency
         self.logger.warn("Currently changing transparency is not supported for MayaVi Contour")
 
@@ -215,8 +215,8 @@ Visualize iso surfaces for the given 3D cube.
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        self.change_lut_mode()
-        self.change_colorbar()
+        self.on_change_lut_mode()
+        self.on_change_colorbar()
 
 
     #---------------------------------------------------------------------------
