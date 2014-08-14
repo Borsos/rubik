@@ -28,7 +28,7 @@ import textwrap
 
 from ..errors import RubikError
 
-VIEWER_TYPES = ('VolumeSlicer', 'VolumeRender')
+VIEWER_TYPES = ('VolumeSlicer', 'VolumeRender', 'VolumeContour')
 _VIEWER_CLASSES = {}
 
 def get_viewer_class(viewer_type, logger=None):
@@ -41,9 +41,11 @@ def get_viewer_class(viewer_type, logger=None):
             from .concrete_volume_slicer_viewer import ConcreteVolumeSlicerViewer
             viewer_class = ConcreteVolumeSlicerViewer
         elif viewer_type == "VolumeRender":
-            # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer.html#example-volume-slicer
             from .concrete_volume_render_viewer import ConcreteVolumeRenderViewer
             viewer_class = ConcreteVolumeRenderViewer
+        elif viewer_type == "VolumeContour":
+            from .concrete_volume_contour_viewer import ConcreteVolumeContourViewer
+            viewer_class = ConcreteVolumeContourViewer
         else:
             if logger is not None:
                 logger.error("invalid viewer type {!r}".format(viewer_type))

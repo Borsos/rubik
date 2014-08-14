@@ -18,13 +18,14 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'VolumeRender',
+    'VolumeContour',
 ]
 
 import numpy as np
+import sys
 
 from traits.api import HasTraits, Instance, Array, \
-    Range, Float, Enum, Bool, \
+    Range, Float, Int, Enum, Bool, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
     RangeEditor, EnumEditor, BooleanEditor
@@ -38,15 +39,18 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar
+from .attributes import Colormap, Colorbar, Contours, Opacity, Transparent
 from ..base_viewer_impl import BaseViewerImpl
 
 ################################################################################
 # The object implementing the dialog
-class VolumeRender(HasTraits, BaseViewerImpl):
+class VolumeContour(HasTraits, BaseViewerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
         'colorbar': Colorbar(),
+        'contours': Contours(),
+        'opacity': Opacity(),
+        'transparent': Transparent(),
     }
 
     # The data to plot
@@ -66,13 +70,23 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     vmax = Float()
     vmin_range = Range('data_min', 'data_max', 'vmin')
     vmax_range = Range('data_min', 'data_max', 'vmax')
+    contours = Int()
+    contours_min = Int(1)
+    contours_max = Int(100)
+    contours_range = Range('contours_min', 'contours_mas', 'contours')
 
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
 
+    opacity = Float()
+    opacity_min = Float(0.0)
+    opacity_max = Float(1.0)
+    opacity_range = Range('opacity_min', 'opacity_max', 'opacity')
+
+    transparent = Bool()
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
-        super(VolumeRender, self).__init__(**traits)
+        super(VolumeContour, self).__init__(**traits)
         BaseViewerImpl.__init__(self)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
 
@@ -81,6 +95,15 @@ class VolumeRender(HasTraits, BaseViewerImpl):
 
     def _colorbar_default(self):
         return self.attributes["colorbar"]
+
+    def _transparent_default(self):
+        return self.attributes["transparent"]
+
+    def _opacity_default(self):
+        return self.attributes["opacity"]
+
+    def _contours_default(self):
+        return self.attributes["contours"]
 
     def _vmin_default(self):
         return np.min(self.data)
@@ -125,18 +148,47 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('lut_mode,colorbar')
+    @on_trait_change('lut_mode')
     def change_lut_mode(self):
-        self.view3d.lut_manager.show_scalar_bar = self.colorbar
-        self.view3d.lut_manager.lut_mode = self.lut_mode
-        #self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.iso_surface.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
 
-    @on_trait_change('scene3d.activated,vmin,vmax')
+    @on_trait_change('colorbar')
+    def change_colorbar(self):
+        self.iso_surface.module_manager.scalar_lut_manager.show_scalar_bar = self.colorbar
+
+#    @on_trait_change('vmin')
+#    def change_vmin(self):
+#        print self.iso_surface.actor, dir(self.iso_surface.actor)
+#        self.iso_surface.actor.property.vmin = self.vmin
+#
+#    @on_trait_change('vmax')
+#    def change_vmax(self):
+#        self.iso_surface.actor.property.vmax = self.vmax
+#
+#
+#    @on_trait_change('transparent')
+#    def change_vmax(self):
+#        self.iso_surface.actor.property.transparent = self.transparent
+
+    @on_trait_change('opacity')
+    def change_opacity(self):
+        self.iso_surface.actor.property.opacity = self.opacity
+
+    @on_trait_change('contours')
+    def change_vmax(self):
+        self.iso_surface.contour.number_of_contours = self.contours
+
+    @on_trait_change('scene3d.activated,vmin,vmax,transparent')
     def display_scene3d(self):
-        self.view3d = mlab.pipeline.volume(self.data_src3d,
+        if hasattr(self, 'iso_surface'):
+            del self.iso_surface
+        self.iso_surface = mlab.contour3d(self.data,
             figure=self.scene3d.mayavi_scene,
             vmin=self.vmin,
             vmax=self.vmax,
+            contours=self.contours,
+            opacity=self.opacity,
+            transparent=self.transparent,
         )
         self.scene3d.mlab.view(40, 50)
 
@@ -177,6 +229,29 @@ class VolumeRender(HasTraits, BaseViewerImpl):
                         mode="slider",
                     ),
                 ),
+                Item('contours',
+                    editor=RangeEditor(
+                        low_name='contours_min',
+                        high_name='contours_max',
+                        label_width=10,
+                        mode="spinner",
+                    ),
+                ),
+                Item('opacity',
+                    editor=RangeEditor(
+                        low_name='opacity_min',
+                        high_name='opacity_max',
+                        format="%.1f",
+                        label_width=10,
+                        mode="slider",
+                    ),
+                ),
+                Item(
+                    'transparent',
+                    editor=BooleanEditor(
+                    ),
+                    label="Transparent",
+                ),
                 Item(
                     'lut_mode',
                     editor=EnumEditor(
@@ -195,7 +270,7 @@ class VolumeRender(HasTraits, BaseViewerImpl):
             ),
         ),
         resizable=True,
-        title='Volume Render',
+        title='Volume Contour',
     )
 
 
@@ -205,5 +280,5 @@ if __name__ == "__main__":
     x, y, z = np.ogrid[-5:5:64j, -5:5:64j, -5:5:64j]
     data = np.sin(3*x)/x + 0.05*z**2 + np.cos(3*y)
 
-    m = VolumeRender(data=data)
+    m = VolumeContour(data=data)
     m.configure_traits()

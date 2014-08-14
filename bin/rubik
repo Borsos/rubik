@@ -364,6 +364,13 @@ Arguments for graphical visualization""")
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
+    graphical_output_group.add_argument('--graph-volume-contour', '-Gc',
+        dest="viewer_type",
+        action="store_const",
+        const="VolumeContour",
+        default="auto",
+        help="view the 3d cube with VolumeContour class")
+
     graphical_output_group.add_argument('--graph-auto', '-GA',
         dest="viewer_type",
         action="store_const",

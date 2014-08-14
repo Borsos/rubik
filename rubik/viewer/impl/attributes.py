@@ -18,8 +18,15 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'colormap',
-    'colorbar',
+    'Colormap',
+    'Colorbar',
+    'Contours',
+    'Transparent',
+    'Opacity',
+    'IntegerAttribute',
+    'PositiveIntegerAttribute',
+    'FloatAttribute',
+    'FractionAttribute',
 ]
 
 from .mayavi_data import COLORMAPS
@@ -34,12 +41,64 @@ Available values: {values}
 """.format(values=', '.join(repr(v) for v in COLORMAPS))
         super(Colormap, self).__init__(default=default, description=description)
 
-    def validate(self, value):
+    def convert(self, value):
         if not value in COLORMAPS:
-            raise ValueError("invalid colormap {!r}".format(value))
+            raise ValueError("invalid {} {!r}".format(self.__class__.__name__, value))
         return value
 
-class Colorbar(Attribute):
+    def check_value(self, value):
+        return value
+
+    
+class IntegerAttribute(Attribute):
+    def convert(self, value):
+        if isinstance(value, int):
+            ivalue = value
+        elif isinstance(value, basestring):
+            try:
+                ivalue = int(value)
+            except ValueError:
+                raise ValueError("invalid {}: {!r}: not an integer".format(self.__class__.__name__, value))
+        else:
+            raise ValueError("invalid {} {!r}".format(self.__class__.__name__, value))
+
+
+class FloatAttribute(Attribute):
+    def convert(self, value):
+        if isinstance(value, float):
+            return value
+        if isinstance(value, int):
+            return float(value)
+        if isinstance(value, basestring):
+            try:
+                return float(value)
+            except ValueError:
+                raise ValueError("invalid {}: {!r}: not a float".format(self.__class__.__name__, value))
+        raise ValueError("invalid {} {!r}".format(self.__class__.__name__, value))
+
+class FractionAttribute(FloatAttribute):
+    def check(self, value):
+        if not (0.0 <= value <= 1.0):
+            raise ValueError("invalid {} {!r}: not in [0.0, 1.0]".format(self.__class__.__name__, value))
+
+class PositiveIntegerAttribute(IntegerAttribute):
+    def check_value(self, value):
+        if value <= 0:
+            raise ValueError("invalid {} {!r}: not positive".format(self.__class__.__name__, value))
+      
+class BooleanAttribute(Attribute):
+    def convert(self, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, basestring):
+            if value.title() == "True":
+                return True
+            elif value.title() == "False":
+                return False
+        raise ValueError("invalid {} {!r}".format(self.__class__.__name__, value))
+
+
+class Colorbar(BooleanAttribute):
     def __init__(self):
         default = False
         description = """\
@@ -48,12 +107,30 @@ Available values: {values}
 """.format(values=', '.join(repr(v) for v in (True, False)))
         super(Colorbar, self).__init__(default=default, description=description)
 
-    def validate(self, value):
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, basestring):
-            if value.title() == "True":
-                return True
-            elif value.title() == "False":
-                return False
-        raise ValueError("invalid colormap {!r}".format(value))
+class Transparent(BooleanAttribute):
+    def __init__(self):
+        default = False
+        description = """\
+Make IsoSurface transparent.
+Available values: {values}
+""".format(values=', '.join(repr(v) for v in (True, False)))
+        super(Transparent, self).__init__(default=default, description=description)
+
+class Opacity(FloatAttribute):
+    def __init__(self):
+        default = 1.0
+        description = """\
+Set IsoSurface opacity.
+Available values: 0.0 <= float <= 1.0
+""".format(values=', '.join(repr(v) for v in (True, False)))
+        super(Opacity, self).__init__(default=default, description=description)
+
+class Contours(PositiveIntegerAttribute):
+    def __init__(self):
+        default = 5
+        description = """\
+Number of contours.
+Available values: any positive integer
+"""
+        super(Contours, self).__init__(default=default, description=description)
+
