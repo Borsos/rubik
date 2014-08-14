@@ -42,4 +42,4 @@ rubik
                                        -"4ZWm;a"`                               
                                         .  "?'.       
 ```
-Read AND PROCESS N-dimensional CUBES, and write M-dimensional subcubes
+Read, visualize and process N-dimensional CUBES.
