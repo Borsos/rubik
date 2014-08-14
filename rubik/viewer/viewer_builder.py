@@ -23,7 +23,7 @@ __all__ = [
 
 import numpy as np
 
-from .viewers import get_viewer_class
+from .viewers import get_viewer_class, VIEWER_TYPES
 from ..errors import RubikError
 
 def viewer_builder(logger, viewer_type, data, viewer_args):
@@ -38,14 +38,20 @@ def viewer_builder(logger, viewer_type, data, viewer_args):
     for viewer_type in orig_viewer_types:
         if viewer_type is None or viewer_type == "auto":
             if isinstance(data, np.ndarray):
-                if len(data.shape) == 3:
-                    # volume
-                    viewer_types.extend(("VolumeSlicer", "VolumeRender"))
+                usable_viewer_type = None
+                for vt in VIEWER_TYPES:
+                    vc = get_viewer_class(vt, logger)
+                    if vc is not None and len(data.shape) in vc.ConcreteViewerClass.DIMENSIONS:
+                        usable_viewer_type = vt
+                        break
                 else:
-                    raise RubikError("cannot find a valid viewer for {} object with rank {}".format(type(data, len(data.shape))))
-            if viewer_type is None:
-                raise RubikError("cannot find a valid viewer for {} object".format(type(data)))
+                    raise RubikError("cannot find a valid viewer for {} object with rank {}".format(type(data), len(data.shape)))
+                if usable_viewer_type is None:
+                    raise RubikError("cannot find a valid viewer for {} object".format(type(data)))
+                viewer_types.append(usable_viewer_type)
         else:
+            if not viewer_type in VIEWER_TYPES:
+                raise RubikError("invalid viewer_type {!r}".format(viewer_type))
             viewer_types.append(viewer_type)
 
     # get viewer class:

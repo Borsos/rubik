@@ -19,6 +19,7 @@ __author__ = "Simone Campagna"
 
 __all__ = [
     'colormap',
+    'colorbar',
 ]
 
 from .mayavi_data import COLORMAPS
@@ -28,7 +29,8 @@ class Colormap(Attribute):
     def __init__(self):
         default = 'blue-red'
         description = """\
-available values: {values}
+Apply the selected colormap.
+Available values: {values}
 """.format(values=', '.join(repr(v) for v in COLORMAPS))
         super(Colormap, self).__init__(default=default, description=description)
 
@@ -36,3 +38,22 @@ available values: {values}
         if not value in COLORMAPS:
             raise ValueError("invalid colormap {!r}".format(value))
         return value
+
+class Colorbar(Attribute):
+    def __init__(self):
+        default = False
+        description = """\
+Show the colorbar.
+Available values: {values}
+""".format(values=', '.join(repr(v) for v in (True, False)))
+        super(Colorbar, self).__init__(default=default, description=description)
+
+    def validate(self, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, basestring):
+            if value.title() == "True":
+                return True
+            elif value.title() == "False":
+                return False
+        raise ValueError("invalid colormap {!r}".format(value))

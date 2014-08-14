@@ -29,24 +29,29 @@ import textwrap
 from ..errors import RubikError
 
 VIEWER_TYPES = ('VolumeSlicer', 'VolumeRender')
+_VIEWER_CLASSES = {}
 
 def get_viewer_class(viewer_type, logger=None):
+    if viewer_type in _VIEWER_CLASSES:
+        return _VIEWER_CLASSES[viewer_type]
+    viewer_class = None
     try:
         if viewer_type == "VolumeSlicer":
             # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
             from .concrete_volume_slicer_viewer import ConcreteVolumeSlicerViewer
-            return ConcreteVolumeSlicerViewer
+            viewer_class = ConcreteVolumeSlicerViewer
         elif viewer_type == "VolumeRender":
             # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer.html#example-volume-slicer
-            from .concrete_volume_slicer_viewer import ConcreteVolumeSlicerViewer
-            return ConcreteVolumeSlicerViewer
+            from .concrete_volume_render_viewer import ConcreteVolumeRenderViewer
+            viewer_class = ConcreteVolumeRenderViewer
         else:
             if logger is not None:
                 logger.error("invalid viewer type {!r}".format(viewer_type))
     except ImportError as err:
         if logger is not None:
             logger.warning("cannot load {!r}: {}: {}".format(viewer_type, type(err).__name__, err))
-    return None
+    _VIEWER_CLASSES[viewer_type] = viewer_class
+    return viewer_class
 
 def list_viewers(logger):
     for viewer_type in VIEWER_TYPES:
@@ -57,6 +62,8 @@ def list_viewer(viewer_type, logger):
     if viewer_class is not None:
         print "===", viewer_type
         for attribute_name, attribute in viewer_class.ConcreteViewerClass.ATTRIBUTES.iteritems():
-            print "   * {} [default: {!r}]".format(attribute_name, attribute.default())
+            print "   * {}:".format(attribute_name)
+            print "     default: {!r}".format(attribute.default())
+            print "     usable for: {}".format(', '.join('{}D'.format(d) for d in viewer_class.ConcreteViewerClass.DIMENSIONS))
             print textwrap.fill(attribute.description(), initial_indent="     ", subsequent_indent="       ", break_on_hyphens=False)
     

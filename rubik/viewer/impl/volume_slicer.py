@@ -35,10 +35,10 @@ confused with too rich interaction.
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Float, Str, Range, Enum, \
+    Float, Str, Range, Enum, Bool, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label, RangeEditor, EnumEditor
+    Label, RangeEditor, EnumEditor, BooleanEditor
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -49,7 +49,7 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap
+from .attributes import Colormap, Colorbar
 from ..base_viewer_impl import BaseViewerImpl
 
 ################################################################################
@@ -57,6 +57,7 @@ from ..base_viewer_impl import BaseViewerImpl
 class VolumeSlicer(HasTraits, BaseViewerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
+        'colorbar': Colorbar(),
     }
     # The data to plot
     data = Array()
@@ -91,6 +92,7 @@ class VolumeSlicer(HasTraits, BaseViewerImpl):
     data_value = Str("")
 
     lut_mode = Enum(*COLORMAPS)
+    colorbar = Bool()
 
     _axis_names = dict(x=0, y=1, z=2)
 
@@ -121,6 +123,9 @@ class VolumeSlicer(HasTraits, BaseViewerImpl):
 
     def _lut_mode_default(self):
         return self.attributes["colormap"]
+
+    def _colorbar_default(self):
+        return self.attributes["colorbar"]
 
     def _x_index_default(self):
         return self.x_high // 2
@@ -155,9 +160,10 @@ class VolumeSlicer(HasTraits, BaseViewerImpl):
     def _set_data_value(self):
         self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
 
-    @on_trait_change('lut_mode')
+    @on_trait_change('lut_mode,colorbar')
     def change_lut_mode(self):
         self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.view3d.module_manager.scalar_lut_manager.show_scalar_bar = self.colorbar
         self.ipw_x.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_y.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_z.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
@@ -347,6 +353,12 @@ class VolumeSlicer(HasTraits, BaseViewerImpl):
 
                     ),
                     label="Colormap",
+                ),
+                Item(
+                    'colorbar',
+                    editor=BooleanEditor(
+                    ),
+                    label="Show colorbar",
                 ),
                 show_labels=True,
             ),

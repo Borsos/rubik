@@ -24,9 +24,10 @@ __all__ = [
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Range, Float, Enum, on_trait_change
+    Range, Float, Enum, Bool, \
+    on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    RangeEditor, EnumEditor
+    RangeEditor, EnumEditor, BooleanEditor
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -37,7 +38,7 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap
+from .attributes import Colormap, Colorbar
 from ..base_viewer_impl import BaseViewerImpl
 
 ################################################################################
@@ -45,6 +46,7 @@ from ..base_viewer_impl import BaseViewerImpl
 class VolumeRender(HasTraits, BaseViewerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
+        'colorbar': Colorbar(),
     }
 
     # The data to plot
@@ -66,6 +68,7 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     vmax_range = Range('data_min', 'data_max', 'vmax')
 
     lut_mode = Enum(*COLORMAPS)
+    colorbar = Bool()
 
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
@@ -75,6 +78,9 @@ class VolumeRender(HasTraits, BaseViewerImpl):
 
     def _lut_mode_default(self):
         return self.attributes["colormap"]
+
+    def _colorbar_default(self):
+        return self.attributes["colorbar"]
 
     def _vmin_default(self):
         return np.min(self.data)
@@ -119,10 +125,11 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('lut_mode')
+    @on_trait_change('lut_mode,colorbar')
     def change_lut_mode(self):
-        self.view3d.module_manager.vector_lut_manager.lut_mode = self.lut_mode
-        self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.view3d.lut_manager.show_scalar_bar = self.colorbar
+        self.view3d.lut_manager.lut_mode = self.lut_mode
+        #self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
 
     @on_trait_change('scene3d.activated,vmin,vmax')
     def display_scene3d(self):
@@ -131,6 +138,8 @@ class VolumeRender(HasTraits, BaseViewerImpl):
             vmin=self.vmin,
             vmax=self.vmax,
         )
+        self.view3d.lut_manager.lut_mode = self.lut_mode
+        self.view3d.lut_manager.show_scalar_bar = True
         self.scene3d.mlab.view(40, 50)
 
         self.scene3d.scene.background = (0, 0, 0)
@@ -177,6 +186,12 @@ class VolumeRender(HasTraits, BaseViewerImpl):
 
                     ),
                     label="Colormap",
+                ),
+                Item(
+                    'colorbar',
+                    editor=BooleanEditor(
+                    ),
+                    label="Show colorbar",
                 ),
                 show_labels=True,
             ),
