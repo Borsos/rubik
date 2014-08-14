@@ -303,7 +303,7 @@ Arguments for graphical visualization""")
         default=False,
         help="print an histogram; see histogram arguments below")
 
-    output_group.add_argument('--graph', '-G',
+    output_group.add_argument('--gview', '-G',
         dest="view",
         action="store_true",
         default=False,
@@ -350,42 +350,43 @@ Arguments for graphical visualization""")
         default="num",
         help="show number of elements per bin")
 
-    graphical_output_group.add_argument('--graph-volume-slicer', '-Gs',
+    graphical_output_group.add_argument('--gview-volume-slicer', '-Gs',
         dest="viewer_type",
         action="store_const",
         const="VolumeSlicer",
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    graphical_output_group.add_argument('--graph-volume-render', '-Gr',
+    graphical_output_group.add_argument('--gview-volume-render', '-Gr',
         dest="viewer_type",
         action="store_const",
         const="VolumeRender",
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
-    graphical_output_group.add_argument('--graph-volume-contour', '-Gc',
+    graphical_output_group.add_argument('--gview-volume-contour', '-Gc',
         dest="viewer_type",
         action="store_const",
         const="VolumeContour",
         default="auto",
         help="view the 3d cube with VolumeContour class")
 
-    graphical_output_group.add_argument('--graph-auto', '-GA',
+    graphical_output_group.add_argument('--gview-auto', '-GA',
         dest="viewer_type",
         action="store_const",
         const="auto",
         default="auto",
         help="view the result with default viewer")
 
-    graphical_output_group.add_argument('--graph-attribute', '-Ga',
+    graphical_output_group.add_argument('--gview-attribute', '-Ga',
+        metavar="VA",
         dest="viewer_attributes",
         type=key_value_type,
         action="append",
         default=[],
         help="add a viewer attribute (e.g. colormap=\"black-white\"")
 
-    graphical_output_group.add_argument('--graph-list', '-Gl',
+    graphical_output_group.add_argument('--gview-list', '-Gl',
         dest="viewer_list",
         action="store_true",
         default=False,
