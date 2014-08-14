@@ -322,7 +322,7 @@ Show 2D slices for the given 3D cube.
                         high_name='x_high',
                         format="%.0f",
                         label_width=10,
-                        mode="auto",
+                        mode="slider",
                     ),
                     format_str="%<8s",
                 ),
@@ -333,7 +333,7 @@ Show 2D slices for the given 3D cube.
                         high_name='y_high',
                         format="%.0f",
                         label_width=10,
-                        mode="auto",
+                        mode="slider",
                     ),
                 ),
                 Item(
@@ -343,7 +343,7 @@ Show 2D slices for the given 3D cube.
                         high_name='z_high',
                         format="%.0f",
                         label_width=10,
-                        mode="auto",
+                        mode="slider",
                     ),
                 ),
                 Item(

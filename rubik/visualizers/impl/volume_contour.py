@@ -192,7 +192,7 @@ Visualize iso surfaces for the given 3D cube.
                 self.vmin = vmax
             finally:
                 self._vmin_vmax_interaction = True
-        self.iso_surface.contour.minimum_contour = vmax
+        self.iso_surface.contour.maximum_contour = vmax
 
     @on_trait_change('transparent')
     def on_change_transparent(self):
@@ -209,6 +209,7 @@ Visualize iso surfaces for the given 3D cube.
             opacity=self.opacity,
             transparent=self.transparent,
         )
+        self.iso_surface.contour.auto_contours = True
         self.scene3d.mlab.view(40, 50)
 
         self.scene3d.scene.background = (0, 0, 0)
