@@ -75,10 +75,11 @@ Volume rendering of the given 3D cube.
     colorbar = Bool()
 
     #---------------------------------------------------------------------------
-    def __init__(self, **traits):
+    def __init__(self, logger, **traits):
         super(VolumeRender, self).__init__(**traits)
-        BaseVisualizerImpl.__init__(self)
+        BaseVisualizerImpl.__init__(self, logger)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
+        self._stop_vmin_vmax_interaction = False
 
     def _lut_mode_default(self):
         return self.attributes["colormap"]
@@ -92,16 +93,6 @@ Volume rendering of the given 3D cube.
     def _vmax_default(self):
         return np.max(self.data)
 
-    @on_trait_change('vmin')
-    def change_vmin(self):
-        if self.vmin > self.vmax:
-            self.vmax = self.vmin
-        
-    @on_trait_change('vmax')
-    def change_vmax(self):
-        if self.vmax < self.vmin:
-            self.vmin = self.vmax
-        
 
     #---------------------------------------------------------------------------
     # Default values
@@ -121,23 +112,47 @@ Volume rendering of the given 3D cube.
     # Scene activation callbaks
     #---------------------------------------------------------------------------
     @on_trait_change('vmin')
-    def change_vmin(self):
-        #self.volume.vmin = self.vmin
-        print "don't know how to set vmin"
+    def on_change_vmin(self):
+        self.on_change_vmin_vmax('vmin')
 
     @on_trait_change('vmax')
-    def change_vmax(self):
-        #help(self.volume.volume_mapper)
-        #self.volume.volume_mapper.vmax = self.vmax
-        print "don't know how to set vmax"
+    def on_change_vmax(self):
+        self.on_change_vmin_vmax('vmax')
+
+    def on_change_vmin_vmax(self, changed):
+        self.logger.warn("Currently changing vmin/vmax is not correctly working in MayaVi Volume")
+        if self._stop_vmin_vmax_interaction:
+            return
+        self._stop_vmin_vmax_interaction = False
+        #print changed, (self.vmin, self.vmax), self._stop_vmin_vmax_interaction, self.volume.current_range,
+        vmin, vmax = self.vmin, self.vmax
+        vmin = min(self.data_max, max(self.data_min, vmin))
+        vmax = min(self.data_max, max(self.data_min, vmax))
+        if changed == 'vmin':
+            if vmin > vmax:
+                vmax = vmin
+        elif changed == 'vmax':
+            if vmax < vmin:
+                vmin = vmax
+        try:
+            if vmin != self.vmin:
+                self.vmin = vmin
+            if vmax != self.vmax:
+                self.vmax = vmax
+        finally:
+            self._stop_vmin_vmax_interaction = False
+        #print (vmin, vmax)
+        self.volume.current_range = vmin, vmax
 
     @on_trait_change('lut_mode')
-    def change_lut_mode(self):
+    def on_change_lut_mode(self):
+        self.logger.warn("Currently changing the LUT mode is not working in MayaVi Volume")
         self.volume.lut_manager.lut_mode = self.lut_mode
-        #self.volume.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.volume.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.volume.module_manager.vector_lut_manager.lut_mode = self.lut_mode
 
     @on_trait_change('colorbar')
-    def change_colorbar(self):
+    def on_change_colorbar(self):
         self.volume.lut_manager.show_scalar_bar = self.colorbar
 
     @on_trait_change('scene3d.activated')
@@ -153,8 +168,8 @@ Volume rendering of the given 3D cube.
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        self.change_lut_mode()
-        self.change_colorbar()
+        self.on_change_lut_mode()
+        self.on_change_colorbar()
 
 
     #---------------------------------------------------------------------------
@@ -173,18 +188,20 @@ Volume rendering of the given 3D cube.
                     editor=RangeEditor(
                         low_name='data_min',
                         high_name='data_max',
-                        format="%.1f",
-                        label_width=10,
+                        format="%.3f",
+                        #label_width=10,
                         mode="slider",
+                        is_float=True,
                     ),
                 ),
                 Item('vmax',
                     editor=RangeEditor(
                         low_name='data_min',
                         high_name='data_max',
-                        format="%.1f",
-                        label_width=10,
+                        format="%.3f",
+                        #label_width=10,
                         mode="slider",
+                        is_float=True,
                     ),
                 ),
                 Item(

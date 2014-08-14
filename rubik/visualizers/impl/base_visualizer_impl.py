@@ -25,7 +25,8 @@ class BaseVisualizerImpl(object):
     ATTRIBUTES = {}
     DIMENSIONS = [3]
     DESCRIPTION = None
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.attributes = {}
         self.set_defaults()
 

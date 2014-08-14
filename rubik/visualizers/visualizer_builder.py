@@ -65,4 +65,4 @@ def visualizer_builder(logger, visualizer_type, data, visualizer_args):
     
     # build:
     logger.info("creating {} visualizer...".format(visualizer_class.__name__))
-    return visualizer_class(data=data, visualizer_args=visualizer_args)
+    return visualizer_class(logger=logger, data=data, visualizer_args=visualizer_args)

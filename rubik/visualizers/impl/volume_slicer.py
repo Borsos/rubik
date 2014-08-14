@@ -103,9 +103,9 @@ Show 2D slices for the given 3D cube.
 
 
     #---------------------------------------------------------------------------
-    def __init__(self, **traits):
+    def __init__(self, logger, **traits):
         super(VolumeSlicer, self).__init__(**traits)
-        BaseVisualizerImpl.__init__(self)
+        BaseVisualizerImpl.__init__(self, logger)
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y

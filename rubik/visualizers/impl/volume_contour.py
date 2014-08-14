@@ -50,7 +50,7 @@ class VolumeContour(HasTraits, BaseVisualizerImpl):
         'colorbar': Colorbar(),
         'contours': Contours(),
         'opacity': Opacity(),
-#        'transparent': Transparent(),
+        'transparent': Transparent(),
     }
     DIMENSIONS = [3]
     DESCRIPTION = """\
@@ -87,12 +87,13 @@ Visualize iso surfaces for the given 3D cube.
     opacity_max = Float(1.0)
     opacity_range = Range('opacity_min', 'opacity_max', 'opacity')
 
-#    transparent = Bool()
+    transparent = Bool()
     #---------------------------------------------------------------------------
-    def __init__(self, **traits):
+    def __init__(self, logger, **traits):
         super(VolumeContour, self).__init__(**traits)
-        BaseVisualizerImpl.__init__(self)
+        BaseVisualizerImpl.__init__(self, logger)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
+        self._vmin_vmax_interaction = True
 
     def _lut_mode_default(self):
         return self.attributes["colormap"]
@@ -100,8 +101,8 @@ Visualize iso surfaces for the given 3D cube.
     def _colorbar_default(self):
         return self.attributes["colorbar"]
 
-#    def _transparent_default(self):
-#        return self.attributes["transparent"]
+    def _transparent_default(self):
+        return self.attributes["transparent"]
 
     def _opacity_default(self):
         return self.attributes["opacity"]
@@ -115,16 +116,6 @@ Visualize iso surfaces for the given 3D cube.
     def _vmax_default(self):
         return np.max(self.data)
 
-    @on_trait_change('vmin')
-    def change_vmin(self):
-        if self.vmin > self.vmax:
-            self.vmax = self.vmin
-        
-    @on_trait_change('vmax')
-    def change_vmax(self):
-        if self.vmax < self.vmin:
-            self.vmin = self.vmax
-        
 
     #---------------------------------------------------------------------------
     # Default values
@@ -171,18 +162,44 @@ Visualize iso surfaces for the given 3D cube.
 
     @on_trait_change('vmin')
     def change_vmin(self):
-        self.iso_surface.contour.minimum_contour = self.vmin
+        if not self._vmin_vmax_interaction:
+            return
+        vmin = self.vmin
+        if vmin > self.data_max:
+            vmin = self.data_max
+        elif vmin < self.data_min:
+            vmin = self.data_min
+        if vmin > self.vmax:
+            try:
+                self._vmin_vmax_interaction = False
+                self.vmax = vmin
+            finally:
+                self._vmin_vmax_interaction = True
+        self.iso_surface.contour.minimum_contour = vmin
 
-    @on_trait_change('vmin')
+    @on_trait_change('vmax')
     def change_vmax(self):
-        self.iso_surface.contour.minimum_contour = self.vmax
+        if not self._vmin_vmax_interaction:
+            return
+        vmax = self.vmax
+        if vmax > self.data_max:
+            vmax = self.data_max
+        elif vmax < self.data_min:
+            vmax = self.data_min
+        if vmax < self.vmin:
+            try:
+                self._vmin_vmax_interaction = False
+                self.vmin = vmax
+            finally:
+                self._vmin_vmax_interaction = True
+        self.iso_surface.contour.minimum_contour = vmax
 
-#    @on_trait_change('transparent')
-#    def change_transparent(self):
-#        #??? don't know how to change transparency
-#        pass
+    @on_trait_change('transparent')
+    def change_transparent(self):
+        #??? don't know how to change transparency
+        self.logger.warn("Currently changing transparency is not supported for MayaVi Contour")
 
-    @on_trait_change('scene3d.activated') #,vmin,vmax,transparent')
+    @on_trait_change('scene3d.activated')
     def display_scene3d(self):
         self.iso_surface = mlab.contour3d(self.data,
             figure=self.scene3d.mayavi_scene,
@@ -190,7 +207,7 @@ Visualize iso surfaces for the given 3D cube.
             vmax=self.vmax,
             contours=self.contours,
             opacity=self.opacity,
-            #transparent=self.transparent,
+            transparent=self.transparent,
         )
         self.scene3d.mlab.view(40, 50)
 
@@ -218,18 +235,20 @@ Visualize iso surfaces for the given 3D cube.
                     editor=RangeEditor(
                         low_name='data_min',
                         high_name='data_max',
-                        format="%.1f",
+                        format="%.3f",
                         label_width=10,
                         mode="slider",
+                        is_float=True,
                     ),
                 ),
                 Item('vmax',
                     editor=RangeEditor(
                         low_name='data_min',
                         high_name='data_max',
-                        format="%.1f",
+                        format="%.3f",
                         label_width=10,
                         mode="slider",
+                        is_float=True,
                     ),
                 ),
                 Item('contours',
@@ -249,12 +268,12 @@ Visualize iso surfaces for the given 3D cube.
                         mode="slider",
                     ),
                 ),
-#                Item(
-#                    'transparent',
-#                    editor=BooleanEditor(
-#                    ),
-#                    label="Transparent",
-#                ),
+                Item(
+                    'transparent',
+                    editor=BooleanEditor(
+                    ),
+                    label="Transparent",
+                ),
                 Item(
                     'lut_mode',
                     editor=EnumEditor(
