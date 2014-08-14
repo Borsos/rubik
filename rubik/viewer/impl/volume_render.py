@@ -127,13 +127,21 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     @on_trait_change('lut_mode,colorbar')
     def change_lut_mode(self):
-        self.view3d.lut_manager.show_scalar_bar = self.colorbar
-        self.view3d.lut_manager.lut_mode = self.lut_mode
-        #self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.volume.lut_manager.lut_mode = self.lut_mode
+        #self.volume.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+
+    @on_trait_change('colorbar')
+    def change_colorbar(self):
+        self.volume.lut_manager.show_scalar_bar = self.colorbar
 
     @on_trait_change('scene3d.activated,vmin,vmax')
     def display_scene3d(self):
-        self.view3d = mlab.pipeline.volume(self.data_src3d,
+        if hasattr(self, 'volume'):
+            del self.volume
+            first_call = False
+        else:
+            first_call = True
+        self.volume = mlab.pipeline.volume(self.data_src3d,
             figure=self.scene3d.mayavi_scene,
             vmin=self.vmin,
             vmax=self.vmax,
@@ -144,7 +152,9 @@ class VolumeRender(HasTraits, BaseViewerImpl):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        self.change_lut_mode()
+        if first_call:
+            self.change_lut_mode()
+            self.change_colorbar()
 
 
     #---------------------------------------------------------------------------

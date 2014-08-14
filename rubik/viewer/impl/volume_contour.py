@@ -156,20 +156,6 @@ class VolumeContour(HasTraits, BaseViewerImpl):
     def change_colorbar(self):
         self.iso_surface.module_manager.scalar_lut_manager.show_scalar_bar = self.colorbar
 
-#    @on_trait_change('vmin')
-#    def change_vmin(self):
-#        print self.iso_surface.actor, dir(self.iso_surface.actor)
-#        self.iso_surface.actor.property.vmin = self.vmin
-#
-#    @on_trait_change('vmax')
-#    def change_vmax(self):
-#        self.iso_surface.actor.property.vmax = self.vmax
-#
-#
-#    @on_trait_change('transparent')
-#    def change_vmax(self):
-#        self.iso_surface.actor.property.transparent = self.transparent
-
     @on_trait_change('opacity')
     def change_opacity(self):
         self.iso_surface.actor.property.opacity = self.opacity
@@ -182,6 +168,9 @@ class VolumeContour(HasTraits, BaseViewerImpl):
     def display_scene3d(self):
         if hasattr(self, 'iso_surface'):
             del self.iso_surface
+            first_call = False
+        else:
+            first_call = True
         self.iso_surface = mlab.contour3d(self.data,
             figure=self.scene3d.mayavi_scene,
             vmin=self.vmin,
@@ -196,7 +185,9 @@ class VolumeContour(HasTraits, BaseViewerImpl):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        self.change_lut_mode()
+        if first_call:
+            self.change_lut_mode()
+            self.change_colorbar()
 
 
     #---------------------------------------------------------------------------

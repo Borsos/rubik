@@ -118,7 +118,7 @@ Available values: {values}
 
 class Opacity(FloatAttribute):
     def __init__(self):
-        default = 1.0
+        default = 0.4
         description = """\
 Set IsoSurface opacity.
 Available values: 0.0 <= float <= 1.0
