@@ -378,6 +378,12 @@ Arguments for graphical visualization""")
         default=[],
         help="add a viewer attribute (e.g. colormap=\"black-white\"")
 
+    graphical_output_group.add_argument('--graph-list', '-Gl',
+        dest="viewer_list",
+        action="store_true",
+        default=False,
+        help="show available graphical viewers and attributes")
+
     output_group.add_argument("--split", "-l",
         metavar="D",
         dest="split_dimensions",
@@ -582,6 +588,11 @@ Options to show help on specific topics """)
     if args.random_seed is not None:
         np.random.seed(args.random_seed)
         random.seed(args.random_seed)
+
+    if args.viewer_list:
+        from rubik.viewer.viewers import list_viewers
+        list_viewers(logger)
+        return 0
 
     return_code = 0
     try:

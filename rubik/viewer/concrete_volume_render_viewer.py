@@ -21,7 +21,7 @@ __all__ = [
     'ConcreteVolumeRenderViewer',
 ]
 
-from .volume_viewer import VolumeViewer
+from .viewer import Viewer
 
 # from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
 from .impl.volume_render import VolumeRender
@@ -35,6 +35,6 @@ except:
     traceback.print_exc()
     pass
 
-class ConcreteVolumeRenderViewer(VolumeViewer):
-    ConcreteVolumeClass = VolumeRender
+class ConcreteVolumeRenderViewer(Viewer):
+    ConcreteViewerClass = VolumeRender
         

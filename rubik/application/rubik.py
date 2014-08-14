@@ -35,7 +35,7 @@ from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
 from ..format_filename import format_filename
-from ..viewer.viewer_builder import viewerBuilder
+from ..viewer.viewer_builder import viewer_builder
 from .. import conf
 from .. import cubes
 
@@ -908,7 +908,7 @@ ave           = {ave}
         logger.debug("  decimals = {}".format(self.histogram_decimals))
 
     def _view(self, cube):
-        viewer = viewerBuilder(
+        viewer = viewer_builder(
             logger=self.logger,
             viewer_type=self.viewer_type,
             data=cube,

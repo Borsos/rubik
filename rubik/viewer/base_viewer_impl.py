@@ -18,11 +18,12 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'BaseViewer',
+    'BaseViewerImpl',
 ]
 
-class BaseViewer(object):
+class BaseViewerImpl(object):
     ATTRIBUTES = {}
+    DIMENSIONS = [3]
     def __init__(self):
         self.attributes = {}
         self.set_defaults()

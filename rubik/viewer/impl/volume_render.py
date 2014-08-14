@@ -38,11 +38,11 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
 
 from .mayavi_data import COLORMAPS
 from .attributes import Colormap
-from ..base_viewer import BaseViewer
+from ..base_viewer_impl import BaseViewerImpl
 
 ################################################################################
 # The object implementing the dialog
-class VolumeRender(HasTraits, BaseViewer):
+class VolumeRender(HasTraits, BaseViewerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
     }
@@ -70,7 +70,7 @@ class VolumeRender(HasTraits, BaseViewer):
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeRender, self).__init__(**traits)
-        BaseViewer.__init__(self)
+        BaseViewerImpl.__init__(self)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
 
     def _lut_mode_default(self):

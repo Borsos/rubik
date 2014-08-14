@@ -50,11 +50,11 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
 
 from .mayavi_data import COLORMAPS
 from .attributes import Colormap
-from ..base_viewer import BaseViewer
+from ..base_viewer_impl import BaseViewerImpl
 
 ################################################################################
 # The object implementing the dialog
-class VolumeSlicer(HasTraits, BaseViewer):
+class VolumeSlicer(HasTraits, BaseViewerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
     }
@@ -98,7 +98,7 @@ class VolumeSlicer(HasTraits, BaseViewer):
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeSlicer, self).__init__(**traits)
-        BaseViewer.__init__(self)
+        BaseViewerImpl.__init__(self)
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y

@@ -18,15 +18,15 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'viewerBuilder',
+    'viewer_builder',
 ]
 
 import numpy as np
 
+from .viewers import get_viewer_class
 from ..errors import RubikError
-from .viewer_wrapper import ViewerWrapper
 
-def viewerBuilder(logger, viewer_type, data, viewer_args):
+def viewer_builder(logger, viewer_type, data, viewer_args):
     # to viewer_types:
     if isinstance(viewer_type, (list, tuple)):
         orig_viewer_types = tuple(viewer_type)
@@ -51,32 +51,9 @@ def viewerBuilder(logger, viewer_type, data, viewer_args):
     # get viewer class:
     viewer_class = None
     for viewer_type in viewer_types:
-        if viewer_type == "AdvancedVolumeSlicer":
-            try:
-                # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
-                from .concrete_advanced_volume_slicer_viewer import ConcreteAdvancedVolumeSlicerViewer
-                viewer_class = ConcreteAdvancedVolumeSlicerViewer
-                break
-            except ImportError as err:
-                logger.warning("cannot build {!r}: {}: {}".format(viewer_type, type(err).__name__, err))
-        elif viewer_type == "VolumeSlicer":
-            try:
-                # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer.html#example-volume-slicer
-                from .concrete_volume_slicer_viewer import ConcreteVolumeSlicerViewer
-                viewer_class = ConcreteVolumeSlicerViewer
-                break
-            except ImportError as err:
-                logger.warning("cannot build {!r}: {}: {}".format(viewer_type, type(err).__name__, err))
-        elif viewer_type == "VolumeRender":
-            try:
-                # example from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer.html#example-volume-slicer
-                from .concrete_volume_render_viewer import ConcreteVolumeRenderViewer
-                viewer_class = ConcreteVolumeRenderViewer
-                break
-            except ImportError as err:
-                logger.warning("cannot build {!r}: {}: {}".format(viewer_type, type(err).__name__, err))
-        else:
-            raise RubikError("unknown viewer_type {!r}".format(viewer_type))
+        viewer_class = get_viewer_class(viewer_type, logger)
+        if viewer_class is not None:
+            break
     else:
         raise RubikError("no usable viewer")
     
