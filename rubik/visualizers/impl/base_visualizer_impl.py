@@ -18,12 +18,13 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'BaseViewerImpl',
+    'BaseVisualizerImpl',
 ]
 
-class BaseViewerImpl(object):
+class BaseVisualizerImpl(object):
     ATTRIBUTES = {}
     DIMENSIONS = [3]
+    DESCRIPTION = None
     def __init__(self):
         self.attributes = {}
         self.set_defaults()
@@ -38,4 +39,4 @@ class BaseViewerImpl(object):
             attribute = self.ATTRIBUTES.get(attribute_name, None)
             if attribute is None:
                 raise KeyError("invalid attribute {!r}".format(attribute_name))
-            self.attributes[attribute_name] = attribute.validate(attribute_value)
+            self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)

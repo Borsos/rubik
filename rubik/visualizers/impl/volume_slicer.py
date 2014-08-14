@@ -50,15 +50,20 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
 
 from .mayavi_data import COLORMAPS
 from .attributes import Colormap, Colorbar
-from ..base_viewer_impl import BaseViewerImpl
+from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
 # The object implementing the dialog
-class VolumeSlicer(HasTraits, BaseViewerImpl):
+class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
         'colorbar': Colorbar(),
     }
+    DIMENSIONS = [3]
+    DESCRIPTION = """\
+Show 2D slices for the given 3D cube.
+"""
+
     # The data to plot
     data = Array()
 
@@ -100,7 +105,7 @@ class VolumeSlicer(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeSlicer, self).__init__(**traits)
-        BaseViewerImpl.__init__(self)
+        BaseVisualizerImpl.__init__(self)
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y
@@ -187,7 +192,7 @@ class VolumeSlicer(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('scene3d.activated') #,x_index,y_index,z_index')
+    @on_trait_change('scene3d.activated')
     def display_scene3d(self):
         self.view3d = mlab.pipeline.outline(self.data_src3d,
                         figure=self.scene3d.mayavi_scene,

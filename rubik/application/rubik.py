@@ -35,7 +35,7 @@ from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
 from ..format_filename import format_filename
-from ..viewer.viewer_builder import viewer_builder
+from ..visualizers.visualizer_builder import visualizer_builder
 from .. import conf
 from .. import cubes
 
@@ -74,7 +74,7 @@ class Rubik(object):
         self.set_clobber(conf.DEFAULT_CLOBBER)
         self.set_print_cube(False)
         self.set_print_stats(False)
-        self.set_graphical_view(False)
+        self.set_visualizer_options(False)
         self.set_print_report(False)
         self.set_in_place(False)
         self.set_histogram(False)
@@ -144,10 +144,10 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
-    def set_graphical_view(self, view, viewer_type=None, viewer_args=None):
-        self.view = view
-        self.viewer_type = viewer_type
-        self.viewer_args = viewer_args
+    def set_visualizer_options(self, enable_visualizer, visualizer_type=None, visualizer_args=None):
+        self.enable_visualizer = enable_visualizer
+        self.visualizer_type = visualizer_type
+        self.visualizer_args = visualizer_args
 
     def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None, decimals=None):
         self.print_histogram = print_histogram
@@ -463,8 +463,8 @@ class Rubik(object):
             if self.output_filenames:
                 useless_run = False
                 self._write_cube(cube=subcube, dlabels=dlabels)
-            if self.view:
-                self._view(cube=subcube)
+            if self.enable_visualizer:
+                self.visualize(cube=subcube)
                 useless_run = False
         if useless_run:
             #self.show_logo_once()
@@ -907,11 +907,11 @@ ave           = {ave}
         logger.debug("  mode = {}".format(self.histogram_mode))
         logger.debug("  decimals = {}".format(self.histogram_decimals))
 
-    def _view(self, cube):
-        viewer = viewer_builder(
+    def visualize(self, cube):
+        visualizer = visualizer_builder(
             logger=self.logger,
-            viewer_type=self.viewer_type,
+            visualizer_type=self.visualizer_type,
             data=cube,
-            viewer_args=self.viewer_args)
-        viewer.run()
+            visualizer_args=self.visualizer_args)
+        visualizer.run()
       

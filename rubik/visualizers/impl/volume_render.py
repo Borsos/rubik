@@ -39,15 +39,19 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
 
 from .mayavi_data import COLORMAPS
 from .attributes import Colormap, Colorbar
-from ..base_viewer_impl import BaseViewerImpl
+from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
 # The object implementing the dialog
-class VolumeRender(HasTraits, BaseViewerImpl):
+class VolumeRender(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
         'colorbar': Colorbar(),
     }
+    DIMENSIONS = [3]
+    DESCRIPTION = """\
+Volume rendering of the given 3D cube.
+"""
 
     # The data to plot
     data = Array()
@@ -73,7 +77,7 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeRender, self).__init__(**traits)
-        BaseViewerImpl.__init__(self)
+        BaseVisualizerImpl.__init__(self)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
 
     def _lut_mode_default(self):
@@ -112,20 +116,22 @@ class VolumeRender(HasTraits, BaseViewerImpl):
                         plane_orientation='%s_axes' % axis_name)
         return ipw
 
-#    def _ipw_3d_x_default(self):
-#        return self.make_ipw_3d('x')
-#
-#    def _ipw_3d_y_default(self):
-#        return self.make_ipw_3d('y')
-#
-#    def _ipw_3d_z_default(self):
-#        return self.make_ipw_3d('z')
-
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
-    @on_trait_change('lut_mode,colorbar')
+    @on_trait_change('vmin')
+    def change_vmin(self):
+        #self.volume.vmin = self.vmin
+        print "don't know how to set vmin"
+
+    @on_trait_change('vmax')
+    def change_vmax(self):
+        #help(self.volume.volume_mapper)
+        #self.volume.volume_mapper.vmax = self.vmax
+        print "don't know how to set vmax"
+
+    @on_trait_change('lut_mode')
     def change_lut_mode(self):
         self.volume.lut_manager.lut_mode = self.lut_mode
         #self.volume.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
@@ -134,13 +140,8 @@ class VolumeRender(HasTraits, BaseViewerImpl):
     def change_colorbar(self):
         self.volume.lut_manager.show_scalar_bar = self.colorbar
 
-    @on_trait_change('scene3d.activated,vmin,vmax')
+    @on_trait_change('scene3d.activated')
     def display_scene3d(self):
-        if hasattr(self, 'volume'):
-            del self.volume
-            first_call = False
-        else:
-            first_call = True
         self.volume = mlab.pipeline.volume(self.data_src3d,
             figure=self.scene3d.mayavi_scene,
             vmin=self.vmin,
@@ -152,9 +153,8 @@ class VolumeRender(HasTraits, BaseViewerImpl):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        if first_call:
-            self.change_lut_mode()
-            self.change_colorbar()
+        self.change_lut_mode()
+        self.change_colorbar()
 
 
     #---------------------------------------------------------------------------

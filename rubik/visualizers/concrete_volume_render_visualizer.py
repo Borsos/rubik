@@ -18,13 +18,13 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'ConcreteVolumeContourViewer',
+    'ConcreteVolumeRenderVisualizer',
 ]
 
-from .viewer import Viewer
+from .visualizer import Visualizer
 
 # from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
-from .impl.volume_contour import VolumeContour
+from .impl.volume_render import VolumeRender
 
 try:
     # disable vtk warnings
@@ -35,6 +35,6 @@ except:
     traceback.print_exc()
     pass
 
-class ConcreteVolumeContourViewer(Viewer):
-    ConcreteViewerClass = VolumeContour
+class ConcreteVolumeRenderVisualizer(Visualizer):
+    ConcreteVisualizerClass = VolumeRender
         

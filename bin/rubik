@@ -269,8 +269,8 @@ Arguments for output to files""")
         description="""\
 Arguments for histogram generation""")
 
-    graphical_output_group = parser.add_argument_group(
-        "graphical viewer arguments",
+    visualizer_group = parser.add_argument_group(
+        "graphical visualizer arguments",
         description="""\
 Arguments for graphical visualization""")
 
@@ -303,11 +303,11 @@ Arguments for graphical visualization""")
         default=False,
         help="print an histogram; see histogram arguments below")
 
-    output_group.add_argument('--gview', '-G',
+    output_group.add_argument('--visualizer', '-G',
         dest="view",
         action="store_true",
         default=False,
-        help="view the result graphically; see graphical graphical viewer arguments below")
+        help="view the result graphically; see graphical visualizer arguments below")
 
     histogram_output_group.add_argument('--histogram-bins', '-Hb',
         metavar="Hb",
@@ -350,47 +350,47 @@ Arguments for graphical visualization""")
         default="num",
         help="show number of elements per bin")
 
-    graphical_output_group.add_argument('--gview-volume-slicer', '-Gs',
-        dest="viewer_type",
+    visualizer_group.add_argument('--visualizer-volume-slicer', '-Gs',
+        dest="visualizer_type",
         action="store_const",
         const="VolumeSlicer",
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    graphical_output_group.add_argument('--gview-volume-render', '-Gr',
-        dest="viewer_type",
+    visualizer_group.add_argument('--visualizer-volume-render', '-Gr',
+        dest="visualizer_type",
         action="store_const",
         const="VolumeRender",
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
-    graphical_output_group.add_argument('--gview-volume-contour', '-Gc',
-        dest="viewer_type",
+    visualizer_group.add_argument('--visualizer-volume-contour', '-Gc',
+        dest="visualizer_type",
         action="store_const",
         const="VolumeContour",
         default="auto",
         help="view the 3d cube with VolumeContour class")
 
-    graphical_output_group.add_argument('--gview-auto', '-GA',
-        dest="viewer_type",
+    visualizer_group.add_argument('--visualizer-auto', '-GA',
+        dest="visualizer_type",
         action="store_const",
         const="auto",
         default="auto",
-        help="view the result with default viewer")
+        help="view the result with default visualizer")
 
-    graphical_output_group.add_argument('--gview-attribute', '-Ga',
+    visualizer_group.add_argument('--visualizer-attribute', '-Ga',
         metavar="VA",
-        dest="viewer_attributes",
+        dest="visualizer_attributes",
         type=key_value_type,
         action="append",
         default=[],
-        help="add a viewer attribute (e.g. colormap=\"black-white\"")
+        help="add a visualizer attribute (e.g. colormap=\"black-white\"")
 
-    graphical_output_group.add_argument('--gview-list', '-Gl',
-        dest="viewer_list",
+    visualizer_group.add_argument('--visualizer-list', '-Gl',
+        dest="visualizer_list",
         action="store_true",
         default=False,
-        help="show available graphical viewers and attributes")
+        help="show available graphical visualizers and attributes")
 
     output_group.add_argument("--split", "-l",
         metavar="D",
@@ -552,7 +552,7 @@ Options to show help on specific topics """)
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
         sys.exit(1)
 
-    viewer_args = dict(args.viewer_attributes)
+    visualizer_attributes = dict(args.visualizer_attributes)
 
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
@@ -567,7 +567,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
-    rubik.set_graphical_view(args.view, args.viewer_type, viewer_args)
+    rubik.set_visualizer_options(args.view, args.visualizer_type, visualizer_attributes)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,
@@ -597,9 +597,9 @@ Options to show help on specific topics """)
         np.random.seed(args.random_seed)
         random.seed(args.random_seed)
 
-    if args.viewer_list:
-        from rubik.viewer.viewers import list_viewers
-        list_viewers(logger)
+    if args.visualizer_list:
+        from rubik.visualizers import list_visualizers
+        list_visualizers(logger)
         return 0
 
     return_code = 0

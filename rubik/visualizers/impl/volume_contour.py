@@ -40,18 +40,22 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
 
 from .mayavi_data import COLORMAPS
 from .attributes import Colormap, Colorbar, Contours, Opacity, Transparent
-from ..base_viewer_impl import BaseViewerImpl
+from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
 # The object implementing the dialog
-class VolumeContour(HasTraits, BaseViewerImpl):
+class VolumeContour(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
         'colorbar': Colorbar(),
         'contours': Contours(),
         'opacity': Opacity(),
-        'transparent': Transparent(),
+#        'transparent': Transparent(),
     }
+    DIMENSIONS = [3]
+    DESCRIPTION = """\
+Visualize iso surfaces for the given 3D cube.
+"""
 
     # The data to plot
     data = Array()
@@ -83,11 +87,11 @@ class VolumeContour(HasTraits, BaseViewerImpl):
     opacity_max = Float(1.0)
     opacity_range = Range('opacity_min', 'opacity_max', 'opacity')
 
-    transparent = Bool()
+#    transparent = Bool()
     #---------------------------------------------------------------------------
     def __init__(self, **traits):
         super(VolumeContour, self).__init__(**traits)
-        BaseViewerImpl.__init__(self)
+        BaseVisualizerImpl.__init__(self)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
 
     def _lut_mode_default(self):
@@ -96,8 +100,8 @@ class VolumeContour(HasTraits, BaseViewerImpl):
     def _colorbar_default(self):
         return self.attributes["colorbar"]
 
-    def _transparent_default(self):
-        return self.attributes["transparent"]
+#    def _transparent_default(self):
+#        return self.attributes["transparent"]
 
     def _opacity_default(self):
         return self.attributes["opacity"]
@@ -151,6 +155,7 @@ class VolumeContour(HasTraits, BaseViewerImpl):
     @on_trait_change('lut_mode')
     def change_lut_mode(self):
         self.iso_surface.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
+        self.change_colorbar()
 
     @on_trait_change('colorbar')
     def change_colorbar(self):
@@ -164,20 +169,28 @@ class VolumeContour(HasTraits, BaseViewerImpl):
     def change_vmax(self):
         self.iso_surface.contour.number_of_contours = self.contours
 
-    @on_trait_change('scene3d.activated,vmin,vmax,transparent')
+    @on_trait_change('vmin')
+    def change_vmin(self):
+        self.iso_surface.contour.minimum_contour = self.vmin
+
+    @on_trait_change('vmin')
+    def change_vmax(self):
+        self.iso_surface.contour.minimum_contour = self.vmax
+
+#    @on_trait_change('transparent')
+#    def change_transparent(self):
+#        #??? don't know how to change transparency
+#        pass
+
+    @on_trait_change('scene3d.activated') #,vmin,vmax,transparent')
     def display_scene3d(self):
-        if hasattr(self, 'iso_surface'):
-            del self.iso_surface
-            first_call = False
-        else:
-            first_call = True
         self.iso_surface = mlab.contour3d(self.data,
             figure=self.scene3d.mayavi_scene,
             vmin=self.vmin,
             vmax=self.vmax,
             contours=self.contours,
             opacity=self.opacity,
-            transparent=self.transparent,
+            #transparent=self.transparent,
         )
         self.scene3d.mlab.view(40, 50)
 
@@ -185,9 +198,8 @@ class VolumeContour(HasTraits, BaseViewerImpl):
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        if first_call:
-            self.change_lut_mode()
-            self.change_colorbar()
+        self.change_lut_mode()
+        self.change_colorbar()
 
 
     #---------------------------------------------------------------------------
@@ -237,12 +249,12 @@ class VolumeContour(HasTraits, BaseViewerImpl):
                         mode="slider",
                     ),
                 ),
-                Item(
-                    'transparent',
-                    editor=BooleanEditor(
-                    ),
-                    label="Transparent",
-                ),
+#                Item(
+#                    'transparent',
+#                    editor=BooleanEditor(
+#                    ),
+#                    label="Transparent",
+#                ),
                 Item(
                     'lut_mode',
                     editor=EnumEditor(

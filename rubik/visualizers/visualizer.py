@@ -18,25 +18,25 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'VolumeViewer',
+    'Visualizer',
 ]
 
 import numpy as np
 
 from ..errors import RubikError
 
-class Viewer(object):
-    ConcreteVolumeClass = None
-    def __init__(self, data, viewer_args):
+class Visualizer(object):
+    ConcreteVisualizerClass = None
+    def __init__(self, data, visualizer_args):
         if not isinstance(data, np.ndarray):
             raise RubikError("cannot create a {} for object of type {}".format(self.__class__.__name__, type(data).__name__))
         elif len(data.shape) != 3:
             raise RubikError("cannot create a {} for {} with shape {}".format(self.__class__.__name__, type(data).__name__, len(data.shape)))
         self.data = data
-        self.viewer_args = viewer_args
-        self.concrete_viewer = self.ConcreteViewerClass(data=data)
-        self.concrete_viewer.set_attributes(**viewer_args)
+        self.visualizer_args = visualizer_args
+        self.concrete_visualizer = self.ConcreteVisualizerClass(data=data)
+        self.concrete_visualizer.set_attributes(**visualizer_args)
 
     def run(self):
-        self.concrete_viewer.configure_traits()
+        self.concrete_visualizer.configure_traits()
         

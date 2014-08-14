@@ -18,25 +18,23 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'Attribute',
+    'ConcreteVolumeContourVisualizer',
 ]
 
-class Attribute(object):
-    def __init__(self, description, default=None):
-        self._description = description
-        self._default = default
+from .visualizer import Visualizer
 
-    def validate(self, value):
-        return self.check(self.convert(value))
+# from http://docs.enthought.com/mayavi/mayavi/auto/example_volume_slicer_advanced.html#example-volume-slicer-advanced
+from .impl.volume_contour import VolumeContour
 
-    def convert(self, value):
-        return value
+try:
+    # disable vtk warnings
+    import vtk 
+    vtk.vtkObject.GlobalWarningDisplayOff()
+except:
+    import traceback
+    traceback.print_exc()
+    pass
 
-    def check(self, value):
-        return value
-
-    def description(self):
-        return self._description
-
-    def default(self):
-        return self._default
+class ConcreteVolumeContourVisualizer(Visualizer):
+    ConcreteVisualizerClass = VolumeContour
+        
