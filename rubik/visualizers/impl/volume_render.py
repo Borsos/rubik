@@ -50,7 +50,6 @@ class VolumeRender(HasTraits, BaseVisualizerImpl):
         ('colormap', Colormap()),
         ('colorbar', Colorbar()),
     ))
-    DIMENSIONS = [3]
     DESCRIPTION = """\
 Volume rendering of the given 3D cube.
 """

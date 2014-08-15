@@ -70,7 +70,7 @@ def list_visualizer(visualizer_type, logger=None, print_function=None):
     visualizer_class = get_visualizer_class(visualizer_type, logger)
     if visualizer_class is not None:
         print_function("=== VISUALIZER {}:".format(visualizer_type))
-        print_function("    TARGET: {}".format(', '.join('{}D'.format(d) for d in visualizer_class.ConcreteVisualizerClass.DIMENSIONS)))
+        print_function("    TARGET DIMENSIONS: {}".format(visualizer_class.ConcreteVisualizerClass.DIMENSIONS))
         print_function("    DESCRIPTION: {}".format(textwrap.fill(visualizer_class.ConcreteVisualizerClass.DESCRIPTION,
                                                                   initial_indent="", subsequent_indent="                 ")))
         for attribute_name, attribute in visualizer_class.ConcreteVisualizerClass.ATTRIBUTES.iteritems():

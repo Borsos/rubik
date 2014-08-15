@@ -27,7 +27,8 @@ from ... import conf
 
 class BaseVisualizerImpl(object):
     ATTRIBUTES = collections.OrderedDict()
-    DIMENSIONS = [3]
+    DIMENSIONS = "3D"
+    DATA_CHECK = classmethod(lambda cls, data: len(data.shape) == 3)
     DESCRIPTION = None
     def __init__(self, logger):
         self.logger = logger

@@ -55,7 +55,6 @@ class VolumeContour(HasTraits, BaseVisualizerImpl):
         ('opacity', Opacity()),
         ('transparent', Transparent()),
     ))
-    DIMENSIONS = [3]
     DESCRIPTION = """\
 Visualize iso surfaces for the given 3D cube.
 """

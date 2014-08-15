@@ -41,7 +41,7 @@ def visualizer_builder(logger, visualizer_type, data, visualizer_args):
                 usable_visualizer_type = None
                 for vt in VISUALIZER_TYPES:
                     vc = get_visualizer_class(vt, logger)
-                    if vc is not None and len(data.shape) in vc.ConcreteVisualizerClass.DIMENSIONS:
+                    if vc is not None and vc.ConcreteVisualizerClass.DATA_CHECK(data):
                         usable_visualizer_type = vt
                         break
                 else:

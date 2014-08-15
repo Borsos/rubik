@@ -67,7 +67,8 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('y', Index('y')),
         ('z', Index('z')),
     ))
-    DIMENSIONS = [2, 3]
+    DIMENSIONS = "2D, 3D, ..., nD"
+    DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
     DESCRIPTION = """\
 Show 2D slices for the given cube.
 """
@@ -115,6 +116,11 @@ Show 2D slices for the given cube.
 
     #---------------------------------------------------------------------------
     def __init__(self, logger, **traits):
+        self._orig_data = traits['data']
+        self._orig_rank = len(self._orig_data.shape)
+        if len(self._orig_data.shape) > 3:
+            sel = [0 for i in range(self._orig_rank - 3)] + [slice(None), slice(None), slice(None)]
+            traits['data'] = self._orig_data[sel]
         super(VolumeSlicer, self).__init__(**traits)
         BaseVisualizerImpl.__init__(self, logger)
         # Force the creation of the image_plane_widgets:
