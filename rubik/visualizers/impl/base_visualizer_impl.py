@@ -52,4 +52,5 @@ class BaseVisualizerImpl(object):
                 self.logger.warn("warning: invalid attribute {!r} ignored".format(attribute_name))
                 #raise KeyError("invalid attribute {!r}".format(attribute_name))
             else:
+                self.logger.info("setting attribute {}={!r}".format(attribute_name, attribute_value))
                 self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)

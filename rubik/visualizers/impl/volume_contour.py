@@ -125,21 +125,6 @@ Visualize iso surfaces for the given 3D cube.
         return mlab.pipeline.scalar_field(self.data,
                             figure=self.scene3d.mayavi_scene)
 
-    def make_ipw_3d(self, axis_name):
-        ipw = mlab.pipeline.image_plane_widget(self.data_src3d,
-                        figure=self.scene3d.mayavi_scene,
-                        plane_orientation='%s_axes' % axis_name)
-        return ipw
-
-#    def _ipw_3d_x_default(self):
-#        return self.make_ipw_3d('x')
-#
-#    def _ipw_3d_y_default(self):
-#        return self.make_ipw_3d('y')
-#
-#    def _ipw_3d_z_default(self):
-#        return self.make_ipw_3d('z')
-
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks

@@ -44,7 +44,8 @@ def expression_type(value):
 def key_value_type(value):
     if not '=' in value:
         raise ValueError("invalid <key=value> argument {!r}".format(value))
-    return value.split('=', 2)
+    k, v = value.split('=', 2)
+    return k.strip(), v.strip()
 
 def main():
 
@@ -385,7 +386,15 @@ Arguments for graphical visualization""")
         action="append",
         default=[],
         nargs='+',
-        help="add a visualizer attribute (e.g. colormap=\"black-white\"")
+        help="add a visualizer attribute (e.g. colormap=\"black-white\"; see --visualizer-list/-Vl for a complete list of attributes)")
+
+    visualizer_group.add_argument('--visualizer-attribute-file', '-Vf',
+        metavar="VF",
+        dest="visualizer_attribute_files",
+        type=str,
+        action="append",
+        default=[],
+        help="load visualizer attributes from file")
 
     visualizer_group.add_argument('--visualizer-list', '-Vl',
         dest="visualizer_list",
@@ -553,12 +562,32 @@ Options to show help on specific topics """)
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
         sys.exit(1)
 
+    logger = log.set_logger(args.verbose_level)
+    report_logger = log.set_report_logger(args.report_level)
+
     visualizer_attributes = {}
+    for visualizer_attribute_filename in args.visualizer_attribute_files:
+        try:
+            with open(visualizer_attribute_filename, 'r') as f_in:
+                lines = f_in.readlines()
+        except Exception as err:
+            logger.error("error: cannot open visualizer attribute file {!r}: {}: {}".format(visualizer_attribute_filename, type(err).__name__, err))
+        try:
+            for line_no, line in enumerate(lines):
+                line = line.strip()
+                if line and line[0] != '#':
+                    attribute_name, attribute_value = key_value_type(line.rstrip('\n'))
+                    visualizer_attributes[attribute_name] = attribute_value
+        except Exception as err:
+            logger.error("error: visualizer attribute file {!r}: line #{} {!r}: {}: {}".format(
+                visualizer_attribute_filename,
+                line_no,
+                line,
+                type(err).__name__,
+                err))
     for item in args.visualizer_attributes:
         visualizer_attributes.update(dict(item))
 
-    logger = log.set_logger(args.verbose_level)
-    report_logger = log.set_report_logger(args.report_level)
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)
     rubik.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
