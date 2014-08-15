@@ -41,6 +41,8 @@ from traits.api import HasTraits, Instance, Array, \
 from traitsui.api import View, Item, HGroup, Group, \
     Label, RangeEditor, EnumEditor, BooleanEditor
 
+from traitsui.menu import OKButton, UndoButton, RevertButton
+
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
 
@@ -68,8 +70,8 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
 Show 2D slices for the given 3D cube.
 """
 
-    W_HEIGHT = 350
-    W_WIDTH = 350
+    W_HEIGHT = -330
+    W_WIDTH = -400
     # The data to plot
     data = Array()
 
@@ -88,17 +90,17 @@ Show 2D slices for the given 3D cube.
     ipw_3d_z = Instance(PipelineBase)
 
     # The index selectors
-    x_low = Float
-    x_high = Float
-    x_index = Float
+    x_low = Int
+    x_high = Int
+    x_index = Int
     x_range = Range(low='x_low', high='x_high', value='x_index')
-    y_low = Float(0.0)
-    y_high = Float(0.0)
-    y_index = Float(0.0)
+    y_low = Int(0.0)
+    y_high = Int(0.0)
+    y_index = Int(0.0)
     y_range = Range(low='y_low', high='y_high', value='y_index')
-    z_low = Float(0.0)
-    z_high = Float(0.0)
-    z_index = Float(0.0)
+    z_low = Int(0.0)
+    z_high = Int(0.0)
+    z_index = Int(0.0)
     z_range = Range(low='z_low', high='z_high', value='z_index')
     data_value = Str("")
 
@@ -266,7 +268,7 @@ Show 2D slices for the given 3D cube.
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
                 axis_index_name = "{}_index".format(other_axis)
-                setattr(self, axis_index_name, position[axis_number])
+                setattr(self, axis_index_name, int(position[axis_number]))
             self.data_value = str(self.data[position])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
@@ -338,7 +340,7 @@ Show 2D slices for the given 3D cube.
                     editor=RangeEditor(
                         low_name='x_low',
                         high_name='x_high',
-                        format="%.0f",
+                        format="%d",
                         label_width=10,
                         mode="slider",
                     ),
@@ -349,7 +351,7 @@ Show 2D slices for the given 3D cube.
                     editor=RangeEditor(
                         low_name='y_low',
                         high_name='y_high',
-                        format="%.0f",
+                        format="%d",
                         label_width=10,
                         mode="slider",
                     ),
@@ -359,7 +361,7 @@ Show 2D slices for the given 3D cube.
                     editor=RangeEditor(
                         low_name='z_low',
                         high_name='z_high',
-                        format="%.0f",
+                        format="%d",
                     label_width=10,
                         mode="slider",
                     ),
@@ -389,8 +391,10 @@ Show 2D slices for the given 3D cube.
         ),
         resizable=True,
         title=BaseVisualizerImpl.window_title("VolumeSlicer"),
-        width=1200,
-        height=600,
+        #width=1200,
+        #height=400,
+        buttons=[UndoButton, OKButton, RevertButton]
+
     )
 
 

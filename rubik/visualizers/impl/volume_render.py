@@ -29,6 +29,7 @@ from traits.api import HasTraits, Instance, Array, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
     RangeEditor, EnumEditor, BooleanEditor
+from traitsui.menu import OKButton, UndoButton, RevertButton
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -224,6 +225,7 @@ Volume rendering of the given 3D cube.
         ),
         resizable=True,
         title=BaseVisualizerImpl.window_title("VolumeRender"),
+        buttons=[UndoButton, OKButton, RevertButton]
     )
 
 

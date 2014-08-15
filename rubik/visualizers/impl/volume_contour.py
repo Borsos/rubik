@@ -29,7 +29,9 @@ from traits.api import HasTraits, Instance, Array, \
     Range, Float, Int, Enum, Bool, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    RangeEditor, EnumEditor, BooleanEditor
+    RangeEditor, EnumEditor, BooleanEditor \
+
+from traitsui.menu import OKButton, UndoButton, RevertButton
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -117,6 +119,8 @@ Visualize iso surfaces for the given 3D cube.
     def _vmax_default(self):
         return np.max(self.data)
 
+    def _on_help(self):
+        print "Help!"
 
     #---------------------------------------------------------------------------
     # Default values
@@ -205,7 +209,6 @@ Visualize iso surfaces for the given 3D cube.
         self.on_change_lut_mode()
         self.on_change_colorbar()
 
-
     #---------------------------------------------------------------------------
     # The layout of the dialog created
     #---------------------------------------------------------------------------
@@ -271,8 +274,7 @@ Visualize iso surfaces for the given 3D cube.
                 ),
                 Item(
                     'colorbar',
-                    editor=BooleanEditor(
-                    ),
+                    editor=BooleanEditor(),
                     label="Show colorbar",
                 ),
                 show_labels=True,
@@ -280,6 +282,7 @@ Visualize iso surfaces for the given 3D cube.
         ),
         resizable=True,
         title=BaseVisualizerImpl.window_title("VolumeContour"),
+        buttons=[UndoButton, OKButton, RevertButton]
     )
 
 
