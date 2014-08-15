@@ -68,8 +68,8 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
 Show 2D slices for the given 3D cube.
 """
 
-    W_HEIGHT = 220
-    W_WIDTH = 300
+    W_HEIGHT = 350
+    W_WIDTH = 350
     # The data to plot
     data = Array()
 
@@ -360,7 +360,7 @@ Show 2D slices for the given 3D cube.
                         low_name='z_low',
                         high_name='z_high',
                         format="%.0f",
-                        label_width=10,
+                    label_width=10,
                         mode="slider",
                     ),
                 ),
@@ -368,6 +368,7 @@ Show 2D slices for the given 3D cube.
                     'data_value',
                     label="Value",
                     style="readonly",
+                    emphasized=True,
                 ),
                 Item(
                     'lut_mode',
@@ -388,6 +389,8 @@ Show 2D slices for the given 3D cube.
         ),
         resizable=True,
         title=BaseVisualizerImpl.window_title(),
+        width=1200,
+        height=600,
     )
 
 
