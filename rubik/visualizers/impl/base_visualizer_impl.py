@@ -30,10 +30,11 @@ class BaseVisualizerImpl(object):
     DIMENSIONS = "3D"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) == 3)
     DESCRIPTION = None
-    def __init__(self, logger):
+    def __init__(self, logger, attributes):
         self.logger = logger
         self.attributes = {}
-        self.set_defaults()
+        
+        self.set_attributes(**attributes)
 
     def set_defaults(self):
         for attribute_name, attribute in self.ATTRIBUTES.iteritems():
@@ -48,10 +49,14 @@ class BaseVisualizerImpl(object):
 
     def set_attributes(self, **attributes):
         for attribute_name, attribute_value in attributes.iteritems():
-            attribute = self.ATTRIBUTES.get(attribute_name, None)
-            if attribute is None:
+            if not attribute_name in self.ATTRIBUTES:
                 self.logger.warn("warning: invalid attribute {!r} ignored".format(attribute_name))
-                #raise KeyError("invalid attribute {!r}".format(attribute_name))
-            else:
+        for attribute_name, attribute in self.ATTRIBUTES.iteritems():
+            if attribute_name in attributes:
+                attribute_value = attributes[attribute_name]
                 self.logger.info("setting attribute {}={!r}".format(attribute_name, attribute_value))
                 self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)
+            else:
+                attribute_value = attribute.default()
+                self.logger.info("setting attribute {} to default {!r}".format(attribute_name, attribute_value))
+                self.attributes[attribute_name] = attribute_value

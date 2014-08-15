@@ -91,9 +91,9 @@ Visualize iso surfaces for the given 3D cube.
 
     transparent = Bool()
     #---------------------------------------------------------------------------
-    def __init__(self, logger, **traits):
+    def __init__(self, logger, attributes, **traits):
         super(VolumeContour, self).__init__(**traits)
-        BaseVisualizerImpl.__init__(self, logger)
+        BaseVisualizerImpl.__init__(self, logger=logger, attributes=attributes)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
         self._vmin_vmax_interaction = True
 
@@ -186,7 +186,7 @@ Visualize iso surfaces for the given 3D cube.
     @on_trait_change('transparent')
     def on_change_transparent(self):
         #??? don't know how to change transparency
-        self.logger.warn("Currently changing transparency is not supported for MayaVi Contour")
+        self.logger.warn("warning: changing transparency is not supported for MayaVi Contour")
 
     @on_trait_change('scene3d.activated')
     def display_scene3d(self):

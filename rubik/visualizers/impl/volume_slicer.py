@@ -37,11 +37,10 @@ import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
     Float, Str, Range, Enum, Bool, Int, \
-    Button, \
+    Trait, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label, RangeEditor, EnumEditor, BooleanEditor, \
-    ButtonEditor
+    Label, RangeEditor, EnumEditor, BooleanEditor \
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
 
@@ -63,6 +62,7 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = collections.OrderedDict((
         ('colormap', Colormap()),
         ('colorbar', Colorbar()),
+        ('w', Index('w')),
         ('x', Index('x')),
         ('y', Index('y')),
         ('z', Index('z')),
@@ -97,57 +97,58 @@ Show 2D slices for the given cube.
     x_high = Int
     x_index = Int
     x_range = Range(low='x_low', high='x_high', value='x_index')
-    y_low = Int(0.0)
-    y_high = Int(0.0)
-    y_index = Int(0.0)
+    y_low = Int(0)
+    y_high = Int(0)
+    y_index = Int(0)
     y_range = Range(low='y_low', high='y_high', value='y_index')
-    z_low = Int(0.0)
-    z_high = Int(0.0)
-    z_index = Int(0.0)
+    z_low = Int(0)
+    z_high = Int(0)
+    z_index = Int(0)
     z_range = Range(low='z_low', high='z_high', value='z_index')
     data_value = Str("")
 
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
-#    modify_scalar_field = Button() # test: modify the scalar field
+    w_low = Int(0)
+    w_high = Int(0)
+    w_index = Int(0)
+    w_range = Range(low='w_low', high='w_high', value='w_index')
+    fourD = Bool(False)
 
     _axis_names = dict(x=0, y=1, z=2)
 
 
     #---------------------------------------------------------------------------
-    def __init__(self, logger, **traits):
-        self._orig_data = traits['data']
-        self._orig_rank = len(self._orig_data.shape)
-        if len(self._orig_data.shape) > 3:
-            sel = [0 for i in range(self._orig_rank - 3)] + [slice(None), slice(None), slice(None)]
-            traits['data'] = self._orig_data[sel]
+    def __init__(self, logger, attributes, **traits):
+        BaseVisualizerImpl.__init__(self, logger=logger, attributes=attributes)
         super(VolumeSlicer, self).__init__(**traits)
-        BaseVisualizerImpl.__init__(self, logger)
+        self.x_low, self.y_low, self.z_low = 0, 0, 0
+        rank = len(self.data.shape)
+        self._start_dim = 3 - rank
+        if rank == 2:
+            wh = 1
+            xh = 1
+            yh, zh = self.data.shape
+        elif rank == 3:
+            wh = 1
+            xh, yh, zh = self.data.shape
+        elif rank == 4:
+            wh, xh, yh, zh = self.data.shape
+        self.w_high, self.x_high, self.y_high, self.z_high = wh - 1, xh - 1, yh - 1, zh - 1
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
-        self.x_low, self.y_low, self.z_low = 0, 0, 0
-        self._rank = len(self.data.shape)
-        self._start_dim = 3 - self._rank
-        if self._rank == 2:
-            self.x_high = 0
-            y, z = self.data.shape
-            self.y_high, self.z_high = y - 1, z - 1
-        else:
-            x, y, z = self.data.shape
-            self.x_high, self.y_high, self.z_high = x - 1, y - 1, z - 1
 
     #---------------------------------------------------------------------------
     # Default values
     #---------------------------------------------------------------------------
-#    def _modify_scalar_field_fired(self):
-#        self.data_src3d.scalar_data = np.log(self.data_src3d.scalar_data)
-#        self.data_src3d.update()
-#        self._set_data_value()
-
     def _data_src3d_default(self):
-        return mlab.pipeline.scalar_field(self.data,
+        if len(self.data.shape) == 4:
+            data = self.data[self.w_index, :, :, :]
+        else:
+            data = self.data
+        return mlab.pipeline.scalar_field(data,
                             figure=self.scene3d.mayavi_scene)
 
     def make_ipw_3d(self, axis_name):
@@ -161,6 +162,16 @@ Show 2D slices for the given cube.
 
     def _colorbar_default(self):
         return self.attributes["colorbar"]
+
+    def _fourD_default(self):
+        return len(self.data.shape) >= 4
+
+    def _w_index_default(self):
+        if self.attributes["w"] is not None:
+            w = min(self.w_high - 1, max(self.w_low, self.attributes["w"]))
+        else:
+            w = self.w_high // 2
+        return w
 
     def _x_index_default(self):
         if self.attributes["x"] is not None:
@@ -205,10 +216,12 @@ Show 2D slices for the given cube.
         return self._make_range('z')
 
     def _set_data_value(self):
-        if self._rank == 2:
-            self.data_value = str(self.data[self.y_index, self.z_index])
-        else:
+        if len(self.data.shape) == 2:
+            self.data_value = str(self.data[self.x_index, self.y_index])
+        elif len(self.data.shape) == 3:
             self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
+        else:
+            self.data_value = str(self.data[self.w_index, self.x_index, self.y_index, self.z_index])
 
     @on_trait_change('lut_mode,colorbar')
     def on_change_lut_mode(self):
@@ -233,6 +246,17 @@ Show 2D slices for the given cube.
         self.ipw_3d_z.ipw.slice_position = self.z_index
         self._set_data_value()
         
+    @on_trait_change('w_index')
+    def on_change_w_index(self):
+        if len(self.data.shape) == 4:
+            self.logger.warn("warning: changing W is not fully supported")
+            self.data_src3d.scalar_data = self.data[self.w_index, :, :, :]
+            self._set_data_value()
+#        self.data_src3d.update_image_data = True
+#        self.data_src3d.update()
+#        self.view3d.update_pipeline()
+#        for ipw in (self.ipw_3d_x, self.ipw_3d_y, self.ipw_3d_z):
+#            ipw.update_pipeline()
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
@@ -294,7 +318,13 @@ Show 2D slices for the given cube.
                 ipw3d.ipw.slice_position = position[axis_number]
                 axis_index_name = "{}_index".format(other_axis)
                 setattr(self, axis_index_name, int(position[axis_number]))
-            self.data_value = str(self.data[position[self._start_dim:]])
+            if len(self.data.shape) == 2:
+                self.data_value = str(self.data[position[:-1]])
+            elif len(self.data.shape) == 3:
+                self.data_value = str(self.data[position])
+            elif len(self.data.shape) == 4:
+                p = (self.w_index, ) + position
+                self.data_value = str(self.data[p])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -361,6 +391,19 @@ Show 2D slices for the given cube.
             Group(
                 '_',
                 Item(
+                    'w_index',
+                    editor=RangeEditor(
+                        low_name='w_low',
+                        high_name='w_high',
+                        format="%d",
+                        label_width=10,
+                        mode="slider",
+                    ),
+                    enabled_when='fourD',
+                    visible_when='fourD',
+                ),
+                '_',
+                Item(
                     'x_index',
                     editor=RangeEditor(
                         low_name='x_low',
@@ -387,10 +430,11 @@ Show 2D slices for the given cube.
                         low_name='z_low',
                         high_name='z_high',
                         format="%d",
-                    label_width=10,
+                        label_width=10,
                         mode="slider",
                     ),
                 ),
+                '_',
                 Item(
                     'data_value',
                     label="Value",
@@ -411,12 +455,6 @@ Show 2D slices for the given cube.
                     ),
                     label="Colorbar",
                 ),
-#                Item(
-#                    'modify_scalar_field',
-#                    editor=ButtonEditor(
-#                    ),
-#                    label="Log",
-#                ),
                 show_labels=True,
             ),
         ),

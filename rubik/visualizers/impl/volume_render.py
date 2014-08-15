@@ -76,9 +76,9 @@ Volume rendering of the given 3D cube.
     colorbar = Bool()
 
     #---------------------------------------------------------------------------
-    def __init__(self, logger, **traits):
+    def __init__(self, logger, attributes, **traits):
         super(VolumeRender, self).__init__(**traits)
-        BaseVisualizerImpl.__init__(self, logger)
+        BaseVisualizerImpl.__init__(self, logger=logger, attributes=attributes)
         self.data_min, self.data_max = np.min(self.data), np.max(self.data)
         self._stop_vmin_vmax_interaction = False
 
@@ -121,7 +121,7 @@ Volume rendering of the given 3D cube.
         self.on_change_vmin_vmax('vmax')
 
     def on_change_vmin_vmax(self, changed):
-        self.logger.warn("Currently changing vmin/vmax is not correctly working in MayaVi Volume")
+        self.logger.warn("warning: changing vmin/vmax is not correctly working in MayaVi Volume")
         if self._stop_vmin_vmax_interaction:
             return
         self._stop_vmin_vmax_interaction = False
@@ -147,7 +147,7 @@ Volume rendering of the given 3D cube.
 
     @on_trait_change('lut_mode')
     def on_change_lut_mode(self):
-        self.logger.warn("Currently changing the LUT mode is not working in MayaVi Volume")
+        self.logger.warn("warning: changing the LUT mode is not working in MayaVi Volume")
         self.volume.lut_manager.lut_mode = self.lut_mode
         self.volume.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.volume.module_manager.vector_lut_manager.lut_mode = self.lut_mode

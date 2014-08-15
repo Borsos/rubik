@@ -86,8 +86,15 @@ Global options""")
     global_group.add_argument("--verbose", "-v",
         dest="verbose_level",
         action="count",
-        default=0,
+        default=1,
         help="increase verbose level")
+
+    global_group.add_argument("--quiet", "--silent", "-q",
+        dest="verbose_level",
+        action="store_const",
+        const=0,
+        default=1,
+        help="set quiet mode (warnings are disabled)")
 
     global_group.add_argument("--report", "-R",
         dest="report_level",

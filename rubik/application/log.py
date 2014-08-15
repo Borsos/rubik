@@ -33,12 +33,14 @@ def create_logger(logger_name, verbose_level, stream=None):
     logger = logging.getLogger(logger_name)
     stream_handler = logging.StreamHandler(stream=stream)
     log_level = logging.WARNING
-    if verbose_level >= 2:
+    if verbose_level >= 3:
         log_level = logging.DEBUG
-    elif verbose_level >= 1:
+    elif verbose_level >= 2:
         log_level = logging.INFO
-    else:
+    elif verbose_level >= 1:
         log_level = logging.WARNING
+    else:
+        log_level = logging.ERROR
     logger.addHandler(stream_handler)
     logger.setLevel(log_level)
     stream_handler.setLevel(logging.DEBUG)
