@@ -384,7 +384,7 @@ Show 2D slices for the given 3D cube.
                     'colorbar',
                     editor=BooleanEditor(
                     ),
-                    label="Show colorbar",
+                    label="Colorbar",
                 ),
                 show_labels=True,
             ),
