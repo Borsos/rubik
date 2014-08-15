@@ -389,6 +389,7 @@ Show 2D slices for the given 3D cube.
                 show_labels=True,
             ),
         ),
+        #icon="rubik-logo.ico",
         resizable=True,
         title=BaseVisualizerImpl.window_title("VolumeSlicer"),
         #width=1200,
