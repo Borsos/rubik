@@ -35,7 +35,7 @@ confused with too rich interaction.
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Float, Str, Range, Enum, Bool, \
+    Float, Str, Range, Enum, Bool, Int, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
     Label, RangeEditor, EnumEditor, BooleanEditor
@@ -48,8 +48,9 @@ from mayavi.core.api import PipelineBase, Source
 from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
+from ...conf import VERSION
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar
+from .attributes import Colormap, Colorbar, Index
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
@@ -58,12 +59,17 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = {
         'colormap': Colormap(),
         'colorbar': Colorbar(),
+        'x': Index('x'),
+        'y': Index('y'),
+        'z': Index('z'),
     }
     DIMENSIONS = [3]
     DESCRIPTION = """\
 Show 2D slices for the given 3D cube.
 """
 
+    W_HEIGHT = 220
+    W_WIDTH = 300
     # The data to plot
     data = Array()
 
@@ -133,13 +139,28 @@ Show 2D slices for the given 3D cube.
         return self.attributes["colorbar"]
 
     def _x_index_default(self):
-        return self.x_high // 2
+        if self.attributes["x"] is not None:
+            x = min(self.x_high - 1, max(self.x_low, self.attributes["x"]))
+        else:
+            x = self.x_high // 2
+        #print 'x=', x, type(self.attributes['x']), repr(self.attributes['x'])
+        return x
 
     def _y_index_default(self):
-        return self.y_high // 2
+        if self.attributes["y"] is not None:
+            y = min(self.y_high - 1, max(self.y_low, self.attributes["y"]))
+        else:
+            y = self.y_high // 2
+        #print 'y=', y, type(self.attributes['y']), repr(self.attributes['y'])
+        return y
 
     def _z_index_default(self):
-        return self.z_high // 2
+        if self.attributes["z"] is not None:
+            z = min(self.z_high - 1, max(self.z_low, self.attributes["z"]))
+        else:
+            z = self.z_high // 2
+        #print 'z=', z, type(self.attributes['z']), repr(self.attributes['z'])
+        return z
 
     def _ipw_3d_x_default(self):
         return self.make_ipw_3d('x')
@@ -163,6 +184,7 @@ Show 2D slices for the given 3D cube.
         return self._make_range('z')
 
     def _set_data_value(self):
+        print self.x_index, self.y_index, self.z_index
         self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
 
     @on_trait_change('lut_mode,colorbar')
@@ -294,22 +316,22 @@ Show 2D slices for the given 3D cube.
             Group(
                 Item('scene_y',
                     editor=SceneEditor(scene_class=Scene),
-                    height=250, width=300
+                    height=W_HEIGHT, width=W_WIDTH,
                 ),
                 Item('scene_z',
                     editor=SceneEditor(scene_class=Scene),
-                    height=250, width=300
+                    height=W_HEIGHT, width=W_WIDTH,
                 ),
                 show_labels=False,
             ),
             Group(
                 Item('scene_x',
                     editor=SceneEditor(scene_class=Scene),
-                    height=250, width=300
+                    height=W_HEIGHT, width=W_WIDTH,
                 ),
                 Item('scene3d',
                     editor=SceneEditor(scene_class=MayaviScene),
-                    height=250, width=300
+                    height=W_HEIGHT, width=W_WIDTH,
                 ),
                 show_labels=False,
             ),
@@ -369,7 +391,7 @@ Show 2D slices for the given 3D cube.
             ),
         ),
         resizable=True,
-        title='Volume Slicer',
+        title='Rubik VolumeSlicer {}'.format(VERSION),
     )
 
 

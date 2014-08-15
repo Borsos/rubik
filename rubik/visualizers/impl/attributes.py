@@ -23,6 +23,7 @@ __all__ = [
     'Contours',
     'Transparent',
     'Opacity',
+    'Index',
 ]
 
 from .mayavi_data import COLORMAPS
@@ -71,4 +72,15 @@ Number of contours.
 Available values: any positive integer
 """
         super(Contours, self).__init__(default=default, description=description, attribute_type=PositiveInteger())
+
+class Index(Attribute):
+    def __init__(self, index_name):
+        default = None
+        self.index_name = index_name
+        description = """\
+{index_name} index for the initial slice.
+Available values: any valid {index_name} index
+""".format(index_name=self.index_name)
+        super(Index, self).__init__(default=default, description=description, attribute_type=PositiveInteger())
+
 

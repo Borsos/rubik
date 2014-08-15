@@ -83,6 +83,7 @@ class PositiveInteger(Integer):
         super(PositiveInteger, self).check(name, value)
         if value <= 0:
             raise ValueError("invalid value {v!r} for attribute {n}: not a positive integer".format(v=value, n=name))
+        return value
 
 
 class Float(AttributeType):
