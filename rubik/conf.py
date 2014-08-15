@@ -29,8 +29,8 @@ from .errors import RubikDataTypeError
 from .units import Memory
 
 VERSION_MAJOR = 1
-VERSION_MINOR = 0
-VERSION_PATCH = 34
+VERSION_MINOR = 1
+VERSION_PATCH = 0
 VERSION = "{major}.{minor}.{patch}".format(
     major=VERSION_MAJOR,
     minor=VERSION_MINOR,
