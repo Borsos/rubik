@@ -21,6 +21,7 @@ __all__ = [
     'VolumeContour',
 ]
 
+import collections
 import numpy as np
 import sys
 
@@ -45,13 +46,13 @@ from .base_visualizer_impl import BaseVisualizerImpl
 ################################################################################
 # The object implementing the dialog
 class VolumeContour(HasTraits, BaseVisualizerImpl):
-    ATTRIBUTES = {
-        'colormap': Colormap(),
-        'colorbar': Colorbar(),
-        'contours': Contours(),
-        'opacity': Opacity(),
-        'transparent': Transparent(),
-    }
+    ATTRIBUTES = collections.OrderedDict((
+        ('colormap', Colormap()),
+        ('colorbar', Colorbar()),
+        ('contours', Contours()),
+        ('opacity', Opacity()),
+        ('transparent', Transparent()),
+    ))
     DIMENSIONS = [3]
     DESCRIPTION = """\
 Visualize iso surfaces for the given 3D cube.
@@ -293,7 +294,7 @@ Visualize iso surfaces for the given 3D cube.
             ),
         ),
         resizable=True,
-        title='Volume Contour',
+        title=BaseVisualizerImpl.window_title(),
     )
 
 

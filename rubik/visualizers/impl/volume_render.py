@@ -21,6 +21,7 @@ __all__ = [
     'VolumeRender',
 ]
 
+import collections
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
@@ -44,10 +45,10 @@ from .base_visualizer_impl import BaseVisualizerImpl
 ################################################################################
 # The object implementing the dialog
 class VolumeRender(HasTraits, BaseVisualizerImpl):
-    ATTRIBUTES = {
-        'colormap': Colormap(),
-        'colorbar': Colorbar(),
-    }
+    ATTRIBUTES = collections.OrderedDict((
+        ('colormap', Colormap()),
+        ('colorbar', Colorbar()),
+    ))
     DIMENSIONS = [3]
     DESCRIPTION = """\
 Volume rendering of the given 3D cube.
@@ -222,7 +223,7 @@ Volume rendering of the given 3D cube.
             ),
         ),
         resizable=True,
-        title='Volume Render',
+        title=BaseVisualizerImpl.window_title(),
     )
 
 

@@ -32,6 +32,7 @@ confused with too rich interaction.
 # Copyright (c) 2009, Enthought, Inc.
 # License: BSD Style.
 
+import collections
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
@@ -48,7 +49,6 @@ from mayavi.core.api import PipelineBase, Source
 from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
-from ...conf import VERSION
 from .mayavi_data import COLORMAPS
 from .attributes import Colormap, Colorbar, Index
 from .base_visualizer_impl import BaseVisualizerImpl
@@ -56,13 +56,13 @@ from .base_visualizer_impl import BaseVisualizerImpl
 ################################################################################
 # The object implementing the dialog
 class VolumeSlicer(HasTraits, BaseVisualizerImpl):
-    ATTRIBUTES = {
-        'colormap': Colormap(),
-        'colorbar': Colorbar(),
-        'x': Index('x'),
-        'y': Index('y'),
-        'z': Index('z'),
-    }
+    ATTRIBUTES = collections.OrderedDict((
+        ('colormap', Colormap()),
+        ('colorbar', Colorbar()),
+        ('x', Index('x')),
+        ('y', Index('y')),
+        ('z', Index('z')),
+    ))
     DIMENSIONS = [3]
     DESCRIPTION = """\
 Show 2D slices for the given 3D cube.
@@ -143,7 +143,6 @@ Show 2D slices for the given 3D cube.
             x = min(self.x_high - 1, max(self.x_low, self.attributes["x"]))
         else:
             x = self.x_high // 2
-        #print 'x=', x, type(self.attributes['x']), repr(self.attributes['x'])
         return x
 
     def _y_index_default(self):
@@ -151,7 +150,6 @@ Show 2D slices for the given 3D cube.
             y = min(self.y_high - 1, max(self.y_low, self.attributes["y"]))
         else:
             y = self.y_high // 2
-        #print 'y=', y, type(self.attributes['y']), repr(self.attributes['y'])
         return y
 
     def _z_index_default(self):
@@ -159,7 +157,6 @@ Show 2D slices for the given 3D cube.
             z = min(self.z_high - 1, max(self.z_low, self.attributes["z"]))
         else:
             z = self.z_high // 2
-        #print 'z=', z, type(self.attributes['z']), repr(self.attributes['z'])
         return z
 
     def _ipw_3d_x_default(self):
@@ -184,7 +181,6 @@ Show 2D slices for the given 3D cube.
         return self._make_range('z')
 
     def _set_data_value(self):
-        print self.x_index, self.y_index, self.z_index
         self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
 
     @on_trait_change('lut_mode,colorbar')
@@ -391,7 +387,7 @@ Show 2D slices for the given 3D cube.
             ),
         ),
         resizable=True,
-        title='Rubik VolumeSlicer {}'.format(VERSION),
+        title=BaseVisualizerImpl.window_title(),
     )
 
 

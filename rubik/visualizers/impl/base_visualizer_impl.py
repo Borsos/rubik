@@ -21,8 +21,12 @@ __all__ = [
     'BaseVisualizerImpl',
 ]
 
+import collections
+
+from ... import conf
+
 class BaseVisualizerImpl(object):
-    ATTRIBUTES = {}
+    ATTRIBUTES = collections.OrderedDict()
     DIMENSIONS = [3]
     DESCRIPTION = None
     def __init__(self, logger):
@@ -35,9 +39,15 @@ class BaseVisualizerImpl(object):
             self.attributes[attribute_name] = attribute.default()
             
 
+    @classmethod
+    def window_title(cls):
+        return "Rubik {} {}".format(cls.__name__, conf.VERSION)
+
     def set_attributes(self, **attributes):
         for attribute_name, attribute_value in attributes.iteritems():
             attribute = self.ATTRIBUTES.get(attribute_name, None)
             if attribute is None:
-                raise KeyError("invalid attribute {!r}".format(attribute_name))
-            self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)
+                self.logger.warn("warning: invalid attribute {!r} ignored".format(attribute_name))
+                #raise KeyError("invalid attribute {!r}".format(attribute_name))
+            else:
+                self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)
