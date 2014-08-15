@@ -30,8 +30,8 @@ class Visualizer(object):
     def __init__(self, logger, data, visualizer_args):
         if not isinstance(data, np.ndarray):
             raise RubikError("cannot create a {} for object of type {}".format(self.__class__.__name__, type(data).__name__))
-        elif len(data.shape) != 3:
-            raise RubikError("cannot create a {} for {} with shape {}".format(self.__class__.__name__, type(data).__name__, len(data.shape)))
+#        elif len(data.shape) != 3:
+#            raise RubikError("cannot create a {} for {} with shape {}".format(self.__class__.__name__, type(data).__name__, len(data.shape)))
         self.data = data
         self.visualizer_args = visualizer_args
         self.concrete_visualizer = self.ConcreteVisualizerClass(logger=logger, data=data)

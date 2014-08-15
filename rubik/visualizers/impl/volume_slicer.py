@@ -37,9 +37,11 @@ import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
     Float, Str, Range, Enum, Bool, Int, \
+    Button, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label, RangeEditor, EnumEditor, BooleanEditor
+    Label, RangeEditor, EnumEditor, BooleanEditor, \
+    ButtonEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
 
@@ -65,9 +67,9 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('y', Index('y')),
         ('z', Index('z')),
     ))
-    DIMENSIONS = [3]
+    DIMENSIONS = [2, 3]
     DESCRIPTION = """\
-Show 2D slices for the given 3D cube.
+Show 2D slices for the given cube.
 """
 
     W_HEIGHT = -330
@@ -106,6 +108,7 @@ Show 2D slices for the given 3D cube.
 
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
+#    modify_scalar_field = Button() # test: modify the scalar field
 
     _axis_names = dict(x=0, y=1, z=2)
 
@@ -119,11 +122,24 @@ Show 2D slices for the given 3D cube.
         self.ipw_3d_y
         self.ipw_3d_z
         self.x_low, self.y_low, self.z_low = 0, 0, 0
-        self.x_high, self.y_high, self.z_high = self.data.shape
+        self._rank = len(self.data.shape)
+        self._start_dim = 3 - self._rank
+        if self._rank == 2:
+            self.x_high = 0
+            y, z = self.data.shape
+            self.y_high, self.z_high = y - 1, z - 1
+        else:
+            x, y, z = self.data.shape
+            self.x_high, self.y_high, self.z_high = x - 1, y - 1, z - 1
 
     #---------------------------------------------------------------------------
     # Default values
     #---------------------------------------------------------------------------
+#    def _modify_scalar_field_fired(self):
+#        self.data_src3d.scalar_data = np.log(self.data_src3d.scalar_data)
+#        self.data_src3d.update()
+#        self._set_data_value()
+
     def _data_src3d_default(self):
         return mlab.pipeline.scalar_field(self.data,
                             figure=self.scene3d.mayavi_scene)
@@ -183,7 +199,10 @@ Show 2D slices for the given 3D cube.
         return self._make_range('z')
 
     def _set_data_value(self):
-        self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
+        if self._rank == 2:
+            self.data_value = str(self.data[self.y_index, self.z_index])
+        else:
+            self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
 
     @on_trait_change('lut_mode,colorbar')
     def on_change_lut_mode(self):
@@ -269,7 +288,7 @@ Show 2D slices for the given 3D cube.
                 ipw3d.ipw.slice_position = position[axis_number]
                 axis_index_name = "{}_index".format(other_axis)
                 setattr(self, axis_index_name, int(position[axis_number]))
-            self.data_value = str(self.data[position])
+            self.data_value = str(self.data[position[self._start_dim:]])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -386,6 +405,12 @@ Show 2D slices for the given 3D cube.
                     ),
                     label="Colorbar",
                 ),
+#                Item(
+#                    'modify_scalar_field',
+#                    editor=ButtonEditor(
+#                    ),
+#                    label="Log",
+#                ),
                 show_labels=True,
             ),
         ),
