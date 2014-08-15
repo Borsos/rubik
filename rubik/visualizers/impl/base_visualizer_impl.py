@@ -40,8 +40,10 @@ class BaseVisualizerImpl(object):
             
 
     @classmethod
-    def window_title(cls):
-        return "Rubik {} {}".format(cls.__name__, conf.VERSION)
+    def window_title(cls, name=None):
+        if name is None:
+            name = cls.__name__
+        return "Rubik {} {}".format(name, conf.VERSION)
 
     def set_attributes(self, **attributes):
         for attribute_name, attribute_value in attributes.iteritems():

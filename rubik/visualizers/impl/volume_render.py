@@ -223,7 +223,7 @@ Volume rendering of the given 3D cube.
             ),
         ),
         resizable=True,
-        title=BaseVisualizerImpl.window_title(),
+        title=BaseVisualizerImpl.window_title("VolumeRender"),
     )
 
 

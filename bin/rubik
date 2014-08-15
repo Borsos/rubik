@@ -100,7 +100,7 @@ Global options""")
         default=False,
         help="dry run")
 
-    global_group.add_argument("--version", "-V",
+    global_group.add_argument("--version",
         action='version',
         version='%(prog)s {version}'.format(version=conf.VERSION))
 
@@ -303,7 +303,7 @@ Arguments for graphical visualization""")
         default=False,
         help="print an histogram; see histogram arguments below")
 
-    output_group.add_argument('--visualizer', '-G',
+    output_group.add_argument('--visualizer', '-V',
         dest="view",
         action="store_true",
         default=False,
@@ -350,35 +350,35 @@ Arguments for graphical visualization""")
         default="num",
         help="show number of elements per bin")
 
-    visualizer_group.add_argument('--visualizer-volume-slicer', '-Gs',
+    visualizer_group.add_argument('--visualizer-volume-slicer', '-Vs',
         dest="visualizer_type",
         action="store_const",
         const="VolumeSlicer",
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    visualizer_group.add_argument('--visualizer-volume-render', '-Gr',
+    visualizer_group.add_argument('--visualizer-volume-render', '-Vr',
         dest="visualizer_type",
         action="store_const",
         const="VolumeRender",
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
-    visualizer_group.add_argument('--visualizer-volume-contour', '-Gc',
+    visualizer_group.add_argument('--visualizer-volume-contour', '-Vc',
         dest="visualizer_type",
         action="store_const",
         const="VolumeContour",
         default="auto",
         help="view the 3d cube with VolumeContour class")
 
-    visualizer_group.add_argument('--visualizer-auto', '-GA',
+    visualizer_group.add_argument('--visualizer-auto', '-VA',
         dest="visualizer_type",
         action="store_const",
         const="auto",
         default="auto",
         help="view the result with default visualizer")
 
-    visualizer_group.add_argument('--visualizer-attribute', '-Ga',
+    visualizer_group.add_argument('--visualizer-attribute', '-Va',
         metavar="VA",
         dest="visualizer_attributes",
         type=key_value_type,
@@ -387,7 +387,7 @@ Arguments for graphical visualization""")
         nargs='+',
         help="add a visualizer attribute (e.g. colormap=\"black-white\"")
 
-    visualizer_group.add_argument('--visualizer-list', '-Gl',
+    visualizer_group.add_argument('--visualizer-list', '-Vl',
         dest="visualizer_list",
         action="store_true",
         default=False,

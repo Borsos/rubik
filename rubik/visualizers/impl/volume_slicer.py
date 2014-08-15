@@ -388,7 +388,7 @@ Show 2D slices for the given 3D cube.
             ),
         ),
         resizable=True,
-        title=BaseVisualizerImpl.window_title(),
+        title=BaseVisualizerImpl.window_title("VolumeSlicer"),
         width=1200,
         height=600,
     )
