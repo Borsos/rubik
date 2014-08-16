@@ -37,6 +37,9 @@ Apply the selected colormap.
 """
         super(Colormap, self).__init__(default=default, description=description, attribute_type=Enum(COLORMAPS))
 
+    def index(self, v):
+        return self._attribute_type.index(v)
+
 class Colorbar(Attribute):
     def __init__(self):
         default = False
@@ -83,4 +86,15 @@ Available values: any valid {index_name} index
 """.format(index_name=self.index_name)
         super(Index, self).__init__(default=default, description=description, attribute_type=PositiveInteger())
 
+class Dimension4D(Attribute):
+    def __init__(self):
+        self.dimensions = ['w', 'x', 'y', 'z']
+        default = 'w'
+        description = """\
+4D dimension.
+Available values: {values}
+""".format(values=', '.join(repr(d) for d in self.dimensions))
+        super(Dimension4D, self).__init__(default=default, description=description, attribute_type=Enum(self.dimensions))
 
+    def index(self, v):
+        return self._attribute_type.index(v)

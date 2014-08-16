@@ -123,11 +123,14 @@ class Enum(AttributeType):
                 v=value,
                 vt=type(value).__name__,
                 n=name,
-                el='!'.join(repr(v) for v in self.values)))
+                el='|'.join(repr(v) for v in self.values)))
         return value
 
     def __str__(self):
         return "{}({})".format(self.__class__.__name__, ', '.join(repr(v) for v in self.values))
+
+    def index(self, v):
+        return self.values.index(v)
 
 class Attribute(object):
     def __init__(self, description, attribute_type, default=None):

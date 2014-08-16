@@ -53,7 +53,7 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar, Index, Integer
+from .attributes import Colormap, Colorbar, Index, Dimension4D
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
@@ -66,7 +66,7 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('x', Index('x')),
         ('y', Index('y')),
         ('z', Index('z')),
-        ('sticky_dim', Integer()),
+        ('sticky_dim', Dimension4D()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -118,9 +118,10 @@ Show 2D slices for the given cube.
     z_range = Range(low='z_low', high='z_high', value='z_index')
 
     ## sticky_dim:
-    sticky_dim = Int(0)
+    sticky_dim = Str()
 
     data_value = Str("")
+    data_shape = Str("")
 
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
@@ -136,6 +137,7 @@ Show 2D slices for the given cube.
     def __init__(self, logger, attributes, **traits):
         BaseVisualizerImpl.__init__(self, logger=logger, attributes=attributes)
         super(VolumeSlicer, self).__init__(**traits)
+        self._set_sticky_dim_index() # -> force creation of self._sticky_dim_index
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         rank = len(self.data.shape)
         if rank == 2:
@@ -170,7 +172,7 @@ Show 2D slices for the given cube.
     def _set_axis_map_3d_to_4d(self):
         a4d = 0
         for a3d in 0, 1, 2:
-            if a4d == self.sticky_dim:
+            if a4d == self._sticky_dim_index:
                 a4d += 1
             self._axis_map_3d_to_4d[self._axis_3d[a3d]] = self._axis_4d[a4d]
             a4d += 1
@@ -178,7 +180,7 @@ Show 2D slices for the given cube.
     def _set_axis_map_4d_to_3d(self):
         a3d = 0
         for a4d in 0, 1, 2, 3:
-            if a4d == self.sticky_dim:
+            if a4d == self._sticky_dim_index:
                 a = ""
             else:
                 a = self._axis_3d[a3d]
@@ -197,7 +199,7 @@ Show 2D slices for the given cube.
 
     def _map_indices_4d(self, x, y, z):
         l = [x, y, z]
-        l.insert(self.sticky_dim, getattr(self, '{}_index'.format(self._axis_4d[self.sticky_dim])))
+        l.insert(self._sticky_dim_index, getattr(self, '{}_index'.format(self._axis_4d[self._sticky_dim_index])))
         return l
 
     def _select_indices_2d(self, w, x, y, z):
@@ -229,6 +231,9 @@ Show 2D slices for the given cube.
                         plane_orientation='%s_axes' % axis_name)
         return ipw
 
+    def _data_shape_default(self):
+        return 'x'.join(str(d) for d in self.data.shape)
+
     def _lut_mode_default(self):
         return self.attributes["colormap"]
 
@@ -239,10 +244,10 @@ Show 2D slices for the given cube.
         return len(self.data.shape) >= 4
 
     def _sticky_dim_default(self):
-        r = self.attributes["sticky_dim"]
-        if r is None:
-            r = 0
-        return r
+        s = self.attributes["sticky_dim"]
+        if s is None:
+            s = 'w'
+        return s
 
     def _w_index_default(self):
         if self.attributes["w"] is not None:
@@ -296,8 +301,13 @@ Show 2D slices for the given cube.
     def _set_data_value(self):
         self.data_value = str(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)])
 
+    def _set_sticky_dim_index(self):
+        self._sticky_dim_index = self.ATTRIBUTES['sticky_dim'].index(self.sticky_dim)
+
     @on_trait_change('sticky_dim')
     def on_change_sticky_dim(self):
+        self._set_sticky_dim_index()
+        print ":::", self.sticky_dim, self._sticky_dim_index
         self._set_axis_maps()
         if len(self.data.shape) == 4:
             data = self.get_data(self.ALL, self.ALL, self.ALL)
@@ -343,8 +353,8 @@ Show 2D slices for the given cube.
         else:
             ## sticky dim
             sel_indices = [self.ALL, self.ALL, self.ALL]
-            sticky_index = getattr(self, '{}_index'.format(self._axis_4d[self.sticky_dim]))
-            sel_indices.insert(self.sticky_dim, sticky_index)
+            sticky_index = getattr(self, '{}_index'.format(self._axis_4d[self._sticky_dim_index]))
+            sel_indices.insert(self._sticky_dim_index, sticky_index)
             data = self.data[self.select_indices(*sel_indices)]
             data_range = data.min(), data.max()
             self.data_src3d.scalar_data = data
@@ -465,7 +475,7 @@ Show 2D slices for the given cube.
             width = 0.06
         else:
             width = 0.04
-        t = mlab.text(0.01, 0.9, axis_name_4d, width=width, color=(0, 1, 0))
+        t = mlab.text(0.01, 0.9, axis_name_4d, width=width, color=(1, 0, 0))
         return t
 
     def redraw_axis_names(self):
@@ -522,15 +532,23 @@ Show 2D slices for the given cube.
             Group(
                 '_',
                 Item(
+                    'data_shape',
+                    label="Shape",
+                    style="readonly",
+                ),
+                Item(
                     'sticky_dim',
                     editor=EnumEditor(
-                        values=[0, 1, 2, 3],
+                        values=['w', 'x', 'y', 'z']
 
                     ),
                     label="Sticky dimension",
                     enabled_when='is4D',
                     visible_when='is4D',
+                    emphasized=True,
                     style="readonly",
+                    tooltip="the sticky dimension",
+                    help="4D volumes are sliced along the 'sticky dimension'; it is possible to change the value of this dimension using the related slider",
                 ),
                 Item(
                     '_',
@@ -548,6 +566,8 @@ Show 2D slices for the given cube.
                     ),
                     enabled_when='is4D',
                     visible_when='is4D',
+                    tooltip="the w dimension",
+                    help="the slowest dimension for 4D volumes",
                 ),
                 Item(
                     'x_index',
@@ -559,6 +579,8 @@ Show 2D slices for the given cube.
                         mode="slider",
                     ),
                     format_str="%<8s",
+                    tooltip="the x dimension",
+                    help="the slowest dimension for 3D volumes",
                 ),
                 Item(
                     'y_index',
@@ -569,6 +591,9 @@ Show 2D slices for the given cube.
                         label_width=10,
                         mode="slider",
                     ),
+                    format_str="%<8s",
+                    tooltip="the y dimension",
+                    help="the slowest dimension for 2D volumes",
                 ),
                 Item(
                     'z_index',
@@ -579,6 +604,9 @@ Show 2D slices for the given cube.
                         label_width=10,
                         mode="slider",
                     ),
+                    format_str="%<8s",
+                    tooltip="the z dimension",
+                    help="the fastest dimension",
                 ),
                 '_',
                 Item(
