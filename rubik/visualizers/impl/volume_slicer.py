@@ -66,7 +66,7 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('x', Index('x')),
         ('y', Index('y')),
         ('z', Index('z')),
-        ('sticky_dim', Dimension4D()),
+        ('slicing_dim', Dimension4D()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -117,8 +117,8 @@ Show 2D slices for the given cube.
     z_index = Int(0)
     z_range = Range(low='z_low', high='z_high', value='z_index')
 
-    ## sticky_dim:
-    sticky_dim = Str()
+    ## slicing_dim:
+    slicing_dim = Str()
 
     data_value = Str("")
     data_shape = Str("")
@@ -138,7 +138,7 @@ Show 2D slices for the given cube.
     def __init__(self, logger, attributes, **traits):
         BaseVisualizerImpl.__init__(self, logger=logger, attributes=attributes)
         super(VolumeSlicer, self).__init__(**traits)
-        self._set_sticky_dim_index() # -> force creation of self._sticky_dim_index
+        self._set_slicing_dim_index() # -> force creation of self._slicing_dim_index
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         rank = len(self.data.shape)
         if rank == 2:
@@ -173,7 +173,7 @@ Show 2D slices for the given cube.
     def _set_axis_map_3d_to_4d(self):
         a4d = 0
         for a3d in 0, 1, 2:
-            if a4d == self._sticky_dim_index:
+            if a4d == self._slicing_dim_index:
                 a4d += 1
             self._axis_map_3d_to_4d[self._axis_3d[a3d]] = self._axis_4d[a4d]
             a4d += 1
@@ -181,7 +181,7 @@ Show 2D slices for the given cube.
     def _set_axis_map_4d_to_3d(self):
         a3d = 0
         for a4d in 0, 1, 2, 3:
-            if a4d == self._sticky_dim_index:
+            if a4d == self._slicing_dim_index:
                 a = ""
             else:
                 a = self._axis_3d[a3d]
@@ -200,7 +200,7 @@ Show 2D slices for the given cube.
 
     def _map_indices_4d(self, x, y, z):
         l = [x, y, z]
-        l.insert(self._sticky_dim_index, getattr(self, '{}_index'.format(self._axis_4d[self._sticky_dim_index])))
+        l.insert(self._slicing_dim_index, getattr(self, '{}_index'.format(self._axis_4d[self._slicing_dim_index])))
         return l
 
     def _select_indices_2d(self, w, x, y, z):
@@ -253,8 +253,8 @@ Show 2D slices for the given cube.
     def _is4D_default(self):
         return len(self.data.shape) >= 4
 
-    def _sticky_dim_default(self):
-        s = self.attributes["sticky_dim"]
+    def _slicing_dim_default(self):
+        s = self.attributes["slicing_dim"]
         if s is None:
             s = 'w'
         return s
@@ -312,12 +312,12 @@ Show 2D slices for the given cube.
         self.data_value = str(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)])
         #self.data_value = "data[{}, {}, {}, {}]={}".format(self.w_index, self.x_index, self.y_index, self.z_index,(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)]))
 
-    def _set_sticky_dim_index(self):
-        self._sticky_dim_index = self.ATTRIBUTES['sticky_dim'].index(self.sticky_dim)
+    def _set_slicing_dim_index(self):
+        self._slicing_dim_index = self.ATTRIBUTES['slicing_dim'].index(self.slicing_dim)
 
-    @on_trait_change('sticky_dim')
-    def on_change_sticky_dim(self):
-        self._set_sticky_dim_index()
+    @on_trait_change('slicing_dim')
+    def on_change_slicing_dim(self):
+        self._set_slicing_dim_index()
         self._set_axis_maps()
         if len(self.data.shape) == 4:
             data = self.get_data(self.ALL, self.ALL, self.ALL)
@@ -361,10 +361,10 @@ Show 2D slices for the given cube.
                 getattr(self, '{}_index'.format(index_4d)) + 1
             self._set_data_value()
         else:
-            ## sticky dim
+            ## slicing dim
             sel_indices = [self.ALL, self.ALL, self.ALL]
-            sticky_index = getattr(self, '{}_index'.format(self._axis_4d[self._sticky_dim_index]))
-            sel_indices.insert(self._sticky_dim_index, sticky_index)
+            slicing_index = getattr(self, '{}_index'.format(self._axis_4d[self._slicing_dim_index]))
+            sel_indices.insert(self._slicing_dim_index, slicing_index)
             data = self.data[self.select_indices(*sel_indices)]
             data_range = data.min(), data.max()
             self.data_src3d.scalar_data = data
@@ -550,18 +550,18 @@ Show 2D slices for the given cube.
 #                    style="readonly",
 #                ),
                 Item(
-                    'sticky_dim',
+                    'slicing_dim',
                     editor=EnumEditor(
                         values=['w', 'x', 'y', 'z']
 
                     ),
-                    label="Sticky dimension",
+                    label="Slicing dim",
                     enabled_when='is4D',
                     visible_when='is4D',
                     emphasized=True,
                     style="readonly",
-                    tooltip="the sticky dimension",
-                    help="4D volumes are sliced along the 'sticky dimension'; it is possible to change the value of this dimension using the related slider",
+                    tooltip="the slicing dimension",
+                    help="4D volumes are sliced along the 'slicing dimension'; it is possible to change the value of this dimension using the related slider",
                 ),
                 Item(
                     '_',
