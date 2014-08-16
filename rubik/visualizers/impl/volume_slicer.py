@@ -249,14 +249,15 @@ Show 2D slices for the given cube.
     @on_trait_change('w_index')
     def on_change_w_index(self):
         if len(self.data.shape) == 4:
-            self.logger.warn("warning: changing W is not fully supported")
-            self.data_src3d.scalar_data = self.data[self.w_index, :, :, :]
+            #self.logger.warn("warning: changing W is not fully supported")
+            data = self.data[self.w_index, :, :, :]
+            data_range = data.min(), data.max()
+            self.data_src3d.scalar_data = data
+            self.view3d.module_manager.scalar_lut_manager.data_range = data_range
+            self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
+            self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
+            self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
             self._set_data_value()
-#        self.data_src3d.update_image_data = True
-#        self.data_src3d.update()
-#        self.view3d.update_pipeline()
-#        for ipw in (self.ipw_3d_x, self.ipw_3d_y, self.ipw_3d_z):
-#            ipw.update_pipeline()
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
