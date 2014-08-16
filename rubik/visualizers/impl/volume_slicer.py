@@ -142,8 +142,8 @@ Show 2D slices for the given cube.
         rank = len(self.data.shape)
         if rank == 2:
             wh = 1
-            xh = 1
-            yh, zh = self.data.shape
+            zh = 1
+            xh, yh = self.data.shape
             map_indices = self._map_indices_2d
             select_indices = self._select_indices_2d
         elif rank == 3:
@@ -192,7 +192,7 @@ Show 2D slices for the given cube.
         self._set_axis_map_4d_to_3d()
 
     def _map_indices_2d(self, x, y, z):
-        return y, z
+        return x, y
 
     def _map_indices_3d(self, x, y, z):
         return x, y, z
@@ -203,7 +203,7 @@ Show 2D slices for the given cube.
         return l
 
     def _select_indices_2d(self, w, x, y, z):
-        return y, z
+        return x, y
 
     def _select_indices_3d(self, w, x, y, z):
         return x, y, z
@@ -212,6 +212,7 @@ Show 2D slices for the given cube.
         return w, x, y, z
 
     def get_data(self, x, y, z):
+        #print ">>>", (x, y, z), self.map_indices(x, y, z), self.select_indices(*self.map_indices(x, y, z))
         return self.data[self.select_indices(*self.map_indices(x, y, z))]
 
     #---------------------------------------------------------------------------
@@ -300,6 +301,7 @@ Show 2D slices for the given cube.
 
     def _set_data_value(self):
         self.data_value = str(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)])
+        #self.data_value = "data[{}, {}, {}, {}]={}".format(self.w_index, self.x_index, self.y_index, self.z_index,(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)]))
 
     def _set_sticky_dim_index(self):
         self._sticky_dim_index = self.ATTRIBUTES['sticky_dim'].index(self.sticky_dim)
@@ -307,7 +309,6 @@ Show 2D slices for the given cube.
     @on_trait_change('sticky_dim')
     def on_change_sticky_dim(self):
         self._set_sticky_dim_index()
-        print ":::", self.sticky_dim, self._sticky_dim_index
         self._set_axis_maps()
         if len(self.data.shape) == 4:
             data = self.get_data(self.ALL, self.ALL, self.ALL)
@@ -348,7 +349,7 @@ Show 2D slices for the given cube.
         index_3d = self._axis_map_4d_to_3d[index_4d]
         if index_3d:
             getattr(self, 'ipw_3d_{}'.format(index_3d)).ipw.slice_position = \
-                getattr(self, '{}_index'.format(index_4d))
+                getattr(self, '{}_index'.format(index_4d)) + 1
             self._set_data_value()
         else:
             ## sticky dim
@@ -434,22 +435,18 @@ Show 2D slices for the given cube.
         def move_view(obj, evt):
             position = obj.GetCurrentCursorPosition()
             for other_axis, axis_number in self._axis_names_3d.iteritems():
+                other_axis_4d = self._axis_map_3d_to_4d[other_axis]
+                axis_index_name = "{}_index".format(other_axis_4d)
+                ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
+                if other_axis == axis_name:
+                    axis_index_value = int(round(ipw3d.ipw.slice_position)) - 1
+                else:
+                    axis_index_value = int(round(position[axis_number]))
+                setattr(self, axis_index_name, axis_index_value)
                 if other_axis == axis_name:
                     continue
-                ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
-                ipw3d.ipw.slice_position = position[axis_number]
-                other_axis_4d = self._axis_map_3d_to_4d[other_axis]
-                print "axis {} [{}] -> {} [{}]".format(axis_name, self._axis_map_3d_to_4d[axis_name], other_axis, other_axis_4d)
-                axis_index_name = "{}_index".format(self._axis_map_4d_to_3d[other_axis])
-                setattr(self, axis_index_name, int(position[axis_number]))
+                ipw3d.ipw.slice_position = round(position[axis_number])
             self._set_data_value()
-#            if len(self.data.shape) == 2:
-#                self.data_value = str(self.data[position[:-1]])
-#            elif len(self.data.shape) == 3:
-#                self.data_value = str(self.data[position])
-#            elif len(self.data.shape) == 4:
-#                p = (self.w_index, ) + position
-#                self.data_value = str(self.data[p])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
