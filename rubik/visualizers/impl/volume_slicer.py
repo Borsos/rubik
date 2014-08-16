@@ -438,6 +438,8 @@ Show 2D slices for the given cube.
                     continue
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
+                other_axis_4d = self._axis_map_3d_to_4d[other_axis]
+                print "axis {} [{}] -> {} [{}]".format(axis_name, self._axis_map_3d_to_4d[axis_name], other_axis, other_axis_4d)
                 axis_index_name = "{}_index".format(self._axis_map_4d_to_3d[other_axis])
                 setattr(self, axis_index_name, int(position[axis_number]))
             self._set_data_value()
