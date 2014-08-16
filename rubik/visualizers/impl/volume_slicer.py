@@ -53,7 +53,7 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar, Index
+from .attributes import Colormap, Colorbar, Index, Integer
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
@@ -66,12 +66,15 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('x', Index('x')),
         ('y', Index('y')),
         ('z', Index('z')),
+        ('sticky_dim', Integer()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
     DESCRIPTION = """\
 Show 2D slices for the given cube.
 """
+
+    ALL = slice(None) # slice ':'
 
     W_HEIGHT = -330
     W_WIDTH = -400
@@ -93,29 +96,40 @@ Show 2D slices for the given cube.
     ipw_3d_z = Instance(PipelineBase)
 
     # The index selectors
-    x_low = Int
-    x_high = Int
-    x_index = Int
-    x_range = Range(low='x_low', high='x_high', value='x_index')
-    y_low = Int(0)
-    y_high = Int(0)
-    y_index = Int(0)
-    y_range = Range(low='y_low', high='y_high', value='y_index')
-    z_low = Int(0)
-    z_high = Int(0)
-    z_index = Int(0)
-    z_range = Range(low='z_low', high='z_high', value='z_index')
-    data_value = Str("")
-
-    lut_mode = Enum(*COLORMAPS)
-    colorbar = Bool()
+    ## w:
     w_low = Int(0)
     w_high = Int(0)
     w_index = Int(0)
     w_range = Range(low='w_low', high='w_high', value='w_index')
-    fourD = Bool(False)
+    ## x:
+    x_low = Int
+    x_high = Int
+    x_index = Int
+    x_range = Range(low='x_low', high='x_high', value='x_index')
+    ## y:
+    y_low = Int(0)
+    y_high = Int(0)
+    y_index = Int(0)
+    y_range = Range(low='y_low', high='y_high', value='y_index')
+    ## z:
+    z_low = Int(0)
+    z_high = Int(0)
+    z_index = Int(0)
+    z_range = Range(low='z_low', high='z_high', value='z_index')
 
-    _axis_names = dict(x=0, y=1, z=2)
+    ## sticky_dim:
+    sticky_dim = Int(0)
+
+    data_value = Str("")
+
+    lut_mode = Enum(*COLORMAPS)
+    colorbar = Bool()
+    is4D = Bool(False)
+
+    _axis_3d = ['x', 'y', 'z']
+    _axis_names_3d = dict(x=0, y=1, z=2)
+    _axis_4d = ['w', 'x', 'y', 'z']
+    _axis_names_4d = dict(w=0, x=1, y=2, z=3)
 
 
     #---------------------------------------------------------------------------
@@ -124,28 +138,86 @@ Show 2D slices for the given cube.
         super(VolumeSlicer, self).__init__(**traits)
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         rank = len(self.data.shape)
-        self._start_dim = 3 - rank
         if rank == 2:
             wh = 1
             xh = 1
             yh, zh = self.data.shape
+            map_indices = self._map_indices_2d
+            select_indices = self._select_indices_2d
         elif rank == 3:
             wh = 1
             xh, yh, zh = self.data.shape
+            map_indices = self._map_indices_3d
+            select_indices = self._select_indices_3d
         elif rank == 4:
             wh, xh, yh, zh = self.data.shape
+            map_indices = self._map_indices_4d
+            select_indices = self._select_indices_4d
+        self.map_indices = map_indices
+        self.select_indices = select_indices
         self.w_high, self.x_high, self.y_high, self.z_high = wh - 1, xh - 1, yh - 1, zh - 1
+        self._axis_map_3d_to_4d = {}
+        self._axis_map_4d_to_3d = {}
+        self._set_axis_maps()
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
 
     #---------------------------------------------------------------------------
+    # Map indices
+    #---------------------------------------------------------------------------
+    def _set_axis_map_3d_to_4d(self):
+        a4d = 0
+        for a3d in 0, 1, 2:
+            if a4d == self.sticky_dim:
+                a4d += 1
+            self._axis_map_3d_to_4d[self._axis_3d[a3d]] = self._axis_4d[a4d]
+            a4d += 1
+
+    def _set_axis_map_4d_to_3d(self):
+        a3d = 0
+        for a4d in 0, 1, 2, 3:
+            if a4d == self.sticky_dim:
+                a = ""
+            else:
+                a = self._axis_3d[a3d]
+                a3d += 1
+            self._axis_map_4d_to_3d[self._axis_4d[a4d]] = a
+
+    def _set_axis_maps(self):
+        self._set_axis_map_3d_to_4d()
+        self._set_axis_map_4d_to_3d()
+
+    def _map_indices_2d(self, x, y, z):
+        return y, z
+
+    def _map_indices_3d(self, x, y, z):
+        return x, y, z
+
+    def _map_indices_4d(self, x, y, z):
+        l = [x, y, z]
+        l.insert(self.sticky_dim, getattr(self, '{}_index'.format(self._axis_4d[self.sticky_dim])))
+        return l
+
+    def _select_indices_2d(self, w, x, y, z):
+        return y, z
+
+    def _select_indices_3d(self, w, x, y, z):
+        return x, y, z
+
+    def _select_indices_4d(self, w, x, y, z):
+        return w, x, y, z
+
+    def get_data(self, x, y, z):
+        return self.data[self.select_indices(*self.map_indices(x, y, z))]
+
+    #---------------------------------------------------------------------------
     # Default values
     #---------------------------------------------------------------------------
     def _data_src3d_default(self):
         if len(self.data.shape) == 4:
-            data = self.data[self.w_index, :, :, :]
+            data = self.get_data(self.ALL, self.ALL, self.ALL)
         else:
             data = self.data
         return mlab.pipeline.scalar_field(data,
@@ -163,8 +235,14 @@ Show 2D slices for the given cube.
     def _colorbar_default(self):
         return self.attributes["colorbar"]
 
-    def _fourD_default(self):
+    def _is4D_default(self):
         return len(self.data.shape) >= 4
+
+    def _sticky_dim_default(self):
+        r = self.attributes["sticky_dim"]
+        if r is None:
+            r = 0
+        return r
 
     def _w_index_default(self):
         if self.attributes["w"] is not None:
@@ -216,12 +294,37 @@ Show 2D slices for the given cube.
         return self._make_range('z')
 
     def _set_data_value(self):
-        if len(self.data.shape) == 2:
-            self.data_value = str(self.data[self.x_index, self.y_index])
-        elif len(self.data.shape) == 3:
-            self.data_value = str(self.data[self.x_index, self.y_index, self.z_index])
+        self.data_value = str(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)])
+
+    @on_trait_change('sticky_dim')
+    def on_change_sticky_dim(self):
+        self._set_axis_maps()
+        if len(self.data.shape) == 4:
+            data = self.get_data(self.ALL, self.ALL, self.ALL)
         else:
-            self.data_value = str(self.data[self.w_index, self.x_index, self.y_index, self.z_index])
+            data = self.data
+        data_range = data.min(), data.max()
+        self.data_src3d.scalar_data = data
+        #self.data_src3d = mlab.pipeline.scalar_field(data,
+        #     figure=self.scene3d.mayavi_scene)
+        self.view3d.module_manager.scalar_lut_manager.data_range = data_range
+        mlab.clf(self.scene3d.mayavi_scene)
+        self.display_scene3d()
+        mlab.draw(self.scene3d.mayavi_scene)
+        self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_x.update_data()
+        self.ipw_x.update_pipeline()
+        self.ipw_y.update_data()
+        self.ipw_y.update_pipeline()
+        self.ipw_z.update_data()
+        self.ipw_z.update_pipeline()
+        self.display_scene_x()
+        self.display_scene_y()
+        self.display_scene_z()
+        self._set_data_value()
+        self.redraw_axis_names()
 
     @on_trait_change('lut_mode,colorbar')
     def on_change_lut_mode(self):
@@ -231,26 +334,18 @@ Show 2D slices for the given cube.
         self.ipw_y.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_z.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
 
-    @on_trait_change('x_index')
-    def on_change_x_index(self):
-        self.ipw_3d_x.ipw.slice_position = self.x_index
-        self._set_data_value()
-        
-    @on_trait_change('y_index')
-    def on_change_y_index(self):
-        self.ipw_3d_y.ipw.slice_position = self.y_index
-        self._set_data_value()
-        
-    @on_trait_change('z_index')
-    def on_change_z_index(self):
-        self.ipw_3d_z.ipw.slice_position = self.z_index
-        self._set_data_value()
-        
-    @on_trait_change('w_index')
-    def on_change_w_index(self):
-        if len(self.data.shape) == 4:
-            #self.logger.warn("warning: changing W is not fully supported")
-            data = self.data[self.w_index, :, :, :]
+    def _on_change_index_4d(self, index_4d):
+        index_3d = self._axis_map_4d_to_3d[index_4d]
+        if index_3d:
+            getattr(self, 'ipw_3d_{}'.format(index_3d)).ipw.slice_position = \
+                getattr(self, '{}_index'.format(index_4d))
+            self._set_data_value()
+        else:
+            ## sticky dim
+            sel_indices = [self.ALL, self.ALL, self.ALL]
+            sticky_index = getattr(self, '{}_index'.format(self._axis_4d[self.sticky_dim]))
+            sel_indices.insert(self.sticky_dim, sticky_index)
+            data = self.data[self.select_indices(*sel_indices)]
             data_range = data.min(), data.max()
             self.data_src3d.scalar_data = data
             self.view3d.module_manager.scalar_lut_manager.data_range = data_range
@@ -259,6 +354,22 @@ Show 2D slices for the given cube.
             self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
             self._set_data_value()
 
+    @on_trait_change('w_index')
+    def on_change_w_index(self):
+        self._on_change_index_4d('w')
+        
+    @on_trait_change('x_index')
+    def on_change_x_index(self):
+        self._on_change_index_4d('x')
+        
+    @on_trait_change('y_index')
+    def on_change_y_index(self):
+        self._on_change_index_4d('y')
+        
+    @on_trait_change('z_index')
+    def on_change_z_index(self):
+        self._on_change_index_4d('z')
+        
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
@@ -312,20 +423,21 @@ Show 2D slices for the given cube.
         # move the others
         def move_view(obj, evt):
             position = obj.GetCurrentCursorPosition()
-            for other_axis, axis_number in self._axis_names.iteritems():
+            for other_axis, axis_number in self._axis_names_3d.iteritems():
                 if other_axis == axis_name:
                     continue
                 ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
-                axis_index_name = "{}_index".format(other_axis)
+                axis_index_name = "{}_index".format(self._axis_map_4d_to_3d[other_axis])
                 setattr(self, axis_index_name, int(position[axis_number]))
-            if len(self.data.shape) == 2:
-                self.data_value = str(self.data[position[:-1]])
-            elif len(self.data.shape) == 3:
-                self.data_value = str(self.data[position])
-            elif len(self.data.shape) == 4:
-                p = (self.w_index, ) + position
-                self.data_value = str(self.data[p])
+            self._set_data_value()
+#            if len(self.data.shape) == 2:
+#                self.data_value = str(self.data[position[:-1]])
+#            elif len(self.data.shape) == 3:
+#                self.data_value = str(self.data[position])
+#            elif len(self.data.shape) == 4:
+#                p = (self.w_index, ) + position
+#                self.data_value = str(self.data[p])
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -345,9 +457,27 @@ Show 2D slices for the given cube.
         scene.scene.background = (0, 0, 0)
 
         # Some text:
-        mlab.text(0.01, 0.9, axis_name, width=0.04)
+        setattr(self, "_axis_name_3d_{}".format(axis_name), self.draw_axis_name(axis_name))
 
+    def draw_axis_name(self, axis_name_3d):
+        axis_name_4d = self._axis_map_3d_to_4d[axis_name_3d]
+        if axis_name_4d == 'w':
+            width = 0.06
+        else:
+            width = 0.04
+        t = mlab.text(0.01, 0.9, axis_name_4d, width=width, color=(0, 1, 0))
+        return t
 
+    def redraw_axis_names(self):
+        for axis_name_3d in self._axis_3d:
+            text = getattr(self, "_axis_name_3d_{}".format(axis_name_3d))
+            axis_name_4d = self._axis_map_3d_to_4d[axis_name_3d]
+            text.text = axis_name_4d
+            if axis_name_4d == 'w':
+                width = 0.06
+            else:
+                width = 0.04
+            text.width = width
 
     @on_trait_change('scene_x.activated')
     def display_scene_x(self):
@@ -392,6 +522,22 @@ Show 2D slices for the given cube.
             Group(
                 '_',
                 Item(
+                    'sticky_dim',
+                    editor=EnumEditor(
+                        values=[0, 1, 2, 3],
+
+                    ),
+                    label="Sticky dimension",
+                    enabled_when='is4D',
+                    visible_when='is4D',
+                    style="readonly",
+                ),
+                Item(
+                    '_',
+                    enabled_when='is4D',
+                    visible_when='is4D',
+                ),
+                Item(
                     'w_index',
                     editor=RangeEditor(
                         low_name='w_low',
@@ -400,10 +546,9 @@ Show 2D slices for the given cube.
                         label_width=10,
                         mode="slider",
                     ),
-                    enabled_when='fourD',
-                    visible_when='fourD',
+                    enabled_when='is4D',
+                    visible_when='is4D',
                 ),
-                '_',
                 Item(
                     'x_index',
                     editor=RangeEditor(

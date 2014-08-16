@@ -24,6 +24,7 @@ __all__ = [
     'Float',
     'Fraction',
     'Boolean',
+    'Enum',
     'Attribute',
 ]
 
