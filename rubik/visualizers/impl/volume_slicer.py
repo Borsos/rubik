@@ -122,6 +122,7 @@ Show 2D slices for the given cube.
 
     data_value = Str("")
     data_shape = Str("")
+#    dimensions = Str("")
 
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
@@ -234,6 +235,14 @@ Show 2D slices for the given cube.
 
     def _data_shape_default(self):
         return 'x'.join(str(d) for d in self.data.shape)
+
+#    def _dimensions_default(self):
+#        if len(self.data.shape) == 2:
+#            return "x, y"
+#        elif len(self.data.shape) == 3:
+#            return "x, y, z"
+#        elif len(self.data.shape) == 4:
+#            return "w, x, y, z"
 
     def _lut_mode_default(self):
         return self.attributes["colormap"]
@@ -535,6 +544,11 @@ Show 2D slices for the given cube.
                     label="Shape",
                     style="readonly",
                 ),
+#                Item(
+#                    'dimensions',
+#                    label="Dimensions",
+#                    style="readonly",
+#                ),
                 Item(
                     'sticky_dim',
                     editor=EnumEditor(
@@ -566,7 +580,6 @@ Show 2D slices for the given cube.
                     enabled_when='is4D',
                     visible_when='is4D',
                     tooltip="the w dimension",
-                    help="the slowest dimension for 4D volumes",
                 ),
                 Item(
                     'x_index',
@@ -579,7 +592,6 @@ Show 2D slices for the given cube.
                     ),
                     format_str="%<8s",
                     tooltip="the x dimension",
-                    help="the slowest dimension for 3D volumes",
                 ),
                 Item(
                     'y_index',
@@ -592,7 +604,6 @@ Show 2D slices for the given cube.
                     ),
                     format_str="%<8s",
                     tooltip="the y dimension",
-                    help="the slowest dimension for 2D volumes",
                 ),
                 Item(
                     'z_index',
@@ -605,7 +616,6 @@ Show 2D slices for the given cube.
                     ),
                     format_str="%<8s",
                     tooltip="the z dimension",
-                    help="the fastest dimension",
                 ),
                 '_',
                 Item(
