@@ -464,9 +464,13 @@ Show 2D slices for the given cube.
         ipw.ipw.slice_position = getattr(self, '{}_index'.format(axis_name))
 
         # Position the view for the scene
-        views = dict(x=( 0, 90),
-                     y=(90, 90),
-                     z=( 0,  0),
+        #views = dict(x=( 0, 90),
+        #             y=(90, 90),
+        #             z=( 0,  0),
+        #             )
+        views = dict(x=( 0,  90),
+                     y=(90, -90),
+                     z=( 0,   0),
                      )
         scene.mlab.view(*views[axis_name])
         # 2D interaction: only pan and zoom
