@@ -55,6 +55,7 @@ class BaseVisualizerImpl(object):
             if attribute_name in attributes:
                 attribute_value = attributes[attribute_name]
                 self.logger.info("setting attribute {}={!r}".format(attribute_name, attribute_value))
+                #print "{!r} {!r} {!r}".format(attribute_name, attribute_value, attribute)
                 self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)
             else:
                 attribute_value = attribute.default()

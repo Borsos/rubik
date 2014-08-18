@@ -42,18 +42,19 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar, Contours, Opacity, Transparent
+from .attributes import ColormapAttribute, ColorbarAttribute, \
+    ContoursAttribute, OpacityAttribute, TransparentAttribute
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
 # The object implementing the dialog
 class VolumeContour(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = collections.OrderedDict((
-        ('colormap', Colormap()),
-        ('colorbar', Colorbar()),
-        ('contours', Contours()),
-        ('opacity', Opacity()),
-        ('transparent', Transparent()),
+        ('colormap', ColormapAttribute()),
+        ('colorbar', ColorbarAttribute()),
+        ('contours', ContoursAttribute()),
+        ('opacity', OpacityAttribute()),
+        ('transparent', TransparentAttribute()),
     ))
     DESCRIPTION = """\
 Visualize iso surfaces for the given 3D cube.

@@ -40,15 +40,15 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar
+from .attributes import ColormapAttribute, ColorbarAttribute
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
 # The object implementing the dialog
 class VolumeRender(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = collections.OrderedDict((
-        ('colormap', Colormap()),
-        ('colorbar', Colorbar()),
+        ('colormap', ColormapAttribute()),
+        ('colorbar', ColorbarAttribute()),
     ))
     DESCRIPTION = """\
 Volume rendering of the given 3D cube.

@@ -53,20 +53,29 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .mayavi_data import COLORMAPS
-from .attributes import Colormap, Colorbar, Index, Dimension4D
+from .attributes import ColormapAttribute, \
+                        ColorbarAttribute, \
+                        IndexAttribute,\
+                        Dimension4DAttribute, \
+                        ClipAttribute, \
+                        SymmetricClipAttribute
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
 # The object implementing the dialog
 class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = collections.OrderedDict((
-        ('colormap', Colormap()),
-        ('colorbar', Colorbar()),
-        ('w', Index('w')),
-        ('x', Index('x')),
-        ('y', Index('y')),
-        ('z', Index('z')),
-        ('slicing_dim', Dimension4D()),
+        ('colormap', ColormapAttribute()),
+        ('colorbar', ColorbarAttribute()),
+        ('w', IndexAttribute('w')),
+        ('x', IndexAttribute('x')),
+        ('y', IndexAttribute('y')),
+        ('z', IndexAttribute('z')),
+        ('clip', ClipAttribute()),
+        ('clip_min', ClipAttribute()),
+        ('clip_max', ClipAttribute()),
+        ('clip_symmetric', SymmetricClipAttribute()),
+        ('slicing_dim', Dimension4DAttribute()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -124,6 +133,11 @@ Show 2D slices for the given cube.
     data_shape = Str("")
 #    dimensions = Str("")
 
+    clip = Float()
+    clip_min = Float()
+    clip_max = Float()
+    clip_symmetric = Bool()
+    clip_asymmetric = Bool()
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
     is4D = Bool(False)
@@ -166,6 +180,7 @@ Show 2D slices for the given cube.
         self.ipw_3d_x
         self.ipw_3d_y
         self.ipw_3d_z
+        self.stop_clip_interaction = False
 
     #---------------------------------------------------------------------------
     # Map indices
@@ -214,18 +229,64 @@ Show 2D slices for the given cube.
 
     def get_data(self, x, y, z):
         #print ">>>", (x, y, z), self.map_indices(x, y, z), self.select_indices(*self.map_indices(x, y, z))
-        return self.data[self.select_indices(*self.map_indices(x, y, z))]
+        if len(self.data.shape) == 4:
+            return self.data[self.select_indices(*self.map_indices(x, y, z))]
+        else:
+            return self.data
 
     #---------------------------------------------------------------------------
     # Default values
     #---------------------------------------------------------------------------
     def _data_src3d_default(self):
-        if len(self.data.shape) == 4:
-            data = self.get_data(self.ALL, self.ALL, self.ALL)
-        else:
-            data = self.data
+        data = self.get_data(self.ALL, self.ALL, self.ALL)
         return mlab.pipeline.scalar_field(data,
                             figure=self.scene3d.mayavi_scene)
+
+    def _clip_symmetric_default(self):
+        if self.attributes["clip_symmetric"] is not None:
+            clip_symmetric = self.attributes["clip_symmetric"]
+        else:
+            clip_symmetric = False
+        #print "CLIP_SYMMETRIC:", clip_symmetric
+        self.clip_asymmetric = not clip_symmetric
+        return clip_symmetric
+
+    def get_clips(self):
+        if self.attributes["clip_min"] is not None:
+            clip_min = self.attributes["clip_min"]
+        elif self.attributes["clip"] is not None:
+            clip_min = -abs(self.attributes["clip"])
+        else:
+            clip_min = self.data_src3d.scalar_data.min()
+        if self.attributes["clip_max"] is not None:
+            clip_max = self.attributes["clip_max"]
+        elif self.attributes["clip"] is not None:
+            clip_max = +abs(self.attributes["clip"])
+        else:
+            clip_max = self.data_src3d.scalar_data.max()
+        clip = max(abs(clip_min), abs(clip_max))
+        if self.clip_symmetric:
+            clip_min = -clip
+            clip_max = +clip
+        return clip, clip_min, clip_max
+
+    def set_clips(self):
+        self.clip, self.clip_min, self.clip_max = self.get_clips()
+        
+    def _clip_default(self):
+        clip, clip_min, clip_max = self.get_clips()
+        #print "CLIP_DEF: ", clip
+        return clip
+
+    def _clip_min_default(self):
+        clip, clip_min, clip_max = self.get_clips()
+        #print "CLIP_MIN: ", clip_min
+        return clip_min
+
+    def _clip_max_default(self):
+        clip, clip_min, clip_max = self.get_clips()
+        #print "CLIP_MAX: ", clip_max
+        return clip_max
 
     def make_ipw_3d(self, axis_name):
         ipw = mlab.pipeline.image_plane_widget(self.data_src3d,
@@ -235,14 +296,6 @@ Show 2D slices for the given cube.
 
     def _data_shape_default(self):
         return 'x'.join(str(d) for d in self.data.shape)
-
-#    def _dimensions_default(self):
-#        if len(self.data.shape) == 2:
-#            return "x, y"
-#        elif len(self.data.shape) == 3:
-#            return "x, y, z"
-#        elif len(self.data.shape) == 4:
-#            return "w, x, y, z"
 
     def _lut_mode_default(self):
         return self.attributes["colormap"]
@@ -315,18 +368,83 @@ Show 2D slices for the given cube.
     def _set_slicing_dim_index(self):
         self._slicing_dim_index = self.ATTRIBUTES['slicing_dim'].index(self.slicing_dim)
 
+    def set_data_range(self):
+        data_range = self.clip_min, self.clip_max
+        self.view3d.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
+
+    @on_trait_change('clip')
+    def on_change_clip(self):
+        if self.stop_clip_interaction:
+            return
+        if self.clip_symmetric:
+            self.stop_clip_interaction = True
+            try:
+                self.clip_min = -abs(self.clip)
+                self.clip_max = +abs(self.clip)
+            finally:
+                self.stop_clip_interaction = False
+        self.set_data_range()
+
+    @on_trait_change('clip_min')
+    def on_change_clip_min(self):
+        if self.stop_clip_interaction:
+            return
+        if self.clip_symmetric:
+            self.clip = abs(self.clip_min)
+        else:
+            self.clip = max(abs(self.clip_min), abs(self.clip_max))
+#            self.stop_clip_interaction = True
+#            try:
+#                self.clip_min = -abs(self.clip_min)
+#                self.clip_max = +abs(self.clip_min)
+#            finally:
+#                self.stop_clip_interaction = False
+#        self.set_data_range()
+
+    @on_trait_change('clip_max')
+    def on_change_clip_max(self):
+        if self.stop_clip_interaction:
+            return
+        if self.clip_symmetric:
+            self.clip = abs(self.clip_max)
+        else:
+            self.clip = max(abs(self.clip_min), abs(self.clip_max))
+#            self.stop_clip_interaction = True
+#            try:
+#                self.clip_min = -abs(self.clip_max)
+#                self.clip_max = +abs(self.clip_max)
+#            finally:
+#                self.stop_clip_interaction = False
+#        self.set_data_range()
+
+        
+    @on_trait_change('clip_symmetric')
+    def on_change_clip_symmetric(self):
+        self.clip_asymmetric = not self.clip_symmetric
+        if self.stop_clip_interaction:
+            return
+        if self.clip_symmetric:
+            #abs_clip_min, abs_clip_max = abs(self.clip_min), abs(self.clip_max)
+            #abs_clip = max(abs_clip_min, abs_clip_max)
+            abs_clip = self.clip
+            self.stop_clip_interaction = True
+            try:
+                self.clip_min = -abs_clip
+                self.clip_max = +abs_clip
+            finally:
+                self.stop_clip_interaction = False
+        self.set_data_range()
+
     @on_trait_change('slicing_dim')
     def on_change_slicing_dim(self):
         self._set_slicing_dim_index()
         self._set_axis_maps()
-        if len(self.data.shape) == 4:
-            data = self.get_data(self.ALL, self.ALL, self.ALL)
-        else:
-            data = self.data
-        data_range = data.min(), data.max()
+        data = self.get_data(self.ALL, self.ALL, self.ALL)
         self.data_src3d.scalar_data = data
-        #self.data_src3d = mlab.pipeline.scalar_field(data,
-        #     figure=self.scene3d.mayavi_scene)
+        data_range = self.clip_min, self.clip_max
         self.view3d.module_manager.scalar_lut_manager.data_range = data_range
         mlab.clf(self.scene3d.mayavi_scene)
         self.display_scene3d()
@@ -366,12 +484,13 @@ Show 2D slices for the given cube.
             slicing_index = getattr(self, '{}_index'.format(self._axis_4d[self._slicing_dim_index]))
             sel_indices.insert(self._slicing_dim_index, slicing_index)
             data = self.data[self.select_indices(*sel_indices)]
-            data_range = data.min(), data.max()
             self.data_src3d.scalar_data = data
-            self.view3d.module_manager.scalar_lut_manager.data_range = data_range
-            self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
-            self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
-            self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
+            #data_range = data.min(), data.max()
+            #self.view3d.module_manager.scalar_lut_manager.data_range = data_range
+            #self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
+            #self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
+            #self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
+            self.set_clips()
             self._set_data_value()
 
     @on_trait_change('w_index')
@@ -412,6 +531,7 @@ Show 2D slices for the given cube.
                                  tvtk.InteractorStyleTerrain()
         self._set_data_value()
         self.on_change_lut_mode()
+        self.set_data_range()
 
 
     def make_side_view(self, axis_name):
@@ -542,7 +662,6 @@ Show 2D slices for the given cube.
                 show_labels=False,
             ),
             Group(
-                '_',
                 Item(
                     'data_shape',
                     label="Shape",
@@ -562,7 +681,7 @@ Show 2D slices for the given cube.
                     label="Slicing dim",
                     enabled_when='is4D',
                     visible_when='is4D',
-                    emphasized=True,
+                    #emphasized=True,
                     style="readonly",
                     tooltip="the slicing dimension",
                     help="4D volumes are sliced along the 'slicing dimension'; it is possible to change the value of this dimension using the related slider",
@@ -626,7 +745,7 @@ Show 2D slices for the given cube.
                     'data_value',
                     label="Value",
                     style="readonly",
-                    emphasized=True,
+                    #emphasized=True,
                 ),
                 Item(
                     'lut_mode',
@@ -636,6 +755,29 @@ Show 2D slices for the given cube.
                     ),
                     label="Colormap",
                 ),
+                '_',
+                Item(
+                    'clip',
+                    label="Clip",
+                    visible_when='clip_symmetric',
+                ),
+                Item(
+                    'clip_min',
+                    label="Clip min",
+                    visible_when='clip_asymmetric',
+                ),
+                Item(
+                    'clip_max',
+                    label="Clip max",
+                    visible_when='clip_asymmetric',
+                ),
+                Item(
+                    'clip_symmetric',
+                    label="Symmetric",
+                    tooltip="makes clip symmetric",
+                    help="if set, clip_min=-clip, clip_max=+clip",
+                ),
+                '_',
                 Item(
                     'colorbar',
                     editor=BooleanEditor(
@@ -643,6 +785,7 @@ Show 2D slices for the given cube.
                     label="Colorbar",
                 ),
                 show_labels=True,
+                show_border=True
             ),
         ),
         #icon="rubik-logo.ico",

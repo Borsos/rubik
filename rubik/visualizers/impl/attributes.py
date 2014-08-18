@@ -27,56 +27,63 @@ __all__ = [
 ]
 
 from .mayavi_data import COLORMAPS
-from ..attribute import Attribute, Integer, PositiveInteger, Float, Fraction, Boolean, Enum
+from ..attribute_types import IntegerAttributeType, \
+                              PositiveIntegerAttributeType, \
+                              FloatAttributeType, \
+                              FractionAttributeType, \
+                              BooleanAttributeType, \
+                              EnumAttributeType
 
-class Colormap(Attribute):
+from ..attribute import Attribute
+
+class ColormapAttribute(Attribute):
     def __init__(self):
         default = 'blue-red'
         description = """\
 Apply the selected colormap.
 """
-        super(Colormap, self).__init__(default=default, description=description, attribute_type=Enum(COLORMAPS))
+        super(ColormapAttribute, self).__init__(default=default, description=description, attribute_type=EnumAttributeType(COLORMAPS))
 
     def index(self, v):
         return self._attribute_type.index(v)
 
-class Colorbar(Attribute):
+class ColorbarAttribute(Attribute):
     def __init__(self):
         default = False
         description = """\
 Show the colorbar.
 Available values: {values}
 """.format(values=', '.join(repr(v) for v in (True, False)))
-        super(Colorbar, self).__init__(default=default, description=description, attribute_type=Boolean())
+        super(ColorbarAttribute, self).__init__(default=default, description=description, attribute_type=BooleanAttributeType())
 
-class Transparent(Attribute):
+class TransparentAttribute(Attribute):
     def __init__(self):
         default = False
         description = """\
 Make IsoSurface transparent.
 Available values: {values}
 """.format(values=', '.join(repr(v) for v in (True, False)))
-        super(Transparent, self).__init__(default=default, description=description, attribute_type=Boolean())
+        super(TransparentAttribute, self).__init__(default=default, description=description, attribute_type=BooleanAttributeType())
 
-class Opacity(Attribute):
+class OpacityAttribute(Attribute):
     def __init__(self):
         default = 0.4
         description = """\
 Set IsoSurface opacity.
 Available values: 0.0 <= float <= 1.0
 """.format(values=', '.join(repr(v) for v in (True, False)))
-        super(Opacity, self).__init__(default=default, description=description, attribute_type=Fraction())
+        super(OpacityAttribute, self).__init__(default=default, description=description, attribute_type=FractionAttributeType())
 
-class Contours(Attribute):
+class ContoursAttribute(Attribute):
     def __init__(self):
         default = 5
         description = """\
 Number of contours.
 Available values: any positive integer
 """
-        super(Contours, self).__init__(default=default, description=description, attribute_type=PositiveInteger())
+        super(ContoursAttribute, self).__init__(default=default, description=description, attribute_type=PositiveIntegerAttributeType())
 
-class Index(Attribute):
+class IndexAttribute(Attribute):
     def __init__(self, index_name):
         default = None
         self.index_name = index_name
@@ -84,9 +91,9 @@ class Index(Attribute):
 {index_name} index for the initial slice.
 Available values: any valid {index_name} index
 """.format(index_name=self.index_name)
-        super(Index, self).__init__(default=default, description=description, attribute_type=PositiveInteger())
+        super(IndexAttribute, self).__init__(default=default, description=description, attribute_type=PositiveIntegerAttributeType())
 
-class Dimension4D(Attribute):
+class Dimension4DAttribute(Attribute):
     def __init__(self):
         self.dimensions = ['w', 'x', 'y', 'z']
         default = 'w'
@@ -94,7 +101,26 @@ class Dimension4D(Attribute):
 4D dimension.
 Available values: {values}
 """.format(values=', '.join(repr(d) for d in self.dimensions))
-        super(Dimension4D, self).__init__(default=default, description=description, attribute_type=Enum(self.dimensions))
+        super(Dimension4DAttribute, self).__init__(default=default, description=description, attribute_type=EnumAttributeType(self.dimensions))
 
     def index(self, v):
         return self._attribute_type.index(v)
+
+class ClipAttribute(Attribute):
+    def __init__(self):
+        default = None
+        description = """\
+Clip value
+Available values: any float
+"""
+        super(ClipAttribute, self).__init__(default=default, description=description, attribute_type=FloatAttributeType())
+
+class SymmetricClipAttribute(Attribute):
+    def __init__(self):
+        default = False
+        description = """\
+Set symmetric clip.
+Available values: {values}
+""".format(values=', '.join(repr(v) for v in (True, False)))
+        super(SymmetricClipAttribute, self).__init__(default=default, description=description, attribute_type=BooleanAttributeType())
+
