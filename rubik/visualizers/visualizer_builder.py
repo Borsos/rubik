@@ -25,8 +25,18 @@ import numpy as np
 
 from . import get_visualizer_class, VISUALIZER_TYPES
 from ..errors import RubikError
+from ..application.config import get_config
 
-def visualizer_builder(logger, visualizer_type, data, visualizer_args):
+def visualizer_builder(logger, visualizer_type, data, visualizer_attributes=None, visualizer_attribute_files=None):
+    # defaults:
+    if visualizer_attributes is None:
+        visualizer_attributes = {}
+    if visualizer_attribute_files is None:
+        visualizer_attribute_files = []
+
+    # config instance:
+    config = get_config()
+
     # to visualizer_types:
     if isinstance(visualizer_type, (list, tuple)):
         orig_visualizer_types = tuple(visualizer_type)
@@ -38,14 +48,17 @@ def visualizer_builder(logger, visualizer_type, data, visualizer_args):
     for visualizer_type in orig_visualizer_types:
         if visualizer_type is None or visualizer_type == "auto":
             if isinstance(data, np.ndarray):
-                usable_visualizer_type = None
+                usable_visualizer_types = []
                 for vt in VISUALIZER_TYPES:
                     vc = get_visualizer_class(vt, logger)
                     if vc is not None and vc.ConcreteVisualizerClass.DATA_CHECK(data):
-                        usable_visualizer_type = vt
-                        break
-                else:
+                        usable_visualizer_types.append(vt)
+                if not usable_visualizer_types:
                     raise RubikError("cannot find a valid visualizer for {} object with rank {}".format(type(data), len(data.shape)))
+                if config.preferred_visualizer in usable_visualizer_types:
+                    usable_visualizer_type = config.preferred_visualizer
+                else:
+                    usable_visualizer_type = usable_visualizer_types[0]
                 if usable_visualizer_type is None:
                     raise RubikError("cannot find a valid visualizer for {} object".format(type(data)))
                 visualizer_types.append(usable_visualizer_type)
@@ -63,6 +76,12 @@ def visualizer_builder(logger, visualizer_type, data, visualizer_args):
     else:
         raise RubikError("no usable visualizer")
     
+    # attributes:
+    attributes = {}
+    attributes.update(config.visualizer_attributes.get(visualizer_type, {}))
+    for attribute_file in visualizer_attribute_files:
+        attributes.update(config.read_attribute_file(attribute_file))
+    attributes.update(visualizer_attributes)
     # build:
     logger.info("creating {} visualizer...".format(visualizer_class.__name__))
-    return visualizer_class(logger=logger, data=data, visualizer_args=visualizer_args)
+    return visualizer_class(logger=logger, data=data, visualizer_attributes=attributes)

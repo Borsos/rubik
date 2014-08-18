@@ -32,6 +32,7 @@ from rubik.application import log
 from rubik.application import logo
 from rubik.application import help_functions
 from rubik.application.rubik import Rubik
+from rubik.application.config import Config
 from rubik.application.argument_parser import CommandLineArgumentParser
 
 _EXPRNUM = 0
@@ -572,28 +573,28 @@ Options to show help on specific topics """)
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
 
-    visualizer_attributes = {}
-    for visualizer_attribute_filename in args.visualizer_attribute_files:
-        try:
-            with open(visualizer_attribute_filename, 'r') as f_in:
-                lines = f_in.readlines()
-        except Exception as err:
-            logger.error("error: cannot open visualizer attribute file {!r}: {}: {}".format(visualizer_attribute_filename, type(err).__name__, err))
-        try:
-            for line_no, line in enumerate(lines):
-                line = line.strip()
-                if line and line[0] != '#':
-                    attribute_name, attribute_value = key_value_type(line.rstrip('\n'))
-                    visualizer_attributes[attribute_name] = attribute_value
-        except Exception as err:
-            logger.error("error: visualizer attribute file {!r}: line #{} {!r}: {}: {}".format(
-                visualizer_attribute_filename,
-                line_no,
-                line,
-                type(err).__name__,
-                err))
-    for item in args.visualizer_attributes:
-        visualizer_attributes.update(dict(item))
+#    visualizer_attributes = {}
+#    for visualizer_attribute_filename in args.visualizer_attribute_files:
+#        try:
+#            with open(visualizer_attribute_filename, 'r') as f_in:
+#                lines = f_in.readlines()
+#        except Exception as err:
+#            logger.error("error: cannot open visualizer attribute file {!r}: {}: {}".format(visualizer_attribute_filename, type(err).__name__, err))
+#        try:
+#            for line_no, line in enumerate(lines):
+#                line = line.strip()
+#                if line and line[0] != '#':
+#                    attribute_name, attribute_value = key_value_type(line.rstrip('\n'))
+#                    visualizer_attributes[attribute_name] = attribute_value
+#        except Exception as err:
+#            logger.error("error: visualizer attribute file {!r}: line #{} {!r}: {}: {}".format(
+#                visualizer_attribute_filename,
+#                line_no,
+#                line,
+#                type(err).__name__,
+#                err))
+#    for item in args.visualizer_attributes:
+#        visualizer_attributes.update(dict(item))
 
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)
@@ -606,7 +607,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
-    rubik.set_visualizer_options(args.view, args.visualizer_type, visualizer_attributes)
+    rubik.set_visualizer_options(args.view, args.visualizer_type, args.visualizer_attributes, args.visualizer_attribute_files)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,

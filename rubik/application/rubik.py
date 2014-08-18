@@ -25,6 +25,7 @@ from collections import OrderedDict
 
 from . import log
 from . import utils
+from . import config
 from ..py23 import irange
 from ..units import Memory
 from ..errors import RubikError, RubikMemoryError
@@ -90,6 +91,8 @@ class Rubik(object):
         self._result = None
         self._locals = {}
 
+        self.config = config.get_config()
+
     def show_logo(self):
         log.PRINT(RUBIK)
 
@@ -144,10 +147,11 @@ class Rubik(object):
     def set_print_stats(self, print_stats):
         self.print_stats = print_stats
 
-    def set_visualizer_options(self, enable_visualizer, visualizer_type=None, visualizer_args=None):
+    def set_visualizer_options(self, enable_visualizer, visualizer_type=None, visualizer_attributes=None, visualizer_attribute_files=None):
         self.enable_visualizer = enable_visualizer
         self.visualizer_type = visualizer_type
-        self.visualizer_args = visualizer_args
+        self.visualizer_attributes = visualizer_attributes
+        self.visualizer_attribute_files = visualizer_attribute_files
 
     def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None, decimals=None):
         self.print_histogram = print_histogram
@@ -446,6 +450,15 @@ class Rubik(object):
             yield cube, None
         
     def output(self):
+        if not any((self.print_cube, self.print_stats, self.print_histogram, self.output_filenames, self.enable_visualizer)):
+            if self.config.preferred_output_action == self.config.OUTPUT_ACTION_PRINT:
+                self.print_cube = True
+            elif self.config.preferred_output_action == self.config.OUTPUT_ACTION_STATS:
+                self.print_stats = True
+            elif self.config.preferred_output_action == self.config.OUTPUT_ACTION_HISTOGRAM:
+                self.print_histogram = True
+            elif self.config.preferred_output_action == self.config.OUTPUT_ACTION_VISUALIZE:
+                self.enable_visualizer = True
         useless_run = True
         cube = self._result
         for subcube, dlabels in self.split_over_dimensions(cube):
@@ -912,6 +925,8 @@ ave           = {ave}
             logger=self.logger,
             visualizer_type=self.visualizer_type,
             data=cube,
-            visualizer_args=self.visualizer_args)
+            visualizer_attributes=self.visualizer_attributes,
+            visualizer_attribute_files=self.visualizer_attribute_files,
+        )
         visualizer.run()
       
