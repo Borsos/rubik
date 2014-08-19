@@ -81,7 +81,7 @@ def visualizer_builder(logger, visualizer_type, data, visualizer_attributes=None
     attributes.update(config.visualizer_attributes.get(visualizer_type, {}))
     for attribute_file in visualizer_attribute_files:
         attributes.update(config.read_attribute_file(attribute_file))
-    attributes.update(visualizer_attributes)
+    attributes.update(dict(visualizer_attributes))
     # build:
     logger.info("creating {} visualizer...".format(visualizer_class.__name__))
     return visualizer_class(logger=logger, data=data, visualizer_attributes=attributes)
