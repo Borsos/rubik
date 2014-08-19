@@ -57,7 +57,10 @@ def set_logger(verbose_level):
     return LOGGER
 
 def get_logger():
-    return LOGGER
+    if LOGGER is None:
+        return create_logger("TMP", 1)
+    else:
+        return LOGGER
 
 def set_report_logger(report_level):
     global REPORT_LOGGER

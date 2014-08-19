@@ -29,6 +29,7 @@ from collections import OrderedDict
 from .. import py23
 from .. import conf
 from .  import log
+from ..units import Memory
 from ..errors import RubikError
 
 if py23.PY3:
@@ -65,6 +66,17 @@ class Config(object):
     CONFIG_DEFAULTS = OrderedDict((
         ('preferred_output_action',	'visualize'),
         ('preferred_visualizer',        'VolumeSlicer'),
+        ('default_options',             ''),
+        ('default_data_type',           conf.DEFAULT_DATA_TYPE),
+        ('default_clobber',             str(conf.DEFAULT_CLOBBER)),
+        ('default_read_mode',           conf.DEFAULT_READ_MODE),
+        ('default_memory_limit',        str(conf.DEFAULT_MEMORY_LIMIT)),
+        ('default_optimized_min_size',  str(conf.DEFAULT_OPTIMIZED_MIN_SIZE)),
+        ('default_file_format',         str(conf.DEFAULT_FILE_FORMAT)),
+        ('default_warnings',            ''),
+        ('default_report_level',        '0'),
+        ('default_verbose_level',       '1'),
+        ('default_trace_errors',        'False'),
     ))
     def __init__(self, filename=None):
         self.create_missing_files()
@@ -79,6 +91,17 @@ class Config(object):
         try:
             self.preferred_output_action = config.get("general", "preferred_output_action")
             self.preferred_visualizer = config.get("general", "preferred_visualizer")
+            self.default_options = shlex.split(config.get("general", "default_options"))
+            self.default_data_type = config.get("general", "default_data_type")
+            self.default_file_format = config.get("general", "default_file_format")
+            self.default_memory_limit = Memory(config.get("general", "default_memory_limit"))
+            self.default_read_mode = config.get("general", "default_read_mode")
+            self.default_optimized_min_size = Memory(config.get("general", "default_optimized_min_size"))
+            self.default_clobber = config.getboolean("general", "default_clobber")
+            self.default_warnings = shlex.split(config.get("general", "default_warnings"))
+            self.default_trace_errors = config.getboolean("general", "default_trace_errors")
+            self.default_verbose_level = config.getint("general", "default_verbose_level")
+            self.default_report_level = config.getint("general", "default_report_level")
         except Exception as err:
             raise RubikError("invalid config file {}: {}: {}".format(self.CONFIG_FILE, type(err).__name__, err))
         self.visualizer_attributes = {
@@ -106,6 +129,23 @@ class Config(object):
                     f_out.write("# e.g.:\n")
                     f_out.write("# colorbar = True\n")
         
+    def get_default_options(self):
+        return self._default_options
+    def set_default_options(self, a):
+        self._default_options = a
+    default_options = property(get_default_options, set_default_options)
+
+    def get_default_warnings(self):
+        return self._default_warnings
+    def set_default_warnings(self, wl):
+        warnings = []
+        for w in wl:
+            if not w in conf.ALL_WARNINGS:
+                raise RubikError("invalid warning {}".format(w))
+            warnings.append(w)
+        self._default_warnings = warnings
+    default_warnings = property(get_default_warnings, set_default_warnings)
+
     def get_preferred_output_action(self):
         return self._preferred_output_action
     def set_preferred_output_action(self, a):
@@ -121,6 +161,30 @@ class Config(object):
             raise RubikError("invalid visualizer {}".format(v))
         self._preferred_visualizer = v
     preferred_visualizer = property(get_preferred_visualizer, set_preferred_visualizer)
+
+    def get_default_data_type(self):
+        return self._default_data_type
+    def set_default_data_type(self, t):
+        if not t in conf.DATA_TYPES:
+            raise RubikError("invalid data type {}".format(t))
+        self._default_data_type = t
+    default_data_type = property(get_default_data_type, set_default_data_type)
+
+    def get_default_read_mode(self):
+        return self._default_read_mode
+    def set_default_read_mode(self, t):
+        if not t in conf.READ_MODES:
+            raise RubikError("invalid read mode {}".format(t))
+        self._default_read_mode = t
+    default_read_mode = property(get_default_read_mode, set_default_read_mode)
+
+    def get_default_file_format(self):
+        return self._default_file_format
+    def set_default_file_format(self, t):
+        if not t in conf.FILE_FORMATS:
+            raise RubikError("invalid file format {}".format(t))
+        self._default_file_format = t
+    default_file_format = property(get_default_file_format, set_default_file_format)
 
     @classmethod
     def read_attribute_file(cls, filename):

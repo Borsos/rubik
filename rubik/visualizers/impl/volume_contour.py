@@ -120,7 +120,7 @@ Visualize iso surfaces for the given 3D cube.
         return np.max(self.data)
 
     def _on_help(self):
-        print "Help!"
+        return "help!"
 
     #---------------------------------------------------------------------------
     # Default values

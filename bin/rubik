@@ -32,7 +32,7 @@ from rubik.application import log
 from rubik.application import logo
 from rubik.application import help_functions
 from rubik.application.rubik import Rubik
-from rubik.application.config import Config
+from rubik.application.config import get_config
 from rubik.application.argument_parser import CommandLineArgumentParser
 
 _EXPRNUM = 0
@@ -49,6 +49,10 @@ def key_value_type(value):
     return k.strip(), v.strip()
 
 def main():
+    try:
+        config = get_config()
+    except Exception as err:
+        log.trace_error(False)
 
     description = """\
 ================================================================================
@@ -87,20 +91,20 @@ Global options""")
     global_group.add_argument("--verbose", "-v",
         dest="verbose_level",
         action="count",
-        default=1,
+        default=config.default_verbose_level,
         help="increase verbose level")
 
     global_group.add_argument("--quiet", "--silent", "-q",
         dest="verbose_level",
         action="store_const",
         const=0,
-        default=1,
-        help="set quiet mode (warnings are disabled)")
+        default=config.default_verbose_level,
+        help="set quiet mode (warning messages are disabled)")
 
     global_group.add_argument("--report", "-R",
         dest="report_level",
         action="count",
-        default=0,
+        default=config.default_report_level,
         help="increase report level")
 
     global_group.add_argument("--dry-run", "-d",
@@ -121,42 +125,42 @@ Global options""")
     global_group.add_argument("--trace-errors", "-E",
         dest="trace_errors",
         action="store_true",
-        default=False,
+        default=config.default_trace_errors,
         help="show error traceback")
 
     global_group.add_argument("--safe",
         dest="read_mode",
         action="store_const",
         const=conf.READ_MODE_SAFE,
-        default=conf.DEFAULT_READ_MODE,
+        default=config.default_read_mode,
         help="safe read mode")
 
     global_group.add_argument("--optimized",
         dest="read_mode",
         action="store_const",
         const=conf.READ_MODE_OPTIMIZED,
-        default=conf.DEFAULT_READ_MODE,
+        default=config.default_read_mode,
         help="safe read mode")
 
     global_group.add_argument("--optimized-min-size",
         metavar="S",
         dest="optimized_min_size",
         type=Memory,
-        default=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
+        default=config.default_optimized_min_size,
         help="switch from optimized to safe read mode when reading less than C bytes (a huge value is equivalent to --safe)")
 
     global_group.add_argument("--memory-limit", "-m",
         metavar="L[units]",
         dest="memory_limit",
         type=Memory,
-        default=conf.DEFAULT_LIMIT_MEMORY,
+        default=config.default_memory_limit,
         help="when more than the given limit is needed for a single extracted cube, raise an error")
 
     global_group.add_argument("--dtype", "-t",
         metavar="D",
         dest="dtype",
         type=conf.get_dtype,
-        default=conf.DEFAULT_DATA_TYPE,
+        default=config.default_data_type,
         help="data type name (--help-data-types/-hd to show all available data types)")
 
     global_group.add_argument("--accept-bigger-raw-files", "-a",
@@ -166,12 +170,12 @@ Global options""")
 
     global_group.add_argument("--clobber",
         action="store_true",
-        default=conf.DEFAULT_CLOBBER,
+        default=config.default_clobber,
         help="overwrite existing output files")
 
     global_group.add_argument("--no-clobber",
         action="store_false",
-        default=conf.DEFAULT_CLOBBER,
+        default=config.default_clobber,
         help="do not overwrite existing output files")
 
     global_group.add_argument("--random-seed", "-r",
@@ -563,7 +567,7 @@ Options to show help on specific topics """)
         default=False,
         help="show demo")
 
-    args = conf.RUBIK_OPTIONS + sys.argv[1:]
+    args = config.default_options + conf.RUBIK_OPTIONS + sys.argv[1:]
     try:
         args = parser.parse_args(args)
     except Exception as err:
@@ -572,29 +576,6 @@ Options to show help on specific topics """)
 
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
-
-#    visualizer_attributes = {}
-#    for visualizer_attribute_filename in args.visualizer_attribute_files:
-#        try:
-#            with open(visualizer_attribute_filename, 'r') as f_in:
-#                lines = f_in.readlines()
-#        except Exception as err:
-#            logger.error("error: cannot open visualizer attribute file {!r}: {}: {}".format(visualizer_attribute_filename, type(err).__name__, err))
-#        try:
-#            for line_no, line in enumerate(lines):
-#                line = line.strip()
-#                if line and line[0] != '#':
-#                    attribute_name, attribute_value = key_value_type(line.rstrip('\n'))
-#                    visualizer_attributes[attribute_name] = attribute_value
-#        except Exception as err:
-#            logger.error("error: visualizer attribute file {!r}: line #{} {!r}: {}: {}".format(
-#                visualizer_attribute_filename,
-#                line_no,
-#                line,
-#                type(err).__name__,
-#                err))
-#    for item in args.visualizer_attributes:
-#        visualizer_attributes.update(dict(item))
 
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)

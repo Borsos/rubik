@@ -42,11 +42,13 @@ from .. import cubes
 
 class Rubik(object):
     def __init__(self):
+        self.config = config.get_config()
+
         self.input_filenames = InputArgDict(InputFilename)
         self.input_modes = InputArgDict(InputMode, default=InputMode("rb"))
         self.input_offsets = InputArgDict(Memory, default=None)
         self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
-        self.input_formats = InputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
+        self.input_formats = InputArgDict(str, default=self.config.default_file_format)
         self.input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
         self.input_text_delimiters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
         self.shapes = InputArgDict(Shape)
@@ -56,7 +58,7 @@ class Rubik(object):
         self.output_modes = OutputArgDict(OutputMode)
         self.output_offsets = OutputArgDict(Memory, default=None)
         self.output_dtypes = OutputArgDict(conf.get_dtype, default=None)
-        self.output_formats = OutputArgDict(str, default=conf.DEFAULT_FILE_FORMAT)
+        self.output_formats = OutputArgDict(str, default=self.config.default_file_format)
         self.output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
         self.output_text_delimiters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
         self.output_text_newlines = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_NEWLINE)
@@ -64,15 +66,15 @@ class Rubik(object):
 
         self.expressions = ArgList(str)
 
-        default_dtype = conf.get_dtype(conf.DEFAULT_DATA_TYPE)
+        default_dtype = conf.get_dtype(self.config.default_data_type)
         self.logger = log.LOGGER
 
         self.set_accept_bigger_raw_files(False)
         self.set_read_mode(conf.DEFAULT_READ_MODE)
-        self.set_optimized_min_size(conf.DEFAULT_OPTIMIZED_MIN_SIZE)
-        self.set_memory_limit(conf.DEFAULT_LIMIT_MEMORY)
+        self.set_optimized_min_size(self.config.default_optimized_min_size)
+        self.set_memory_limit(self.config.default_memory_limit)
         self.set_split_dimensions(None)
-        self.set_clobber(conf.DEFAULT_CLOBBER)
+        self.set_clobber(self.config.default_clobber)
         self.set_print_cube(False)
         self.set_print_stats(False)
         self.set_visualizer_options(False)
@@ -91,7 +93,6 @@ class Rubik(object):
         self._result = None
         self._locals = {}
 
-        self.config = config.get_config()
 
     def show_logo(self):
         log.PRINT(RUBIK)
