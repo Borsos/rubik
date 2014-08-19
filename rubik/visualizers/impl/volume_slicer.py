@@ -40,7 +40,7 @@ from traits.api import HasTraits, Instance, Array, \
     Trait, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label, RangeEditor, EnumEditor, BooleanEditor \
+    Label, RangeEditor, EnumEditor, BooleanEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
 
@@ -87,6 +87,7 @@ Show 2D slices for the given cube.
 
     W_HEIGHT = -330
     W_WIDTH = -400
+    LABEL_WIDTH = 30
     # The data to plot
     data = Array()
 
@@ -361,7 +362,7 @@ Show 2D slices for the given cube.
     def _z_range_default(self):
         return self._make_range('z')
 
-    def _set_data_value(self):
+    def set_data_value(self):
         self.data_value = str(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)])
         #self.data_value = "data[{}, {}, {}, {}]={}".format(self.w_index, self.x_index, self.y_index, self.z_index,(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)]))
 
@@ -461,7 +462,7 @@ Show 2D slices for the given cube.
         self.display_scene_x()
         self.display_scene_y()
         self.display_scene_z()
-        self._set_data_value()
+        self.set_data_value()
         self.redraw_axis_names()
 
     @on_trait_change('lut_mode,colorbar')
@@ -472,12 +473,24 @@ Show 2D slices for the given cube.
         self.ipw_y.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.ipw_z.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
 
-    def _on_change_index_4d(self, index_4d):
+    def on_change_index_4d(self, index_4d):
+        # check value
+        index_value = getattr(self, '{}_index'.format(index_4d))
+        index_low = getattr(self, '{}_low'.format(index_4d))
+        index_high = getattr(self, '{}_high'.format(index_4d))
+        if index_value < index_low:
+            index_value = index_low
+            setattr(self, '{}_index'.format(index_4d), index_value)
+            return
+        elif index_value > index_high:
+            index_value = index_high
+            setattr(self, '{}_index'.format(index_4d), index_value)
+            return
         index_3d = self._axis_map_4d_to_3d[index_4d]
         if index_3d:
             getattr(self, 'ipw_3d_{}'.format(index_3d)).ipw.slice_position = \
-                getattr(self, '{}_index'.format(index_4d)) + 1
-            self._set_data_value()
+                index_value + 1
+            self.set_data_value()
         else:
             ## slicing dim
             sel_indices = [self.ALL, self.ALL, self.ALL]
@@ -490,24 +503,27 @@ Show 2D slices for the given cube.
             #self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
             #self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
             #self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
+            
+            self.data_src3d.update()
             self.set_clips()
-            self._set_data_value()
+            self.set_data_range()
+            self.set_data_value()
 
     @on_trait_change('w_index')
     def on_change_w_index(self):
-        self._on_change_index_4d('w')
+        self.on_change_index_4d('w')
         
     @on_trait_change('x_index')
     def on_change_x_index(self):
-        self._on_change_index_4d('x')
+        self.on_change_index_4d('x')
         
     @on_trait_change('y_index')
     def on_change_y_index(self):
-        self._on_change_index_4d('y')
+        self.on_change_index_4d('y')
         
     @on_trait_change('z_index')
     def on_change_z_index(self):
-        self._on_change_index_4d('z')
+        self.on_change_index_4d('z')
         
     #---------------------------------------------------------------------------
     # Scene activation callbaks
@@ -529,7 +545,7 @@ Show 2D slices for the given cube.
         # Keep the view always pointing up
         self.scene3d.scene.interactor.interactor_style = \
                                  tvtk.InteractorStyleTerrain()
-        self._set_data_value()
+        self.set_data_value()
         self.on_change_lut_mode()
         self.set_data_range()
 
@@ -575,7 +591,7 @@ Show 2D slices for the given cube.
                 if other_axis == axis_name:
                     continue
                 ipw3d.ipw.slice_position = round(position[axis_number])
-            self._set_data_value()
+            self.set_data_value()
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -694,11 +710,12 @@ Show 2D slices for the given cube.
                 Item(
                     'w_index',
                     editor=RangeEditor(
+                        enter_set=True,
                         low_name='w_low',
                         high_name='w_high',
                         format="%d",
-                        label_width=10,
-                        mode="slider",
+                        label_width=LABEL_WIDTH,
+                        mode="auto",
                     ),
                     enabled_when='is4D',
                     visible_when='is4D',
@@ -707,10 +724,11 @@ Show 2D slices for the given cube.
                 Item(
                     'x_index',
                     editor=RangeEditor(
+                        enter_set=True,
                         low_name='x_low',
                         high_name='x_high',
                         format="%d",
-                        label_width=10,
+                        label_width=LABEL_WIDTH,
                         mode="slider",
                     ),
                     format_str="%<8s",
@@ -719,10 +737,11 @@ Show 2D slices for the given cube.
                 Item(
                     'y_index',
                     editor=RangeEditor(
+                        enter_set=True,
                         low_name='y_low',
                         high_name='y_high',
                         format="%d",
-                        label_width=10,
+                        label_width=LABEL_WIDTH,
                         mode="slider",
                     ),
                     format_str="%<8s",
@@ -731,10 +750,11 @@ Show 2D slices for the given cube.
                 Item(
                     'z_index',
                     editor=RangeEditor(
+                        enter_set=True,
                         low_name='z_low',
                         high_name='z_high',
                         format="%d",
-                        label_width=10,
+                        label_width=LABEL_WIDTH,
                         mode="slider",
                     ),
                     format_str="%<8s",
@@ -773,6 +793,7 @@ Show 2D slices for the given cube.
                 ),
                 Item(
                     'clip_symmetric',
+                    editor=BooleanEditor(),
                     label="Symmetric",
                     tooltip="makes clip symmetric",
                     help="if set, clip_min=-clip, clip_max=+clip",
