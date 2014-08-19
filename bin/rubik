@@ -30,6 +30,7 @@ from rubik.errors import RubikError, RubikMemoryError
 
 from rubik.application import log
 from rubik.application import logo
+from rubik.application import utils
 from rubik.application import help_functions
 from rubik.application.rubik import Rubik
 from rubik.application.config import get_config
@@ -588,7 +589,7 @@ Options to show help on specific topics """)
     rubik.set_clobber(args.clobber)
     rubik.set_print_cube(args.print_cube)
     rubik.set_print_stats(args.print_stats)
-    rubik.set_visualizer_options(args.view, args.visualizer_type, args.visualizer_attributes, args.visualizer_attribute_files)
+    rubik.set_visualizer_options(args.view, args.visualizer_type, utils.flatten_list(args.visualizer_attributes, depth=1), args.visualizer_attribute_files)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram(args.print_histogram,
         bins=args.histogram_bins,
