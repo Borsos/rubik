@@ -27,12 +27,16 @@ from traits.api import \
     HasTraits, on_trait_change, \
     Int, Str, Bool, \
     Range
+
+from traitsui.handler import Handler
    
 from traitsui.api import \
     View, Item, HGroup, Group, \
+    Action, \
     RangeEditor, EnumEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
+from traitsui.handler import Handler
 
 from .base_controller_impl import BaseControllerImpl
 
@@ -40,6 +44,17 @@ from .attributes import \
     IndexAttribute, \
     Dimension4DAttribute
     
+class ControllerHandler(Handler):
+    def _on_close(self, info):
+        print "CLOSE!", info
+        print filter(lambda x: 'instance' in x, dir(self))
+        print type(info)
+        print info.editable_traits(), info._instance_traits()
+        print filter(lambda x: 'instance' in x, dir(info))
+        print type(info.ui)
+        print info.ui.editable_traits(), info.ui._instance_traits()
+        print filter(lambda x: 'instance' in x, dir(info.ui))
+        info.ui.dispose()
 
 class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
@@ -87,43 +102,49 @@ Controller for multiple viewers
 
     slicing_axis = Str("")
     data_shape = Str("")
+    close_button = Action(name='Close', action='_on_close')
 
 
     def __init__(self, logger, attributes, **traits):
         BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
         HasTraits.__init__(self, **traits)
         self.w_low, self.x_low, self.y_low, self.z_low = 0, 0, 0, 0
-        rank = len(self.data.shape)
+        rank = len(self.shape)
         if rank == 2:
             wh = 1
             zh = 1
-            xh, yh = self.data.shape
+            xh, yh = self.shape
         elif rank == 3:
             wh = 1
-            xh, yh, zh = self.data.shape
+            xh, yh, zh = self.shape
         elif rank == 4:
-            wh, xh, yh, zh = self.data.shape
+            wh, xh, yh, zh = self.shape
         self.w_high, self.x_high, self.y_high, self.z_high = wh - 1, xh - 1, yh - 1, zh - 1
         self.set_axis_mapping()
 
 
     ### U t i l i t i e s :
-    def create_viewer(self, viewer_class):
-        return viewer_class(controller=self, data=self.get_volume())
+    def create_viewer(self, viewer_class, data):
+        return viewer_class(controller=self, data=self.get_local_volume(data))
 
-    def add_viewer(self, viewer_class):
-        viewer = self.create_viewer(viewer_class)
+    def add_viewer(self, viewer_class, data):
+        if data.shape != self.shape:
+            raise ValueError("{}: cannot create {} viewer: data shape {} is not {}".format(self.name, viewer_class.__name__, data.shape, self.shape))
+        viewer = self.create_viewer(viewer_class, data)
         self.viewers.append(viewer)
+        self.viewers_data[viewer] = data
+        self.add_trait(viewer.name, viewer)
         return viewer
-     
 
-    def get_volume(self):
-        if len(self.data.shape) == 4:
+    def get_local_volume(self, data):
+        if data.shape != self.shape:
+            raise ValueError("{}: invalid shape {}".format(self.name, data.shape))
+        if len(self.shape) == 4:
             s = [self.S_ALL, self.S_ALL, self.S_ALL]
             s.insert(self.GLOBAL_AXIS_NUMBERS[self.slicing_axis], getattr(self, '{}_index'.format(self.slicing_axis)))
-            return self.data[s]
+            return data[s]
         else:
-            return self.data
+            return data
 
     def set_axis_mapping(self):
         self._m_local2global = {}
@@ -148,10 +169,10 @@ Controller for multiple viewers
         
     ### D e f a u l t s :
     def _data_shape_default(self):
-        return 'x'.join(str(d) for d in self.data.shape)
+        return 'x'.join(str(d) for d in self.shape)
 
     def _is4D_default(self):
-        return len(self.data.shape) == 4
+        return len(self.shape) == 4
 
     def _axis_index_default(self, axis_name):
         if self.attributes.get(axis_name, None) is None:
@@ -287,5 +308,7 @@ Controller for multiple viewers
                 ),
             ),
         ),
-        buttons=[UndoButton, OKButton, RevertButton]
+        buttons=[UndoButton, RevertButton, close_button],
+        handler=ControllerHandler(),
+        resizable=True,
     )

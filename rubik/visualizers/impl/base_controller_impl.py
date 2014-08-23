@@ -36,6 +36,7 @@ class BaseControllerImpl(BaseClassImpl):
     def __init__(self, logger, attributes):
         super(BaseControllerImpl, self).__init__(logger)
         self.viewers = []
+        self.viewers_data = {}
         self.attributes = {}
         
         self.set_attributes(**attributes)
@@ -59,7 +60,6 @@ class BaseControllerImpl(BaseClassImpl):
                 self.logger.info("{}: setting attribute {} to default {!r}".format(self.name, attribute_name, attribute_value))
                 self.attributes[attribute_name] = attribute_value
 
-
     def apply_attributes(self):
         for attribute_name in self.ATTRIBUTES:
             self.apply_attribute(attribute_name)
@@ -69,12 +69,15 @@ class BaseControllerImpl(BaseClassImpl):
             self.apply_attribute_to_viewer(viewer, attribute_name)
 
     def apply_attribute_to_viewer(self, viewer, attribute_name):
-        viewer.feedback = False
-        try:
-            self.logger.info("{}: applying attribute {}={!r} to viewer {}".format(self.name, attribute_name, getattr(self, attribute_name), viewer.name))
-            setattr(viewer, attribute_name, getattr(self, attribute_name))
-        finally:
-            viewer.feedback = True
+        if viewer.has_trait(attribute_name):
+            viewer.feedback = False
+            try:
+                self.logger.info("{}: applying attribute {}={!r} to viewer {}".format(self.name, attribute_name, getattr(self, attribute_name), viewer.name))
+                setattr(viewer, attribute_name, getattr(self, attribute_name))
+            finally:
+                viewer.feedback = True
+        else:
+            self.logger.info("{}: attribute {}={!r} *not* applied to viewer {}: it does not support this trait".format(self.name, attribute_name, getattr(self, attribute_name), viewer.name))
             
             
     def run(self):
@@ -83,3 +86,8 @@ class BaseControllerImpl(BaseClassImpl):
             viewer.edit_traits()
         self.configure_traits()
 
+    def on_exit(self):
+        print "QUA"
+        for viewer in self.viewers:
+            viewer.on_exit()
+        super(BaseControllerImpl, self).on_exit()

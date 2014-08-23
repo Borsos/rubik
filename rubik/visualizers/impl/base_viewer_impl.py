@@ -26,6 +26,7 @@ import collections
 from .base_class_impl import BaseClassImpl
 from ... import conf
 
+
 class BaseViewerImpl(BaseClassImpl):
     CURRENT_ID = 0
     ID_FORMAT = "viewer_{id}"

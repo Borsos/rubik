@@ -42,6 +42,9 @@ class BaseClassImpl(object):
             name = cls.__name__
         return "{} - Rubik {}".format(name, conf.VERSION)
 
+    def has_trait(self, trait):
+        return trait in self.editable_traits()
+
     def log_trait_change(self, traits):
         self.logger.info("{}: changed traits: {}".format(self.name, traits))
 

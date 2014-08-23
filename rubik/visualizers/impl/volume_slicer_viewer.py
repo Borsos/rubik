@@ -26,7 +26,9 @@ import numpy as np
 from traits.api import HasTraits, Instance, Array, \
     Int, Str, \
     on_trait_change
+
 from traitsui.api import View, Item, HGroup, Group
+from traitsui.handler import Handler
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -38,8 +40,9 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
 
 from .base_viewer_impl import BaseViewerImpl
 
-################################################################################
-# The object implementing the dialog
+class VolumeSlicerViewerHandler(Handler):
+    pass
+
 class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     # The data to plot
     data = Array()
@@ -267,31 +270,36 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     # The layout of the dialog created
     #---------------------------------------------------------------------------
-    view = View(HGroup(
-                  Group(
-                       Item('scene_y',
-                            editor=SceneEditor(scene_class=Scene),
-                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
-                       Item('scene_z',
-                            editor=SceneEditor(scene_class=Scene),
-                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
-                       show_labels=False,
-                  ),
-                  Group(
-                       Item('scene_x',
-                            editor=SceneEditor(scene_class=Scene),
-                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
-                       Item('scene3d',
-                            editor=SceneEditor(scene_class=MayaviScene),
-                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
-                       show_labels=False,
-                  ),
-                  Group(
-                       Item('data_value'),
-                       show_labels=True,
-                  ),
+    view = View(
+        HGroup(
+            Group(
+                Item('scene_y',
+                    editor=SceneEditor(scene_class=Scene),
+                    height=SCENE_HEIGHT, width=SCENE_WIDTH
                 ),
-                resizable=True,
-                title='Volume Slicer',
-                )
+                Item('scene_z',
+                    editor=SceneEditor(scene_class=Scene),
+                    height=SCENE_HEIGHT, width=SCENE_WIDTH
+                ),
+                show_labels=False,
+            ),
+            Group(
+                Item('scene_x',
+                     editor=SceneEditor(scene_class=Scene),
+                     height=SCENE_HEIGHT, width=SCENE_WIDTH),
+                Item('scene3d',
+                     editor=SceneEditor(scene_class=MayaviScene),
+                     height=SCENE_HEIGHT, width=SCENE_WIDTH
+                ),
+                show_labels=False,
+            ),
+            Group(
+                Item('data_value'),
+                show_labels=True,
+            ),
+        ),
+        handler=VolumeSlicerViewerHandler(),
+        resizable=True,
+        title='Volume Slicer',
+    )
 
