@@ -157,7 +157,9 @@ Show 2D slices for the given cube.
     colorbar = Bool()
     is4D = Bool(False)
     locate_mode = Enum(*LOCATE_MODES)
-    locate_value = Float()
+    locate_low = Float()
+    locate_high = Float()
+    locate_value = Range(low='locate_low', high='locate_high')
     locate_mode_is_value = Bool()
     locate_prev_button = Button()
     locate_nearest_button = Button()
@@ -202,6 +204,9 @@ Show 2D slices for the given cube.
         self.ipw_3d_y
         self.ipw_3d_z
         self.stop_clip_interaction = False
+
+    def log_trait_change(self, traits):
+        self.logger.info("changed traits: {}".format(traits))
 
     #---------------------------------------------------------------------------
     # Map indices
@@ -340,6 +345,7 @@ Show 2D slices for the given cube.
         
     def _data_src3d_default(self):
         data = self.get_data(self.ALL, self.ALL, self.ALL)
+        self.set_locate_range(data)
         return mlab.pipeline.scalar_field(data,
                             figure=self.scene3d.mayavi_scene)
 
@@ -476,25 +482,41 @@ Show 2D slices for the given cube.
         self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
         self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
 
+    def set_locate_range(self, data=None):
+        if data is None:
+            data = self.data_src3d.scalar_data
+        self.locate_low = data.min()
+        self.locate_high = data.max()
+
     @on_trait_change('locate_mode')
     def on_change_locate_mode(self):
+        self.log_trait_change("locate_mode")
         self.locate_mode_is_value = (self.locate_mode == LOCATE_MODE_VALUE)
         self.locate_value = self.get_locate_value()
 
+    @on_trait_change('locate_value')
+    def on_change_locate_value(self):
+        self.log_trait_change("locate_value")
+        self.locate_nearest()
+
     @on_trait_change('locate_nearest_button')
     def on_change_locate_nearest_button(self):
+        self.log_trait_change("locate_nearest_button")
         self.locate_nearest()
 
     @on_trait_change('locate_prev_button')
     def on_change_locate_prev_button(self):
+        self.log_trait_change("locate_prev_button")
         self.locate_prev()
 
     @on_trait_change('locate_next_button')
     def on_change_locate_next_button(self):
+        self.log_trait_change("locate_next_button")
         self.locate_next()
 
     @on_trait_change('clip')
     def on_change_clip(self):
+        self.log_trait_change("clip")
         if self.stop_clip_interaction:
             return
         if self.clip_symmetric:
@@ -508,6 +530,7 @@ Show 2D slices for the given cube.
 
     @on_trait_change('clip_min')
     def on_change_clip_min(self):
+        self.log_trait_change("clip_min")
         if self.stop_clip_interaction:
             return
         if self.clip_symmetric:
@@ -524,6 +547,7 @@ Show 2D slices for the given cube.
 
     @on_trait_change('clip_max')
     def on_change_clip_max(self):
+        self.log_trait_change("clip_max")
         if self.stop_clip_interaction:
             return
         if self.clip_symmetric:
@@ -541,6 +565,7 @@ Show 2D slices for the given cube.
         
     @on_trait_change('clip_symmetric')
     def on_change_clip_symmetric(self):
+        self.log_trait_change("clip_symmetric")
         self.clip_asymmetric = not self.clip_symmetric
         if self.stop_clip_interaction:
             return
@@ -558,6 +583,7 @@ Show 2D slices for the given cube.
 
     @on_trait_change('slicing_dim')
     def on_change_slicing_dim(self):
+        self.log_trait_change("slicing_dim")
         self._set_slicing_dim_index()
         self._set_axis_maps()
         data = self.get_data(self.ALL, self.ALL, self.ALL)
@@ -584,6 +610,7 @@ Show 2D slices for the given cube.
 
     @on_trait_change('lut_mode,colorbar')
     def on_change_lut_mode(self):
+        self.log_trait_change("lut_mode,colorbar")
         self.view3d.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
         self.view3d.module_manager.scalar_lut_manager.show_scalar_bar = self.colorbar
         self.ipw_x.module_manager.scalar_lut_manager.lut_mode = self.lut_mode
@@ -615,6 +642,8 @@ Show 2D slices for the given cube.
             sel_indices.insert(self._slicing_dim_index, slicing_index)
             data = self.data[self.select_indices(*sel_indices)]
             self.data_src3d.scalar_data = data
+            self.locate_low = data.min()
+            self.locate_high = data.max()
             #data_range = data.min(), data.max()
             #self.view3d.module_manager.scalar_lut_manager.data_range = data_range
             #self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
@@ -629,18 +658,22 @@ Show 2D slices for the given cube.
 
     @on_trait_change('w_index')
     def on_change_w_index(self):
+        self.log_trait_change("w_index")
         self.on_change_index_4d('w')
         
     @on_trait_change('x_index')
     def on_change_x_index(self):
+        self.log_trait_change("x_index")
         self.on_change_index_4d('x')
         
     @on_trait_change('y_index')
     def on_change_y_index(self):
+        self.log_trait_change("y_index")
         self.on_change_index_4d('y')
         
     @on_trait_change('z_index')
     def on_change_z_index(self):
+        self.log_trait_change("z_index")
         self.on_change_index_4d('z')
         
     #---------------------------------------------------------------------------
@@ -648,6 +681,7 @@ Show 2D slices for the given cube.
     #---------------------------------------------------------------------------
     @on_trait_change('scene3d.activated')
     def display_scene3d(self):
+        self.log_trait_change("scene3d.activated")
         self.view3d = mlab.pipeline.outline(self.data_src3d,
                         figure=self.scene3d.mayavi_scene,
                         )
@@ -757,14 +791,17 @@ Show 2D slices for the given cube.
 
     @on_trait_change('scene_x.activated')
     def display_scene_x(self):
+        self.log_trait_change("scene_x.activated")
         return self.make_side_view('x')
 
     @on_trait_change('scene_y.activated')
     def display_scene_y(self):
+        self.log_trait_change("scene_y.activated")
         return self.make_side_view('y')
 
     @on_trait_change('scene_z.activated')
     def display_scene_z(self):
+        self.log_trait_change("scene_z.activated")
         return self.make_side_view('z')
 
 
@@ -932,6 +969,15 @@ Show 2D slices for the given cube.
                 ),
                 Item(
                     'locate_value',
+                    editor=RangeEditor(
+                        enter_set=True,
+                        low_name='locate_low',
+                        high_name='locate_high',
+                        label_width=LABEL_WIDTH,
+                        format="%g",
+                        mode="slider",
+                        is_float=True,
+                    ),
                     enabled_when='locate_mode_is_value',
                 ),
                 HSplit(
