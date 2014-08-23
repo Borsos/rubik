@@ -24,7 +24,7 @@ __all__ = [
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Int, \
+    Int, Str, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group
 
@@ -58,14 +58,15 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     ipw_3d_y = Instance(PipelineBase)
     ipw_3d_z = Instance(PipelineBase)
 
-    _axis_names = dict(x=0, y=1, z=2)
-
     x_index = Int()
     y_index = Int()
     z_index = Int()
-    
 
-    #---------------------------------------------------------------------------
+    data_value = Str()
+    
+    SCENE_WIDTH = -300
+    SCENE_HEIGHT = -300
+
     def __init__(self, controller, **traits):
         HasTraits.__init__(self, **traits)
         BaseViewerImpl.__init__(self, controller=controller)
@@ -74,6 +75,20 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         self.ipw_3d_y
         self.ipw_3d_z
 
+
+    ### U t i l i t i e s :
+    def get_value(self):
+        data = self.data_src3d.scalar_data
+        if len(data.shape) == 2:
+            return data[self.x_index, self.y_index]
+        else:
+            return data[self.x_index, self.y_index, self.z_index]
+
+    def get_data_value(self):
+        return str(self.get_value())
+
+    def update_data_value(self):
+        self.data_value = self.get_data_value()
 
     #---------------------------------------------------------------------------
     # Default values
@@ -87,6 +102,9 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     def _z_index_default(self):
         return (self.data_src3d.scalar_data.shape[0] + 1) // 2
     
+    def _data_value_default(self):
+        return self.get_data_value()
+
     def _data_src3d_default(self):
         return mlab.pipeline.scalar_field(self.data,
                             figure=self.scene3d.mayavi_scene)
@@ -107,20 +125,41 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         return self.make_ipw_3d('z')
 
 
+    def on_change_axis(self, axis_name):
+        # check value
+        index_name = "{}_index".format(axis_name)
+        axis_number = self.controller.LOCAL_AXIS_NUMBERS[axis_name]
+        index_value = getattr(self, index_name)
+        shape = self.data_src3d.scalar_data.shape
+        index_low = 0
+        index_high = shape[axis_number] - 1
+        if index_value < index_low:
+            index_value = index_low
+            setattr(self, index_name, index_value)
+            return
+        elif index_value > index_high:
+            index_value = index_high
+            setattr(self, index_name, index_value)
+            return
+        # log:
+        self.log_trait_change(index_name)
+        # feedback:
+        self.feedback_attribute(index_name)
+        getattr(self, 'ipw_3d_{}'.format(axis_name)).ipw.slice_position = \
+            index_value + 1
+        self.update_data_value()
+
     @on_trait_change('x_index')
     def on_change_x_index(self):
-        self.log_trait_change('x_index')
-        self.feedback_attribute('x_index')
+        self.on_change_axis('x')
 
     @on_trait_change('y_index')
     def on_change_y_index(self):
-        self.log_trait_change('y_index')
-        self.feedback_attribute('y_index')
+        self.on_change_axis('y')
 
     @on_trait_change('z_index')
     def on_change_z_index(self):
-        self.log_trait_change('z_index')
-        self.feedback_attribute('z_index')
+        self.on_change_axis('z')
 
     #---------------------------------------------------------------------------
     # Scene activation callbaks
@@ -170,12 +209,18 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         # move the others
         def move_view(obj, evt):
             position = obj.GetCurrentCursorPosition()
-            for other_axis, axis_number in self._axis_names.iteritems():
+            for other_axis, axis_number in self.controller.LOCAL_AXIS_NUMBERS.iteritems():
+                ipw3d = getattr(self, 'ipw_3d_{}'.format(other_axis))
+                if other_axis == axis_name:
+                    axis_index_value = int(round(ipw3d.ipw.slice_position)) - 1
+                else:
+                    axis_index_value = int(round(position[axis_number]))
+                axis_index_name = '{}_index'.format(other_axis)
+                setattr(self, axis_index_name, axis_index_value)
                 if other_axis == axis_name:
                     continue
-                ipw3d = getattr(self, 'ipw_3d_%s' % other_axis)
                 ipw3d.ipw.slice_position = position[axis_number]
-                setattr(self, '{}_index'.format(other_axis), int(round(position[axis_number])))
+                #setattr(self, '{}_index'.format(other_axis), int(round(position[axis_number])))
 
         ipw.ipw.add_observer('InteractionEvent', move_view)
         ipw.ipw.add_observer('StartInteractionEvent', move_view)
@@ -194,6 +239,17 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
                                  tvtk.InteractorStyleImage()
         scene.scene.background = (0, 0, 0)
 
+        # Some text:
+        setattr(self, "_{}_label".format(axis_name), self.draw_axis_name(axis_name))
+
+    def draw_axis_name(self, axis_name):
+        axis_name_global = self.controller.get_global_axis_name(axis_name)
+        if axis_name_global == 'w':
+            width = 0.06
+        else:
+            width = 0.04
+        t = mlab.text(0.01, 0.9, axis_name_global, width=width, color=(1, 0, 0))
+        return t
 
     @on_trait_change('scene_x.activated')
     def display_scene_x(self):
@@ -215,20 +271,24 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
                   Group(
                        Item('scene_y',
                             editor=SceneEditor(scene_class=Scene),
-                            height=250, width=300),
+                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
                        Item('scene_z',
                             editor=SceneEditor(scene_class=Scene),
-                            height=250, width=300),
+                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
                        show_labels=False,
                   ),
                   Group(
                        Item('scene_x',
                             editor=SceneEditor(scene_class=Scene),
-                            height=250, width=300),
+                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
                        Item('scene3d',
                             editor=SceneEditor(scene_class=MayaviScene),
-                            height=250, width=300),
+                            height=SCENE_HEIGHT, width=SCENE_WIDTH),
                        show_labels=False,
+                  ),
+                  Group(
+                       Item('data_value'),
+                       show_labels=True,
                   ),
                 ),
                 resizable=True,

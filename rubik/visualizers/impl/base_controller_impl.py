@@ -27,12 +27,15 @@ from .base_class_impl import BaseClassImpl
 from ... import conf
 
 class BaseControllerImpl(BaseClassImpl):
+    CURRENT_ID = 0
+    ID_FORMAT = "controller_{id}"
     ATTRIBUTES = collections.OrderedDict()
     DIMENSIONS = "3D"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) == 3)
     DESCRIPTION = None
     def __init__(self, logger, attributes):
         super(BaseControllerImpl, self).__init__(logger)
+        self.viewers = []
         self.attributes = {}
         
         self.set_attributes(**attributes)
@@ -44,14 +47,39 @@ class BaseControllerImpl(BaseClassImpl):
     def set_attributes(self, **attributes):
         for attribute_name, attribute_value in attributes.iteritems():
             if not attribute_name in self.ATTRIBUTES:
-                self.logger.warn("warning: invalid attribute {!r} ignored".format(attribute_name))
+                self.logger.warn("{}: warning: invalid attribute {!r} ignored".format(self.name, attribute_name))
         for attribute_name, attribute in self.ATTRIBUTES.iteritems():
             if attribute_name in attributes:
                 attribute_value = attributes[attribute_name]
-                self.logger.info("setting attribute {}={!r}".format(attribute_name, attribute_value))
+                self.logger.info("{}: setting attribute {}={!r}".format(self.name, attribute_name, attribute_value))
                 #print "{!r} {!r} {!r}".format(attribute_name, attribute_value, attribute)
                 self.attributes[attribute_name] = attribute.validate(attribute_name, attribute_value)
             else:
                 attribute_value = attribute.default()
-                self.logger.info("setting attribute {} to default {!r}".format(attribute_name, attribute_value))
+                self.logger.info("{}: setting attribute {} to default {!r}".format(self.name, attribute_name, attribute_value))
                 self.attributes[attribute_name] = attribute_value
+
+
+    def apply_attributes(self):
+        for attribute_name in self.ATTRIBUTES:
+            self.apply_attribute(attribute_name)
+
+    def apply_attribute(self, attribute_name):
+        for viewer in self.viewers:
+            self.apply_attribute_to_viewer(viewer, attribute_name)
+
+    def apply_attribute_to_viewer(self, viewer, attribute_name):
+        viewer.feedback = False
+        try:
+            self.logger.info("{}: applying attribute {}={!r} to viewer {}".format(self.name, attribute_name, getattr(self, attribute_name), viewer.name))
+            setattr(viewer, attribute_name, getattr(self, attribute_name))
+        finally:
+            viewer.feedback = True
+            
+            
+    def run(self):
+        threads = []
+        for viewer in self.viewers:
+            viewer.edit_traits()
+        self.configure_traits()
+

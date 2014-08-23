@@ -22,7 +22,6 @@ __all__ = [
 ]
 
 import collections
-import threading
 
 from traits.api import \
     HasTraits, on_trait_change, \
@@ -33,47 +32,22 @@ from traitsui.api import \
     View, Item, HGroup, Group, \
     RangeEditor, EnumEditor
 
+from traitsui.menu import OKButton, UndoButton, RevertButton
+
 from .base_controller_impl import BaseControllerImpl
 
 from .attributes import \
-    IndexAttribute
+    IndexAttribute, \
+    Dimension4DAttribute
     
-class ThreadedView(threading.Thread):
-    def __init__(self, viewer):
-        threading.Thread.__init__(self)
-        self.viewer = viewer
 
-    def run(self):
-        self.viewer.configure_traits()
-
-
-class BaseController(HasTraits, BaseControllerImpl):
-    def __init__(self, logger, attributes, **traits):
-        BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
-        HasTraits.__init__(self, **traits)
-        self.viewers = []
-
-    def apply(self):
-        for attribute_name in self.ATTRIBUTES:
-            self.apply_attribute(attribute_name)
-
-    def apply_attribute(self, attribute_name):
-        for viewer in self.viewers:
-            setattr(viewer, attribute_name, getattr(self, attribute_name))
-            
-    def run(self):
-        threads = []
-        for viewer in self.viewers:
-            viewer.edit_traits()
-        self.configure_traits()
-
-class Controller(BaseController):
+class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
         ('w', IndexAttribute('w')),
         ('x', IndexAttribute('x')),
         ('y', IndexAttribute('y')),
         ('z', IndexAttribute('z')),
-        ('slicing_axis', IndexAttribute('w')),
+        ('slicing_axis', Dimension4DAttribute()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -81,8 +55,10 @@ class Controller(BaseController):
 Controller for multiple viewers
 """
     LABEL_WIDTH = 30
-    AXIS_NAMES = ['w', 'x', 'y', 'z']
-    AXIS_NUMBERS = dict((axis_name, axis_number) for axis_number, axis_name in enumerate(AXIS_NAMES))
+    LOCAL_AXIS_NAMES = ['x', 'y', 'z']
+    LOCAL_AXIS_NUMBERS = dict((axis_name, axis_number) for axis_number, axis_name in enumerate(LOCAL_AXIS_NAMES))
+    GLOBAL_AXIS_NAMES = ['w', 'x', 'y', 'z']
+    GLOBAL_AXIS_NUMBERS = dict((axis_name, axis_number) for axis_number, axis_name in enumerate(GLOBAL_AXIS_NAMES))
     S_ALL = slice(None, None, None)
 
     # The axis selectors
@@ -114,7 +90,8 @@ Controller for multiple viewers
 
 
     def __init__(self, logger, attributes, **traits):
-        super(Controller, self).__init__(logger=logger, attributes=attributes, **traits)
+        BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
+        HasTraits.__init__(self, **traits)
         self.w_low, self.x_low, self.y_low, self.z_low = 0, 0, 0, 0
         rank = len(self.data.shape)
         if rank == 2:
@@ -127,6 +104,7 @@ Controller for multiple viewers
         elif rank == 4:
             wh, xh, yh, zh = self.data.shape
         self.w_high, self.x_high, self.y_high, self.z_high = wh - 1, xh - 1, yh - 1, zh - 1
+        self.set_axis_mapping()
 
 
     ### U t i l i t i e s :
@@ -142,11 +120,32 @@ Controller for multiple viewers
     def get_volume(self):
         if len(self.data.shape) == 4:
             s = [self.S_ALL, self.S_ALL, self.S_ALL]
-            s.insert(self.AXIS_NUMBERS[self.slicing_axis], getattr(self, '{}_index'.format(self.slicing_axis)))
+            s.insert(self.GLOBAL_AXIS_NUMBERS[self.slicing_axis], getattr(self, '{}_index'.format(self.slicing_axis)))
             return self.data[s]
         else:
             return self.data
 
+    def set_axis_mapping(self):
+        self._m_local2global = {}
+        self._m_global2local = {}
+        local_axis_number = 0
+        for global_axis_number, global_axis_name in enumerate(self.GLOBAL_AXIS_NAMES):
+            if global_axis_name != self.slicing_axis:
+                local_axis_name = self.LOCAL_AXIS_NAMES[local_axis_number]
+                print self.LOCAL_AXIS_NAMES, global_axis_name, self.slicing_axis, local_axis_number, local_axis_name
+                self._m_local2global[local_axis_name] = global_axis_name
+                self._m_global2local[global_axis_name] = local_axis_name
+                local_axis_number += 1
+        print "l2g:", self._m_local2global
+        print "g2l:", self._m_global2local
+
+    def get_global_axis_name(self, local_axis_name):
+        return self._m_local2global[local_axis_name]
+        
+    def get_local_axis_name(self, global_axis_name):
+        return self._m_global2local[global_axis_name]
+        
+        
     ### D e f a u l t s :
     def _data_shape_default(self):
         return 'x'.join(str(d) for d in self.data.shape)
@@ -177,25 +176,33 @@ Controller for multiple viewers
     def _slicing_axis_default(self):
         slicing_axis = self.attributes.get("slicing_axis", None) 
         if slicing_axis is None:
-            slicing_axis = self.AXIS_NAMES[0]
+            slicing_axis = self.GLOBAL_AXIS_NAMES[0]
         return slicing_axis
+
+    def on_change_axis(self, global_axis_name):
+        if global_axis_name == self.slicing_axis:
+            self.logger.error("{}: changing the slicing axis is not supported yet".format(self.name))
+        else:
+            local_axis_name = self.get_local_axis_name(global_axis_name)
+            self.log_trait_change('{}_index'.format(global_axis_name))
+            self.apply_attribute('{}_index'.format(local_axis_name))
 
     ### T r a t s   c h a n g e s :
     @on_trait_change('w_index')
     def on_change_w_index(self):
-        self.log_trait_change('w_index')
+        self.on_change_axis('w')
 
     @on_trait_change('x_index')
     def on_change_x_index(self):
-        self.log_trait_change('x_index')
+        self.on_change_axis('x')
 
     @on_trait_change('y_index')
     def on_change_y_index(self):
-        self.log_trait_change('y_index')
+        self.on_change_axis('y')
 
     @on_trait_change('z_index')
     def on_change_z_index(self):
-        self.log_trait_change('z_index')
+        self.on_change_axis('z')
        
 
     controller_view = View(
@@ -206,15 +213,10 @@ Controller for multiple viewers
                     label="Shape",
                     style="readonly",
                 ),
-#                Item(
-#                    'dimensions',
-#                    label="Dimensions",
-#                    style="readonly",
-#                ),
                 Item(
                     'slicing_axis',
                     editor=EnumEditor(
-                        values=AXIS_NAMES
+                        values=GLOBAL_AXIS_NAMES
 
                     ),
                     label="Slicing dim",
@@ -285,4 +287,5 @@ Controller for multiple viewers
                 ),
             ),
         ),
+        buttons=[UndoButton, OKButton, RevertButton]
     )

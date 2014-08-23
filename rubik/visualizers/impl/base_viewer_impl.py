@@ -27,13 +27,29 @@ from .base_class_impl import BaseClassImpl
 from ... import conf
 
 class BaseViewerImpl(BaseClassImpl):
+    CURRENT_ID = 0
+    ID_FORMAT = "viewer_{id}"
     def __init__(self, controller, logger=None):
         if logger is None:
             logger = controller.logger
         super(BaseViewerImpl, self).__init__(logger=logger)
+        self.feedback = True
         self.controller = controller
 
+    @classmethod
+    def reserve_viewer_id(cls):
+        viewer_id = cls.VIEWER_ID
+        cls.VIEWER_ID += 1
+        return viewer_id
+
+    def get_feedback(self):
+        return self._feedback
+    def set_feedback(self, feedback):
+        self._feedback = bool(feedback)
+    feedback = property(get_feedback, set_feedback)
 
     def feedback_attribute(self, attribute_name):
-        setattr(self.controller, attribute_name, getattr(self, attribute_name))
+        if self.feedback:
+            self.logger.info("{}: sending feedback for attribute {}={!r} to controller {}".format(self.name, attribute_name, getattr(self, attribute_name), self.controller.name))
+            setattr(self.controller, attribute_name, getattr(self, attribute_name))
 

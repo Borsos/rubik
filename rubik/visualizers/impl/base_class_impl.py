@@ -24,15 +24,24 @@ __all__ = [
 from ... import conf
 
 class BaseClassImpl(object):
+    CURRENT_ID = 0
+    ID_FORMAT = "{id}"
     def __init__(self, logger):
         self.logger = logger
+        self.name = self.reserve_id()
 
+    @classmethod
+    def reserve_id(cls):
+        cur_id = cls.CURRENT_ID
+        cls.CURRENT_ID += 1
+        return cls.ID_FORMAT.format(id=cur_id)
+            
     @classmethod
     def window_title(cls, name=None):
         if name is None:
             name = cls.__name__
-        return "Rubik {} {}".format(name, conf.VERSION)
+        return "{} - Rubik {}".format(name, conf.VERSION)
 
     def log_trait_change(self, traits):
-        self.logger.info("changed traits: {}".format(traits))
+        self.logger.info("{}: changed traits: {}".format(self.name, traits))
 
