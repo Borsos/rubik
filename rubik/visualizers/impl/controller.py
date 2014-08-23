@@ -64,12 +64,7 @@ class BaseController(HasTraits, BaseControllerImpl):
     def run(self):
         threads = []
         for viewer in self.viewers:
-            #t = ThreadedView(viewer)
-            #print "AA"
-            #t.start()
-            #print "BB"
-            viewer.configure_traits()
-            #threads.append(t)
+            viewer.edit_traits()
         self.configure_traits()
 
 class Controller(BaseController):
@@ -135,8 +130,14 @@ Controller for multiple viewers
 
 
     ### U t i l i t i e s :
+    def create_viewer(self, viewer_class):
+        return viewer_class(controller=self, data=self.get_volume())
+
     def add_viewer(self, viewer_class):
-        self.viewers.append(viewer_class(controller=self, data=self.get_volume()))
+        viewer = self.create_viewer(viewer_class)
+        self.viewers.append(viewer)
+        return viewer
+     
 
     def get_volume(self):
         if len(self.data.shape) == 4:
