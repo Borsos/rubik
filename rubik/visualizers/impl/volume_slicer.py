@@ -41,6 +41,7 @@ from traits.api import HasTraits, Instance, Array, \
     Trait, Button, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
+    HSplit, \
     Label, RangeEditor, EnumEditor, BooleanEditor, \
     ButtonEditor
 
@@ -158,8 +159,8 @@ Show 2D slices for the given cube.
     locate_mode = Enum(*LOCATE_MODES)
     locate_value = Float()
     locate_mode_is_value = Bool()
-    locate_button = Button()
     locate_prev_button = Button()
+    locate_nearest_button = Button()
     locate_next_button = Button()
 
     _axis_3d = ['x', 'y', 'z']
@@ -268,11 +269,13 @@ Show 2D slices for the given cube.
         elif self.locate_mode == LOCATE_MODE_VALUE:
             return self.locate_value
 
-    def locate(self):
+    def locate_nearest(self):
         data = self.data_src3d.scalar_data
         diff = abs(data - self.locate_value)
         indices_3d = np.unravel_index(diff.argmin(), diff.shape)
         self.goto_indices(indices_3d)
+        value = data[indices_3d]
+        self.locate_value = value
 
     def goto_indices(self, indices_3d):
         if len(indices_3d) == 2:
@@ -287,30 +290,24 @@ Show 2D slices for the given cube.
             self.x_index, self.y_index = indices_4d
             
     def locate_sign(self, sign):
+        self.locate_mode = LOCATE_MODE_VALUE
         data = self.data_src3d.scalar_data
-        if sign > 0:
-            diff = +data - self.locate_value
-        else:
-            diff = -data + self.locate_value
+        diff = sign * (data - self.locate_value)
+        diff =  np.where(diff <= 0, diff.max() + 1, diff)
         n = 1
         for d in diff.shape:
             n *= d
-        #print diff
         l = diff.reshape((n, )).argsort()
         for i in l:
             indices_3d = np.unravel_index(i, data.shape)
-            if diff[indices_3d] < 0:
-                continue
-            value = data[indices_3d]
-            #print "   ", i, indices_3d, value, value == self.locate_value
-            if value != self.locate_value:
-                break
+            break
         else:
-            #print "not found"
+            # not found
             return
-        #print "sign=", sign, "locate_value=", self.locate_value, "indices_3d=", indices_3d, "value=", value
-        self.locate_value = data[indices_3d]
-        self.goto_indices(indices_3d)
+        value = data[indices_3d]
+        if (sign > 0 and value > self.locate_value) or (sign < 0 and value < self.locate_value):
+            self.locate_value = value
+            self.goto_indices(indices_3d)
         
     def locate_next(self):
         self.locate_sign(+1)
@@ -484,9 +481,9 @@ Show 2D slices for the given cube.
         self.locate_mode_is_value = (self.locate_mode == LOCATE_MODE_VALUE)
         self.locate_value = self.get_locate_value()
 
-    @on_trait_change('locate_button')
-    def on_change_locate_button(self):
-        self.locate()
+    @on_trait_change('locate_nearest_button')
+    def on_change_locate_nearest_button(self):
+        self.locate_nearest()
 
     @on_trait_change('locate_prev_button')
     def on_change_locate_prev_button(self):
@@ -921,6 +918,13 @@ Show 2D slices for the given cube.
                 ),
                 '_',
                 Item(
+                    'colorbar',
+                    editor=BooleanEditor(
+                    ),
+                    label="Colorbar",
+                ),
+                '_',
+                Item(
                     'locate_mode',
                     editor=EnumEditor(values=LOCATE_MODES),
                     label="Locate mode",
@@ -930,27 +934,23 @@ Show 2D slices for the given cube.
                     'locate_value',
                     enabled_when='locate_mode_is_value',
                 ),
-                Item(
-                    'locate_button',
-                    editor=ButtonEditor(),
-                    label="Locate",
-                ),
-                Item(
-                    'locate_prev_button',
-                    editor=ButtonEditor(),
-                    label="Prev",
-                ),
-                Item(
-                    'locate_next_button',
-                    editor=ButtonEditor(),
-                    label="Next",
-                ),
-                '_',
-                Item(
-                    'colorbar',
-                    editor=BooleanEditor(
-                    ),
-                    label="Colorbar",
+                HSplit(
+                        Item(
+                            'locate_prev_button',
+                            editor=ButtonEditor(),
+                            label="Prev",
+                        ),
+                        Item(
+                            'locate_nearest_button',
+                            editor=ButtonEditor(),
+                            label="Nearest",
+                        ),
+                        Item(
+                            'locate_next_button',
+                            editor=ButtonEditor(),
+                            label="Next",
+                        ),
+                        show_labels=False,
                 ),
                 show_labels=True,
                 show_border=True
