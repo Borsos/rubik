@@ -37,10 +37,11 @@ import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
     Float, Str, Range, Enum, Bool, Int, \
-    Trait, \
+    Trait, Button, \
     on_trait_change
 from traitsui.api import View, Item, HGroup, Group, \
-    Label, RangeEditor, EnumEditor, BooleanEditor
+    Label, RangeEditor, EnumEditor, BooleanEditor, \
+    ButtonEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
 
@@ -58,7 +59,15 @@ from .attributes import ColormapAttribute, \
                         IndexAttribute,\
                         Dimension4DAttribute, \
                         ClipAttribute, \
-                        SymmetricClipAttribute
+                        SymmetricClipAttribute, \
+                        LocateValueAttribute, \
+                        LocateModeAttribute, \
+                        LOCATE_MODES, \
+			LOCATE_MODE_VALUE, \
+			LOCATE_MODE_MIN, \
+			LOCATE_MODE_MAX, \
+			LOCATE_MODE_DEFAULT
+
 from .base_visualizer_impl import BaseVisualizerImpl
 
 ################################################################################
@@ -76,6 +85,8 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('clip_max', ClipAttribute()),
         ('clip_symmetric', SymmetricClipAttribute()),
         ('slicing_dim', Dimension4DAttribute()),
+        ('locate_mode', LocateModeAttribute()),
+        ('locate_value', LocateValueAttribute()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -142,6 +153,10 @@ Show 2D slices for the given cube.
     lut_mode = Enum(*COLORMAPS)
     colorbar = Bool()
     is4D = Bool(False)
+    locate_mode = Enum(*LOCATE_MODES)
+    locate_value = Float()
+    locate_mode_is_value = Bool()
+    locate_button = Button()
 
     _axis_3d = ['x', 'y', 'z']
     _axis_names_3d = dict(x=0, y=1, z=2)
@@ -235,9 +250,58 @@ Show 2D slices for the given cube.
         else:
             return self.data
 
+    def get_min(self):
+        return self.data_src3d.scalar_data.min()
+
+    def get_max(self):
+        return self.data_src3d.scalar_data.max()
+
+    def get_locate_value(self):
+        if self.locate_mode == LOCATE_MODE_MIN:
+            return self.get_min()
+        elif self.locate_mode == LOCATE_MODE_MAX:
+            return self.get_max()
+        elif self.locate_mode == LOCATE_MODE_VALUE:
+            return self.locate_value
+
+    def locate(self):
+        data = self.data_src3d.scalar_data
+        diff = abs(data - self.locate_value)
+        indices_3d = np.unravel_index(diff.argmin(), diff.shape)
+        if len(indices_3d) == 2:
+            indices_3d = indices_3d + (0, )
+        indices_4d = self.map_indices(*indices_3d)
+        #print indices_3d, "->", indices_4d
+        if len(indices_4d) == 4:
+            self.w_index, self.x_index, self.y_index, self.z_index = indices_4d
+        elif len(indices_4d) == 3:
+            self.w_index, self.x_index, self.y_index, self.z_index = indices_4d
+        elif len(indices_4d) == 2:
+            self.x_index, self.y_index = indices_4d
+            
+        
     #---------------------------------------------------------------------------
     # Default values
     #---------------------------------------------------------------------------
+    def _locate_mode_default(self):
+        if self.attributes["locate_mode"] is not None:
+            return self.attributes["locate_mode"]
+        elif self.attributes["locate_value"] is not None:
+            return LOCATE_MODE_VALUE
+        else:
+            return LOCATE_MODE_DEFAULT
+
+    def _locate_value_default(self):
+        if self.locate_mode == LOCATE_MODE_MIN:
+            return self.get_min()
+        elif self.locate_mode == LOCATE_MODE_MAX:
+            return self.get_max()
+        elif self.locate_mode == LOCATE_MODE_VALUE:
+            if self.attributes["locate_value"] is not None:
+                return self.attributes["locate_value"]
+            else:
+                return self.get_min()
+        
     def _data_src3d_default(self):
         data = self.get_data(self.ALL, self.ALL, self.ALL)
         return mlab.pipeline.scalar_field(data,
@@ -376,6 +440,15 @@ Show 2D slices for the given cube.
         self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
         self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
 
+    @on_trait_change('locate_mode')
+    def on_change_locate_mode(self):
+        self.locate_mode_is_value = (self.locate_mode == LOCATE_MODE_VALUE)
+        self.locate_value = self.get_locate_value()
+
+    @on_trait_change('locate_button')
+    def on_change_locate_button(self):
+        self.locate()
+
     @on_trait_change('clip')
     def on_change_clip(self):
         if self.stop_clip_interaction:
@@ -508,6 +581,7 @@ Show 2D slices for the given cube.
             self.set_clips()
             self.set_data_range()
             self.set_data_value()
+            self.locate_value = self.get_locate_value()
 
     @on_trait_change('w_index')
     def on_change_w_index(self):
@@ -797,6 +871,22 @@ Show 2D slices for the given cube.
                     label="Symmetric",
                     tooltip="makes clip symmetric",
                     help="if set, clip_min=-clip, clip_max=+clip",
+                ),
+                '_',
+                Item(
+                    'locate_mode',
+                    editor=EnumEditor(values=LOCATE_MODES),
+                    label="Locate mode",
+                    tooltip="Set locate mode",
+                ),
+                Item(
+                    'locate_value',
+                    enabled_when='locate_mode_is_value',
+                ),
+                Item(
+                    'locate_button',
+                    editor=ButtonEditor(),
+                    label="Locate",
                 ),
                 '_',
                 Item(

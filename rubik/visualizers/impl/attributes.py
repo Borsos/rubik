@@ -18,13 +18,29 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-    'Colormap',
-    'Colorbar',
-    'Contours',
-    'Transparent',
-    'Opacity',
-    'Index',
+    'LOCATE_MODES',
+    'LOCATE_MODE_MAX',
+    'LOCATE_MODE_MIN',
+    'LOCATE_MODE_VALUE',
+    'LOCATE_MODE_DEFAULT',
+    'ColormapAttribute',
+    'ColorbarAttribute',
+    'ContoursAttribute',
+    'TransparentAttribute',
+    'OpacityAttribute',
+    'IndexAttribute',
+    'Dimension4DAttribute',
+    'ClipAttribute',
+    'SymmetricClipAttribute',
+    'LocateModeAttribute',
+    'LocateValueAttribute',
 ]
+
+LOCATE_MODE_MAX = 'max'
+LOCATE_MODE_MIN = 'min'
+LOCATE_MODE_VALUE = 'value'
+LOCATE_MODES = [LOCATE_MODE_MAX, LOCATE_MODE_MIN, LOCATE_MODE_VALUE]
+LOCATE_MODE_DEFAULT = LOCATE_MODES[0]
 
 from .mayavi_data import COLORMAPS
 from ..attribute_types import IntegerAttributeType, \
@@ -36,16 +52,17 @@ from ..attribute_types import IntegerAttributeType, \
 
 from ..attribute import Attribute
 
-class ColormapAttribute(Attribute):
+class EnumAttribute(Attribute):
+    def index(self, v):
+        return self._attribute_type.index(v)
+
+class ColormapAttribute(EnumAttribute):
     def __init__(self):
         default = 'blue-red'
         description = """\
 Apply the selected colormap.
 """
         super(ColormapAttribute, self).__init__(default=default, description=description, attribute_type=EnumAttributeType(COLORMAPS))
-
-    def index(self, v):
-        return self._attribute_type.index(v)
 
 class ColorbarAttribute(Attribute):
     def __init__(self):
@@ -93,7 +110,7 @@ Available values: any valid {index_name} index
 """.format(index_name=self.index_name)
         super(IndexAttribute, self).__init__(default=default, description=description, attribute_type=PositiveIntegerAttributeType())
 
-class Dimension4DAttribute(Attribute):
+class Dimension4DAttribute(EnumAttribute):
     def __init__(self):
         self.dimensions = ['w', 'x', 'y', 'z']
         default = 'w'
@@ -102,9 +119,6 @@ class Dimension4DAttribute(Attribute):
 Available values: {values}
 """.format(values=', '.join(repr(d) for d in self.dimensions))
         super(Dimension4DAttribute, self).__init__(default=default, description=description, attribute_type=EnumAttributeType(self.dimensions))
-
-    def index(self, v):
-        return self._attribute_type.index(v)
 
 class ClipAttribute(Attribute):
     def __init__(self):
@@ -124,3 +138,18 @@ Available values: {values}
 """.format(values=', '.join(repr(v) for v in (True, False)))
         super(SymmetricClipAttribute, self).__init__(default=default, description=description, attribute_type=BooleanAttributeType())
 
+class LocateModeAttribute(EnumAttribute):
+    def __init__(self):
+        default = None
+        description = """\
+Locate mode: {}
+""".format('|'.join(e for e in LOCATE_MODES))
+        super(LocateModeAttribute, self).__init__(default=default, description=description, attribute_type=EnumAttributeType(LOCATE_MODES))
+
+class LocateValueAttribute(Attribute):
+    def __init__(self):
+        default = None
+        description = """\
+Locate value
+"""
+        super(LocateValueAttribute, self).__init__(default=default, description=description, attribute_type=FloatAttributeType())
