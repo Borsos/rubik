@@ -34,6 +34,7 @@ confused with too rich interaction.
 
 import collections
 import numpy as np
+import sys
 
 from traits.api import HasTraits, Instance, Array, \
     Float, Str, Range, Enum, Bool, Int, \
@@ -69,6 +70,7 @@ from .attributes import ColormapAttribute, \
 			LOCATE_MODE_DEFAULT
 
 from .base_visualizer_impl import BaseVisualizerImpl
+from ... import cubes
 
 ################################################################################
 # The object implementing the dialog
@@ -157,6 +159,8 @@ Show 2D slices for the given cube.
     locate_value = Float()
     locate_mode_is_value = Bool()
     locate_button = Button()
+    locate_prev_button = Button()
+    locate_next_button = Button()
 
     _axis_3d = ['x', 'y', 'z']
     _axis_names_3d = dict(x=0, y=1, z=2)
@@ -268,17 +272,52 @@ Show 2D slices for the given cube.
         data = self.data_src3d.scalar_data
         diff = abs(data - self.locate_value)
         indices_3d = np.unravel_index(diff.argmin(), diff.shape)
+        self.goto_indices(indices_3d)
+
+    def goto_indices(self, indices_3d):
         if len(indices_3d) == 2:
             indices_3d = indices_3d + (0, )
         indices_4d = self.map_indices(*indices_3d)
-        #print indices_3d, "->", indices_4d
+        #print (self.w_index, self.x_index, self.y_index, self.z_index), ":::", indices_3d, "->", indices_4d
         if len(indices_4d) == 4:
             self.w_index, self.x_index, self.y_index, self.z_index = indices_4d
         elif len(indices_4d) == 3:
-            self.w_index, self.x_index, self.y_index, self.z_index = indices_4d
+            self.x_index, self.y_index, self.z_index = indices_4d
         elif len(indices_4d) == 2:
             self.x_index, self.y_index = indices_4d
             
+    def locate_sign(self, sign):
+        data = self.data_src3d.scalar_data
+        if sign > 0:
+            diff = +data - self.locate_value
+        else:
+            diff = -data + self.locate_value
+        n = 1
+        for d in diff.shape:
+            n *= d
+        #print diff
+        l = diff.reshape((n, )).argsort()
+        for i in l:
+            indices_3d = np.unravel_index(i, data.shape)
+            if diff[indices_3d] < 0:
+                continue
+            value = data[indices_3d]
+            #print "   ", i, indices_3d, value, value == self.locate_value
+            if value != self.locate_value:
+                break
+        else:
+            #print "not found"
+            return
+        #print "sign=", sign, "locate_value=", self.locate_value, "indices_3d=", indices_3d, "value=", value
+        self.locate_value = data[indices_3d]
+        self.goto_indices(indices_3d)
+        
+    def locate_next(self):
+        self.locate_sign(+1)
+
+    def locate_prev(self):
+        self.locate_sign(-1)
+
         
     #---------------------------------------------------------------------------
     # Default values
@@ -448,6 +487,14 @@ Show 2D slices for the given cube.
     @on_trait_change('locate_button')
     def on_change_locate_button(self):
         self.locate()
+
+    @on_trait_change('locate_prev_button')
+    def on_change_locate_prev_button(self):
+        self.locate_prev()
+
+    @on_trait_change('locate_next_button')
+    def on_change_locate_next_button(self):
+        self.locate_next()
 
     @on_trait_change('clip')
     def on_change_clip(self):
@@ -887,6 +934,16 @@ Show 2D slices for the given cube.
                     'locate_button',
                     editor=ButtonEditor(),
                     label="Locate",
+                ),
+                Item(
+                    'locate_prev_button',
+                    editor=ButtonEditor(),
+                    label="Prev",
+                ),
+                Item(
+                    'locate_next_button',
+                    editor=ButtonEditor(),
+                    label="Next",
                 ),
                 '_',
                 Item(
