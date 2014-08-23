@@ -19,7 +19,7 @@ logger = set_logger(verbose_level=3)
 
 controller = Controller(logger=logger, attributes=attributes, shape=shape.shape())
 controller.add_viewer(viewer_class=VolumeSlicerViewer, data=cube01)
-controller.add_viewer(viewer_class=VolumeSlicerViewer, data=cube02)
+#controller.add_viewer(viewer_class=VolumeSlicerViewer, data=cube02)
 
 
 controller.run()

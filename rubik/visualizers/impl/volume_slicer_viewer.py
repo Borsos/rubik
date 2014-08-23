@@ -24,7 +24,7 @@ __all__ = [
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Int, Str, \
+    Int, Str, Float, \
     on_trait_change
 
 from traitsui.api import View, Item, HGroup, Group
@@ -65,6 +65,9 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     y_index = Int()
     z_index = Int()
 
+    clip_min = Float()
+    clip_max = Float()
+
     data_value = Str()
     
     SCENE_WIDTH = -300
@@ -93,9 +96,37 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     def update_data_value(self):
         self.data_value = self.get_data_value()
 
-    #---------------------------------------------------------------------------
-    # Default values
-    #---------------------------------------------------------------------------
+    def set_volume(self, data):
+        self.data_src3d.scalar_data = data
+
+    def update_volume(self, clip_min, clip_max):
+        data_range = clip_min, clip_max
+        self.view3d.module_manager.scalar_lut_manager.data_range = data_range
+#        mlab.clf(self.scene3d.mayavi_scene)
+#        self.display_scene3d()
+#        mlab.draw(self.scene3d.mayavi_scene)
+        self.ipw_x.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_y.module_manager.scalar_lut_manager.data_range = data_range
+        self.ipw_z.module_manager.scalar_lut_manager.data_range = data_range
+#        self.ipw_x.update_data()
+#        self.ipw_x.update_pipeline()
+#        self.ipw_y.update_data()
+#        self.ipw_y.update_pipeline()
+#        self.ipw_z.update_data()
+#        self.ipw_z.update_pipeline()
+#        self.display_scene_x()
+#        self.display_scene_y()
+#        self.display_scene_z()
+        self.update_data_value()
+        self.redraw_axis_names()
+
+    ### D e f a u l t s :
+    def _clip_min_default(self):
+        return self.data_src3d.scalar_data.min()
+
+    def _clip_max_default(self):
+        return self.data_src3d.scalar_data.max()
+
     def _x_index_default(self):
         return (self.data_src3d.scalar_data.shape[0] + 1) // 2
     
@@ -169,9 +200,10 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     #---------------------------------------------------------------------------
     @on_trait_change('scene3d.activated')
     def display_scene3d(self):
-        outline = mlab.pipeline.outline(self.data_src3d,
-                        figure=self.scene3d.mayavi_scene,
-                        )
+        self.view3d = mlab.pipeline.outline(
+            self.data_src3d,
+            figure=self.scene3d.mayavi_scene,
+        )
         self.scene3d.mlab.view(40, 50)
         # Interaction properties can only be changed after the scene
         # has been created, and thus the interactor exists
@@ -246,13 +278,24 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         setattr(self, "_{}_label".format(axis_name), self.draw_axis_name(axis_name))
 
     def draw_axis_name(self, axis_name):
-        axis_name_global = self.controller.get_global_axis_name(axis_name)
-        if axis_name_global == 'w':
+        global_axis_name = self.controller.get_global_axis_name(axis_name)
+        if global_axis_name == 'w':
             width = 0.06
         else:
             width = 0.04
-        t = mlab.text(0.01, 0.9, axis_name_global, width=width, color=(1, 0, 0))
+        t = mlab.text(0.01, 0.9, global_axis_name, width=width, color=(1, 0, 0))
         return t
+
+    def redraw_axis_names(self):
+        for local_axis_name in self.controller.LOCAL_AXIS_NAMES:
+            global_axis_name = self.controller.get_global_axis_name(local_axis_name)
+            text = getattr(self, "_{}_label".format(local_axis_name))
+            text.text = global_axis_name
+            if global_axis_name == 'w':
+                width = 0.06
+            else:
+                width = 0.04
+            text.width = width
 
     @on_trait_change('scene_x.activated')
     def display_scene_x(self):

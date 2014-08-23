@@ -25,7 +25,7 @@ import collections
 
 from traits.api import \
     HasTraits, on_trait_change, \
-    Int, Str, Bool, \
+    Int, Str, Bool, Float, \
     Range
 
 from traitsui.handler import Handler
@@ -33,7 +33,7 @@ from traitsui.handler import Handler
 from traitsui.api import \
     View, Item, HGroup, Group, \
     Action, \
-    RangeEditor, EnumEditor
+    RangeEditor, EnumEditor, BooleanEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
 from traitsui.handler import Handler
@@ -42,18 +42,13 @@ from .base_controller_impl import BaseControllerImpl
 
 from .attributes import \
     IndexAttribute, \
-    Dimension4DAttribute
+    Dimension4DAttribute, \
+    ClipAttribute, \
+    SymmetricClipAttribute
+
     
 class ControllerHandler(Handler):
     def _on_close(self, info):
-        print "CLOSE!", info
-        print filter(lambda x: 'instance' in x, dir(self))
-        print type(info)
-        print info.editable_traits(), info._instance_traits()
-        print filter(lambda x: 'instance' in x, dir(info))
-        print type(info.ui)
-        print info.ui.editable_traits(), info.ui._instance_traits()
-        print filter(lambda x: 'instance' in x, dir(info.ui))
         info.ui.dispose()
 
 class Controller(HasTraits, BaseControllerImpl):
@@ -63,6 +58,10 @@ class Controller(HasTraits, BaseControllerImpl):
         ('y', IndexAttribute('y')),
         ('z', IndexAttribute('z')),
         ('slicing_axis', Dimension4DAttribute()),
+        ('clip', ClipAttribute()),
+        ('clip_min', ClipAttribute()),
+        ('clip_max', ClipAttribute()),
+        ('clip_symmetric', SymmetricClipAttribute()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -104,6 +103,14 @@ Controller for multiple viewers
     data_shape = Str("")
     close_button = Action(name='Close', action='_on_close')
 
+    data_min = Float()
+    data_max = Float()
+
+    clip = Float()
+    clip_min = Float()
+    clip_max = Float()
+    clip_symmetric = Bool()
+    clip_asymmetric = Bool()
 
     def __init__(self, logger, attributes, **traits):
         BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
@@ -125,17 +132,32 @@ Controller for multiple viewers
 
     ### U t i l i t i e s :
     def create_viewer(self, viewer_class, data):
-        return viewer_class(controller=self, data=self.get_local_volume(data))
+        return viewer_class(controller=self, data=data)
 
     def add_viewer(self, viewer_class, data):
         if data.shape != self.shape:
             raise ValueError("{}: cannot create {} viewer: data shape {} is not {}".format(self.name, viewer_class.__name__, data.shape, self.shape))
-        viewer = self.create_viewer(viewer_class, data)
+        local_volume = self.get_local_volume(data)
+        viewer = self.create_viewer(viewer_class, local_volume)
         self.viewers.append(viewer)
         self.viewers_data[viewer] = data
         self.add_trait(viewer.name, viewer)
+        self.update_data_range()
         return viewer
 
+    def update_data_range(self):
+        if self.viewers:
+            data_min_l, data_max_l = [], []
+            for viewer in self.viewers:
+                for local_volume in viewer.data:
+                    data_min_l.append(local_volume.min())
+                    data_max_l.append(local_volume.max())
+            self.data_min = float(min(data_min_l))
+            self.data_max = float(max(data_max_l))
+        else:
+            self.data_min = 0.0
+            self.data_max = 0.0
+                
     def get_local_volume(self, data):
         if data.shape != self.shape:
             raise ValueError("{}: invalid shape {}".format(self.name, data.shape))
@@ -166,8 +188,50 @@ Controller for multiple viewers
     def get_local_axis_name(self, global_axis_name):
         return self._m_global2local[global_axis_name]
         
+    def get_clips(self):
+        if self.attributes["clip_min"] is not None:
+            clip_min = self.attributes["clip_min"]
+        elif self.attributes["clip"] is not None:
+            clip_min = -abs(self.attributes["clip"])
+        else:
+            clip_min = self.data_min
+        if self.attributes["clip_max"] is not None:
+            clip_max = self.attributes["clip_max"]
+        elif self.attributes["clip"] is not None:
+            clip_max = +abs(self.attributes["clip"])
+        else:
+            clip_max = self.data_max
+        clip = max(abs(clip_min), abs(clip_max))
+        if self.clip_symmetric:
+            clip_min = -clip
+            clip_max = +clip
+        return clip, clip_min, clip_max
+
         
     ### D e f a u l t s :
+    def _clip_symmetric_default(self):
+        if self.attributes["clip_symmetric"] is not None:
+            clip_symmetric = self.attributes["clip_symmetric"]
+        else:
+            clip_symmetric = False
+        self.clip_asymmetric = not clip_symmetric
+        return clip_symmetric
+
+    def _clip_default(self):
+        clip, clip_min, clip_max = self.get_clips()
+        #print "CLIP_DEF: ", clip
+        return clip
+
+    def _clip_min_default(self):
+        clip, clip_min, clip_max = self.get_clips()
+        #print "CLIP_MIN: ", clip_min
+        return clip_min
+
+    def _clip_max_default(self):
+        clip, clip_min, clip_max = self.get_clips()
+        #print "CLIP_MAX: ", clip_max
+        return clip_max
+
     def _data_shape_default(self):
         return 'x'.join(str(d) for d in self.shape)
 
@@ -203,12 +267,26 @@ Controller for multiple viewers
     def on_change_axis(self, global_axis_name):
         if global_axis_name == self.slicing_axis:
             self.logger.error("{}: changing the slicing axis is not supported yet".format(self.name))
+            gmin, gmax = [], []
+            for viewer in self.viewers:
+                local_volume = self.get_local_volume(self.viewers_data[viewer])
+                viewer.set_volume(local_volume)
+                gmin.append(local_volume.min())
+                gmax.append(local_volume.max())
+            self.update_data_range()
+            clip, clip_min, clip_max = self.get_clips()
+            for viewer in self.viewers:
+                viewer.update_volume(clip_min, clip_max)
         else:
             local_axis_name = self.get_local_axis_name(global_axis_name)
             self.log_trait_change('{}_index'.format(global_axis_name))
             self.apply_attribute('{}_index'.format(local_axis_name))
 
     ### T r a t s   c h a n g e s :
+    @on_trait_change('clip_symmetric')
+    def on_change_clip_symmetric(self):
+        self.clip_asymmetric = not self.clip_symmetric
+
     @on_trait_change('w_index')
     def on_change_w_index(self):
         self.on_change_axis('w')
@@ -306,6 +384,40 @@ Controller for multiple viewers
                     format_str="%<8s",
                     tooltip="the z dimension",
                 ),
+                '_',
+                Item(
+                    'data_min',
+                    label="Data min",
+                    style="readonly",
+                ),
+                Item(
+                    'data_max',
+                    label="Data max",
+                    style="readonly",
+                ),
+                Item(
+                    'clip',
+                    label="Clip",
+                    visible_when='clip_symmetric',
+                ),
+                Item(
+                    'clip_min',
+                    label="Clip min",
+                    visible_when='clip_asymmetric',
+                ),
+                Item(
+                    'clip_max',
+                    label="Clip max",
+                    visible_when='clip_asymmetric',
+                ),
+                Item(
+                    'clip_symmetric',
+                    editor=BooleanEditor(),
+                    label="Symmetric",
+                    tooltip="makes clip symmetric",
+                    help="if set, clip_min=-clip, clip_max=+clip",
+                ),
+
             ),
         ),
         buttons=[UndoButton, RevertButton, close_button],
