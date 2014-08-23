@@ -87,7 +87,7 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
         ('clip_min', ClipAttribute()),
         ('clip_max', ClipAttribute()),
         ('clip_symmetric', SymmetricClipAttribute()),
-        ('slicing_dim', Dimension4DAttribute()),
+        ('slicing_axis', Dimension4DAttribute()),
         ('locate_mode', LocateModeAttribute()),
         ('locate_value', LocateValueAttribute()),
     ))
@@ -141,8 +141,8 @@ Show 2D slices for the given cube.
     z_index = Int(0)
     z_range = Range(low='z_low', high='z_high', value='z_index')
 
-    ## slicing_dim:
-    slicing_dim = Str()
+    ## slicing_axis:
+    slicing_axis = Str()
 
     data_value = Str("")
     data_shape = Str("")
@@ -175,7 +175,7 @@ Show 2D slices for the given cube.
     def __init__(self, logger, attributes, **traits):
         BaseVisualizerImpl.__init__(self, logger=logger, attributes=attributes)
         super(VolumeSlicer, self).__init__(**traits)
-        self._set_slicing_dim_index() # -> force creation of self._slicing_dim_index
+        self._set_slicing_axis_index() # -> force creation of self._slicing_axis_index
         self.x_low, self.y_low, self.z_low = 0, 0, 0
         rank = len(self.data.shape)
         if rank == 2:
@@ -214,7 +214,7 @@ Show 2D slices for the given cube.
     def _set_axis_map_3d_to_4d(self):
         a4d = 0
         for a3d in 0, 1, 2:
-            if a4d == self._slicing_dim_index:
+            if a4d == self._slicing_axis_index:
                 a4d += 1
             self._axis_map_3d_to_4d[self._axis_3d[a3d]] = self._axis_4d[a4d]
             a4d += 1
@@ -222,7 +222,7 @@ Show 2D slices for the given cube.
     def _set_axis_map_4d_to_3d(self):
         a3d = 0
         for a4d in 0, 1, 2, 3:
-            if a4d == self._slicing_dim_index:
+            if a4d == self._slicing_axis_index:
                 a = ""
             else:
                 a = self._axis_3d[a3d]
@@ -241,7 +241,7 @@ Show 2D slices for the given cube.
 
     def _map_indices_4d(self, x, y, z):
         l = [x, y, z]
-        l.insert(self._slicing_dim_index, getattr(self, '{}_index'.format(self._axis_4d[self._slicing_dim_index])))
+        l.insert(self._slicing_axis_index, getattr(self, '{}_index'.format(self._axis_4d[self._slicing_axis_index])))
         return l
 
     def _select_indices_2d(self, w, x, y, z):
@@ -413,8 +413,8 @@ Show 2D slices for the given cube.
     def _is4D_default(self):
         return len(self.data.shape) >= 4
 
-    def _slicing_dim_default(self):
-        s = self.attributes["slicing_dim"]
+    def _slicing_axis_default(self):
+        s = self.attributes["slicing_axis"]
         if s is None:
             s = 'w'
         return s
@@ -472,8 +472,8 @@ Show 2D slices for the given cube.
         self.data_value = str(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)])
         #self.data_value = "data[{}, {}, {}, {}]={}".format(self.w_index, self.x_index, self.y_index, self.z_index,(self.data[self.select_indices(self.w_index, self.x_index, self.y_index, self.z_index)]))
 
-    def _set_slicing_dim_index(self):
-        self._slicing_dim_index = self.ATTRIBUTES['slicing_dim'].index(self.slicing_dim)
+    def _set_slicing_axis_index(self):
+        self._slicing_axis_index = self.ATTRIBUTES['slicing_axis'].index(self.slicing_axis)
 
     def set_data_range(self):
         data_range = self.clip_min, self.clip_max
@@ -581,10 +581,10 @@ Show 2D slices for the given cube.
                 self.stop_clip_interaction = False
         self.set_data_range()
 
-    @on_trait_change('slicing_dim')
-    def on_change_slicing_dim(self):
-        self.log_trait_change("slicing_dim")
-        self._set_slicing_dim_index()
+    @on_trait_change('slicing_axis')
+    def on_change_slicing_axis(self):
+        self.log_trait_change("slicing_axis")
+        self._set_slicing_axis_index()
         self._set_axis_maps()
         data = self.get_data(self.ALL, self.ALL, self.ALL)
         self.data_src3d.scalar_data = data
@@ -638,8 +638,8 @@ Show 2D slices for the given cube.
         else:
             ## slicing dim
             sel_indices = [self.ALL, self.ALL, self.ALL]
-            slicing_index = getattr(self, '{}_index'.format(self._axis_4d[self._slicing_dim_index]))
-            sel_indices.insert(self._slicing_dim_index, slicing_index)
+            slicing_index = getattr(self, '{}_index'.format(self._axis_4d[self._slicing_axis_index]))
+            sel_indices.insert(self._slicing_axis_index, slicing_index)
             data = self.data[self.select_indices(*sel_indices)]
             self.data_src3d.scalar_data = data
             self.locate_low = data.min()
@@ -844,7 +844,7 @@ Show 2D slices for the given cube.
 #                    style="readonly",
 #                ),
                 Item(
-                    'slicing_dim',
+                    'slicing_axis',
                     editor=EnumEditor(
                         values=['w', 'x', 'y', 'z']
 
