@@ -87,7 +87,6 @@ class BaseControllerImpl(BaseClassImpl):
         self.configure_traits()
 
     def on_exit(self):
-        print "QUA"
         for viewer in self.viewers:
             viewer.on_exit()
         super(BaseControllerImpl, self).on_exit()

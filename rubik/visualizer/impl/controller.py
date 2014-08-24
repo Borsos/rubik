@@ -198,12 +198,9 @@ Controller for multiple viewers
         for global_axis_number, global_axis_name in enumerate(self.GLOBAL_AXIS_NAMES):
             if global_axis_name != self.slicing_axis:
                 local_axis_name = self.LOCAL_AXIS_NAMES[local_axis_number]
-                print self.LOCAL_AXIS_NAMES, global_axis_name, self.slicing_axis, local_axis_number, local_axis_name
                 self._m_local2global[local_axis_name] = global_axis_name
                 self._m_global2local[global_axis_name] = local_axis_name
                 local_axis_number += 1
-        print "l2g:", self._m_local2global
-        print "g2l:", self._m_global2local
 
     def get_global_axis_name(self, local_axis_name):
         return self._m_local2global[local_axis_name]

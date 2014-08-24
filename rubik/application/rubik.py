@@ -19,6 +19,7 @@ __author__ = "Simone Campagna"
 
 import os
 import numpy as np
+import logging
 import warnings
 import itertools
 from collections import OrderedDict
@@ -43,6 +44,8 @@ from .. import cubes
 
 class Rubik(object):
     def __init__(self):
+        self.name = "{} {}".format(self.__class__.__name__, conf.VERSION)
+        self._log_header = "{}: ".format(self.__class__.__name__.lower())
         self.config = config.get_config()
 
         self.input_filenames = InputArgDict(InputFilename)
@@ -93,6 +96,28 @@ class Rubik(object):
         self._locals = {}
 
         self._controller = None
+
+    def log(self, level, message):
+        if level > logging.INFO:
+            format = "{header}{level}: {message}"
+        else:
+            format = "{header}{message}"
+        self.logger.log(level, format.format(header=self._log_header, level=logging.getLevelName(level), message=message))
+
+    def log_debug(self, message):
+        self.log(logging.DEBUG, message)
+
+    def log_info(self, message):
+        self.log(logging.INFO, message)
+
+    def log_warning(self, message):
+        self.log(logging.WARNING, message)
+
+    def log_error(self, message):
+        self.log(logging.ERROR, message)
+
+    def log_critical(self, message):
+        self.log(logging.CRITICAL, message)
 
     def show_logo(self):
         log.PRINT(RUBIK)
@@ -183,10 +208,10 @@ class Rubik(object):
             else:
                 if self.input_filenames is None or len(self.input_filenames) == 0:
                     #self.show_logo_once()
-                    self.logger.warning("warning: nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
+                    self.log_warning("nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
                     return
                 elif len(self.input_filenames) == 0:
-                    self.logger.warning("warning: loading more than an input file is useless if '--expression/-e' is not used")
+                    self.log_warning("loading more than an input file is useless if '--expression/-e' is not used")
     
             if self.in_place:
                 if self.output_filenames:
@@ -236,7 +261,7 @@ class Rubik(object):
             input_bytes_read = input_bytes_sub
         else:
             input_bytes_read = count * input_dtype_bytes 
-        self.logger.debug("trying to read {0} bytes and extract {1} bytes; already read {2} bytes...".format(
+        self.log_debug("trying to read {0} bytes and extract {1} bytes; already read {2} bytes...".format(
                     input_bytes_read,
                     input_bytes_sub,
                     self.total_read_bytes))
@@ -258,7 +283,7 @@ class Rubik(object):
             raise RubikError("invalid read mode {0!r}".format(self.read_mode))
 
     def _read_safe(self, input_label, input_filename):
-        self.logger.debug("executing safe read...")
+        self.log_debug("executing safe read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
@@ -308,7 +333,7 @@ class Rubik(object):
             raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype, input_offset)
-        self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
+        self.log_info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
             c=expected_input_count,
             t=input_dtype.__name__,
             b=msg_bytes,
@@ -317,7 +342,7 @@ class Rubik(object):
         with open(input_filename, input_mode) as f_in:
             if input_offset is not None:
                 offset = input_offset.get_bytes()
-                self.logger.info("seeking {f!r}@{o}...".format(
+                self.log_info("seeking {f!r}@{o}...".format(
                     f=input_filename,
                     o=offset,
                 ))
@@ -359,7 +384,7 @@ class Rubik(object):
         return cube
 
     def _read_optimized(self, input_label, input_filename):
-        self.logger.debug("executing optimized read...")
+        self.log_debug("executing optimized read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.shapes.get(input_label, input_ordinal)
         if shape is None:
@@ -410,7 +435,7 @@ class Rubik(object):
             extractor_msg = ''
         else:
             extractor_msg = "[{0}]".format(extractor)
-        self.logger.info("reading {c} {t!r} elements {b}from {f!r} file {i!r}{x}...".format(
+        self.log_info("reading {c} {t!r} elements {b}from {f!r} file {i!r}{x}...".format(
             c=expected_read_count,
             t=input_dtype.__name__,
             b=msg_bytes,
@@ -420,7 +445,7 @@ class Rubik(object):
         with open(input_filename, input_mode) as f_in:
             if input_offset is not None:
                 offset = input_offset.get_bytes()
-                self.logger.info("seeking {f!r}@{o}...".format(
+                self.log_info("seeking {f!r}@{o}...".format(
                     f=input_filename,
                     o=offset,
                 ))
@@ -532,7 +557,7 @@ class Rubik(object):
             omode = 'appending'
         else:
             omode = 'writing'
-        self.logger.info("{m} {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
+        self.log_info("{m} {c} {t!r} elements {b}to {f!r} file {o!r}...".format(
             m=omode,
             c=cube.size,
             t=output_dtype.__name__,
@@ -542,7 +567,7 @@ class Rubik(object):
         with open(output_filename, output_mode.mode) as f_out:
             if output_offset is not None:
                 offset = output_offset.get_bytes()
-                self.logger.info("seeking {f!r}@{o}...".format(
+                self.log_info("seeking {f!r}@{o}...".format(
                     f=output_filename,
                     o=offset,
                 ))
@@ -726,12 +751,12 @@ ave           = {ave}
         if (not self.clobber) and os.path.exists(output_filename):
             raise RubikError("output file {0!r} already exists".format(output_filename))
         if output_filename in self._used_output_filenames:
-            self.logger.warning("warning: output filename {0!r} already written".format(output_filename))
+            self.log_warning("output filename {0!r} already written".format(output_filename))
         self._used_output_filenames.add(output_filename)
 
     def _check_input_filename(self, shape, input_format, input_filename, input_dtype, input_offset):
         if input_filename in self._used_input_filenames:
-            self.logger.warning("warning: input filename {0!r} already read".format(input_filename))
+            self.log_warning("input filename {0!r} already read".format(input_filename))
         self._used_input_filenames.add(input_filename)
         if input_offset is not None:
             accept_bigger_raw_files = True
@@ -763,7 +788,6 @@ ave           = {ave}
                 )
                 if accept_bigger_raw_files:
                     warnings.warn(RuntimeWarning(message))
-                    #self.logger.warning("warning: " + message)
                 else:
                     raise RubikError(message)
         return input_filename
@@ -777,7 +801,7 @@ ave           = {ave}
                 shape=cube.shape,
                 rshape=len(cube.shape),
             ))
-        self.logger.info("extracting '{0}'...".format(extractor))
+        self.log_info("extracting '{0}'...".format(extractor))
         subcube = cube[extractor.index_pickers()]
         return subcube
  
@@ -802,7 +826,7 @@ ave           = {ave}
         for expression in expressions:
             if expression.startswith('@'):
                 source_filename = expression[1:]
-                self.logger.info("loading source from file {0!r}...".format(source_filename))
+                self.log_info("loading source from file {0!r}...".format(source_filename))
                 if not os.path.exists(source_filename):
                     raise RubikError("cannot compile expression {0!r}: missing filename {1}".format(expression, source_filename))
                 try:
@@ -816,7 +840,7 @@ ave           = {ave}
                 except SyntaxError as err:
                     raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             else:
-                self.logger.info("evaluating expression {0!r}...".format(expression))
+                self.log_info("evaluating expression {0!r}...".format(expression))
                 try:
                     mode = 'eval'
                     compiled_expression = compile(expression, '<string>', mode)
@@ -827,7 +851,7 @@ ave           = {ave}
                     except SyntaxError as err:
                         raise RubikError("cannot compile expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             try:
-                self.logger.debug("executing {0!r} expression...".format(mode))
+                self.log_debug("executing {0!r} expression...".format(mode))
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
                     if result is not None:
