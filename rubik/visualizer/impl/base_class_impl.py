@@ -24,6 +24,7 @@ __all__ = [
 import weakref
 from ... import conf
 
+from traitsui.ui_info import UIInfo
 class BaseClassImpl(object):
     WINDOW_TITLE = None
     CURRENT_ID = 0
@@ -31,12 +32,10 @@ class BaseClassImpl(object):
     def __init__(self, logger):
         self.logger = logger
         self.name = self.reserve_id()
-        self.handlers = []
-        self.uis = []
+        self.handler_infos = []
 
-    def add_handler_ui(self, handler, ui):
-        self.handlers.append(weakref.ref(handler))
-        self.uis.append(weakref.ref(ui))
+    def add_handler_info(self, handler, info):
+        self.handler_infos.append((weakref.ref(handler), weakref.ref(info)))
 
     @classmethod
     def reserve_id(cls):
@@ -68,11 +67,14 @@ class BaseClassImpl(object):
     def log_trait_change(self, traits):
         self.logger.info("{}: changed traits: {}".format(self.name, traits))
 
-    def close_uis(self):
+    def close_uis(self, finish=True, close=True):
         self.logger.info("{}: closing windows".format(self.name))
-        for ui_ref in reversed(self.uis):
-            ui = ui_ref()
-            if ui is not None:
-                self.logger.info("{}: closing ui {}".format(self.name, ui))
-                #ui.dispose()
-                ui.finish()
+        for handler_ref, info_ref in reversed(self.handler_infos):
+            handler = handler_ref()
+            info = info_ref()
+            if info is not None and handler is not None:
+                self.logger.info("{}: closing handler {}, info {}".format(self.name, handler, info))
+                if finish and info.ui:
+                    info.ui.finish()
+                if close:
+                    handler.close(info, True)

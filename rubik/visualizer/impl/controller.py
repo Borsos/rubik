@@ -65,8 +65,10 @@ class ControllerHandler(TraitsController, BaseHandlerMixIn):
 
     def _on_close(self, info):
         BaseHandlerMixIn._on_close(self, info)
-        #info.object.close_ui()
 
+    def closed(self, info, is_ok):
+        #info.object.close_views()
+        super(ControllerHandler, self).closed(info, is_ok)
 
 class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
@@ -172,8 +174,8 @@ Controller for multiple views
         view = self.create_view(view_class, local_volume)
         self.views.append(view)
         self.views_data[view] = data
-        self.add_class_trait(view.name, Instance(view_class))
-        self.add_trait(view.name, view)
+        #self.add_class_trait(view.name, Instance(view_class))
+        #self.add_trait(view.name, view)
         self.update_data_range()
         return view
 
@@ -244,11 +246,14 @@ Controller for multiple views
         self.clip_auto = clip_auto
 
     def close_uis(self):
-        super(Controller, self).close_uis()
         # locks on exit !
-        #for view in self.views:
-        #    view.close_uis()
+        super(Controller, self).close_uis()
         
+    def close_views(self):
+        for view in self.views:
+            view.close_uis()
+        del self.views[:]
+
     ### D e f a u l t s :
     def _colorbar_default(self):
         return self.attributes["colorbar"]
