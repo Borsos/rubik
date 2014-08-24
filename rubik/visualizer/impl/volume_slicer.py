@@ -30,6 +30,7 @@ from traits.api import HasTraits, Instance, Array, \
 
 from traitsui.api import View, \
     Item, \
+    Action, \
     HGroup, \
     Group, \
     HSplit, \
@@ -37,7 +38,7 @@ from traitsui.api import View, \
     RangeEditor, \
     ButtonEditor
 
-from traitsui.handler import Handler
+from traitsui.handler import Handler, ModelView
 
 from tvtk.api import tvtk
 from tvtk.pyface.scene import Scene
@@ -56,7 +57,15 @@ from .attributes import \
     LOCATE_MODES
 
 class VolumeSlicerHandler(Handler):
-    pass
+    def setattr(self, info, object, name, value):
+        print object.name, name, value
+        super(VolumeSlicerHandler, self).setattr(info, object, name, value)
+        info.ui.title = info.object.window_title
+        info.object._updated = True
+
+    def _done_changed(self, info):
+        info.ui.dispose()
+
 
 class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     DIMENSIONS = "2D, 3D, 4D"
@@ -64,6 +73,9 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     DESCRIPTION = """\
 Volume slicer visualizer
 """
+
+    # window_title
+    window_title = Str()
 
     # The data to plot
     data = Array()
@@ -100,6 +112,8 @@ Volume slicer visualizer
     locate_nearest_button = Button()
     locate_next_button = Button()
     
+    done = Bool(False)
+
     LABEL_WIDTH = 20
     SCENE_WIDTH = 200
     SCENE_HEIGHT = 200
@@ -109,6 +123,8 @@ Volume slicer visualizer
     def __init__(self, controller, **traits):
         HasTraits.__init__(self, **traits)
         BaseVisualizerImpl.__init__(self, controller=controller)
+        # set window_title
+        self.window_title = self.name
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y

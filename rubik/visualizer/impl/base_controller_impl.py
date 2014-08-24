@@ -35,8 +35,8 @@ class BaseControllerImpl(BaseClassImpl):
     DESCRIPTION = None
     def __init__(self, logger, attributes):
         super(BaseControllerImpl, self).__init__(logger)
-        self.viewers = []
-        self.viewers_data = {}
+        self.views = []
+        self.views_data = {}
         self.attributes = {}
         
         self.set_attributes(**attributes)
@@ -65,28 +65,28 @@ class BaseControllerImpl(BaseClassImpl):
             self.apply_attribute(attribute_name)
 
     def apply_attribute(self, attribute_name):
-        for viewer in self.viewers:
-            self.apply_attribute_to_viewer(viewer, attribute_name)
+        for view in self.views:
+            self.apply_attribute_to_view(view, attribute_name)
 
-    def apply_attribute_to_viewer(self, viewer, attribute_name):
-        if viewer.has_trait(attribute_name):
-            viewer.feedback = False
+    def apply_attribute_to_view(self, view, attribute_name):
+        if view.has_trait(attribute_name):
+            view.feedback = False
             try:
-                self.logger.info("{}: applying attribute {}={!r} to viewer {}".format(self.name, attribute_name, getattr(self, attribute_name), viewer.name))
-                setattr(viewer, attribute_name, getattr(self, attribute_name))
+                self.logger.info("{}: applying attribute {}={!r} to view {}".format(self.name, attribute_name, getattr(self, attribute_name), view.name))
+                setattr(view, attribute_name, getattr(self, attribute_name))
             finally:
-                viewer.feedback = True
+                view.feedback = True
         else:
-            self.logger.info("{}: attribute {}={!r} *not* applied to viewer {}: it does not support this trait".format(self.name, attribute_name, getattr(self, attribute_name), viewer.name))
+            self.logger.info("{}: attribute {}={!r} *not* applied to view {}: it does not support this trait".format(self.name, attribute_name, getattr(self, attribute_name), view.name))
             
             
     def run(self):
         threads = []
-        for viewer in self.viewers:
-            viewer.edit_traits()
+        for view in self.views:
+            view.edit_traits()
         self.configure_traits()
 
     def on_exit(self):
-        for viewer in self.viewers:
-            viewer.on_exit()
+        for view in self.views:
+            view.on_exit()
         super(BaseControllerImpl, self).on_exit()

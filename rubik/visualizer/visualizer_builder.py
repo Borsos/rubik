@@ -85,5 +85,5 @@ def visualizer_builder(logger, controller, visualizer_type, data, attributes=Non
 
     # build:
     logger.info("creating {} visualizer...".format(visualizer_class.__name__))
-    visualizer = controller.add_viewer(visualizer_class, data=data) ###, attributes=visualizer_attributes)
+    visualizer = controller.add_view(visualizer_class, data=data) ###, attributes=visualizer_attributes)
     return visualizer

@@ -26,9 +26,8 @@ import collections
 from traits.api import \
     HasTraits, on_trait_change, \
     Int, Str, Bool, Float, \
-    Range
+    Range, Instance
 
-from traitsui.handler import Handler
    
 from traitsui.api import \
     View, Item, HGroup, Group, \
@@ -36,7 +35,7 @@ from traitsui.api import \
     RangeEditor, EnumEditor, BooleanEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
-from traitsui.handler import Handler
+from traitsui.handler import Controller
 
 from .base_controller_impl import BaseControllerImpl
 
@@ -55,9 +54,21 @@ from .attributes import \
     LocateValueAttribute
 
     
-class ControllerHandler(Handler):
+class ControllerHandler(Controller):
+    def setattr(self, info, object, name, value):
+        super(ControllerHandler, self).setattr(info, object, name, value)
+        if getattr(self, '_instance', None) is None:
+            self._instance = object
+            info.ui.title = self._instance.window_title
+        info.object._updated = True
+
     def _on_close(self, info):
         info.ui.dispose()
+#        print self.__instance_traits__
+##        for view in info.object.views:
+#            print self._get_instance_handlers(view.name)
+#            view.done = True
+#        #    print view.close_button.action
 
 class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
@@ -73,14 +84,14 @@ class Controller(HasTraits, BaseControllerImpl):
         ('clip_max', ClipAttribute()),
         ('clip_auto', AutoClipAttribute()),
         ('clip_symmetric', SymmetricClipAttribute()),
-# passed to viewers
+# passed to views
         ('locate_mode', LocateModeAttribute()),
         ('locate_value', LocateValueAttribute()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
     DESCRIPTION = """\
-Controller for multiple viewers
+Controller for multiple views
 """
     LABEL_WIDTH = 30
     LOCAL_AXIS_NAMES = ['x', 'y', 'z']
@@ -88,6 +99,9 @@ Controller for multiple viewers
     GLOBAL_AXIS_NAMES = ['w', 'x', 'y', 'z']
     GLOBAL_AXIS_NUMBERS = dict((axis_name, axis_number) for axis_number, axis_name in enumerate(GLOBAL_AXIS_NAMES))
     S_ALL = slice(None, None, None)
+
+    # window_title
+    window_title = Str()
 
     # The axis selectors
     ## w:
@@ -134,8 +148,9 @@ Controller for multiple viewers
     clip_range_visible = Bool()
 
     def __init__(self, logger, attributes, **traits):
-        BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
         HasTraits.__init__(self, **traits)
+        BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
+        self.window_title = self.name
         self.w_low, self.x_low, self.y_low, self.z_low = 0, 0, 0, 0
         rank = len(self.shape)
         if rank == 2:
@@ -153,25 +168,26 @@ Controller for multiple viewers
 
 
     ### U t i l i t i e s :
-    def create_viewer(self, viewer_class, data):
-        return viewer_class(controller=self, data=data)
+    def create_view(self, view_class, data):
+        return view_class(controller=self, data=data)
 
-    def add_viewer(self, viewer_class, data):
+    def add_view(self, view_class, data):
         if data.shape != self.shape:
-            raise ValueError("{}: cannot create {} viewer: data shape {} is not {}".format(self.name, viewer_class.__name__, data.shape, self.shape))
+            raise ValueError("{}: cannot create {} view: data shape {} is not {}".format(self.name, view_class.__name__, data.shape, self.shape))
         local_volume = self.get_local_volume(data)
-        viewer = self.create_viewer(viewer_class, local_volume)
-        self.viewers.append(viewer)
-        self.viewers_data[viewer] = data
-        self.add_trait(viewer.name, viewer)
+        view = self.create_view(view_class, local_volume)
+        self.views.append(view)
+        self.views_data[view] = data
+        self.add_class_trait(view.name, Instance(view_class))
+        self.add_trait(view.name, view)
         self.update_data_range()
-        return viewer
+        return view
 
     def update_data_range(self):
-        if self.viewers:
+        if self.views:
             data_min_l, data_max_l = [], []
-            for viewer in self.viewers:
-                for local_volume in viewer.data:
+            for view in self.views:
+                for local_volume in view.data:
                     data_min_l.append(local_volume.min())
                     data_max_l.append(local_volume.max())
             self.data_min = float(min(data_min_l))
@@ -276,9 +292,9 @@ Controller for multiple viewers
     def on_change_axis(self, global_axis_name):
         if global_axis_name == self.slicing_axis:
             self.logger.error("{}: changing the slicing axis is not supported yet".format(self.name))
-            for viewer in self.viewers:
-                local_volume = self.get_local_volume(self.viewers_data[viewer])
-                viewer.set_volume(local_volume)
+            for view in self.views:
+                local_volume = self.get_local_volume(self.views_data[view])
+                view.set_volume(local_volume)
             self.update_data_range()
             self.update_clip_range()
         else:
@@ -312,19 +328,19 @@ Controller for multiple viewers
     def update_clip_range(self):
         clip_min, clip_max = self.get_clip_range()
         self.logger.info("{}: applying clip {} <-> {}".format(self.name, clip_min, clip_max))
-        for viewer in self.viewers:
-            viewer.update_clip_range(clip_min, clip_max)
+        for view in self.views:
+            view.update_clip_range(clip_min, clip_max)
 
     ### T r a t s   c h a n g e s :
     @on_trait_change('colorbar')
     def on_change_colorbar(self):
-        for viewer in self.viewers:
-            viewer.enable_colorbar(self.colorbar)
+        for view in self.views:
+            view.enable_colorbar(self.colorbar)
 
     @on_trait_change('colormap')
     def on_change_colormap(self):
-        for viewer in self.viewers:
-            viewer.set_colormap(self.colormap)
+        for view in self.views:
+            view.set_colormap(self.colormap)
 
     @on_trait_change('data_min,data_max')
     def on_change_data_range(self):

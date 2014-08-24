@@ -29,6 +29,7 @@ class BaseClassImpl(object):
     def __init__(self, logger):
         self.logger = logger
         self.name = self.reserve_id()
+        self.window_title = self.default_window_title(self.name)
 
     @classmethod
     def reserve_id(cls):
@@ -37,7 +38,7 @@ class BaseClassImpl(object):
         return cls.ID_FORMAT.format(id=cur_id)
             
     @classmethod
-    def window_title(cls, name=None):
+    def default_window_title(cls, name=None):
         if name is None:
             name = cls.__name__
         return "{} - Rubik {}".format(name, conf.VERSION)

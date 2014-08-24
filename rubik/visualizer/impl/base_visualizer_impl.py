@@ -29,19 +29,13 @@ from ... import conf
 
 class BaseVisualizerImpl(BaseClassImpl):
     CURRENT_ID = 0
-    ID_FORMAT = "viewer_{id}"
+    ID_FORMAT = "view_{id}"
     def __init__(self, controller, logger=None):
         if logger is None:
             logger = controller.logger
         super(BaseVisualizerImpl, self).__init__(logger=logger)
         self.feedback = True
         self.controller = controller
-
-    @classmethod
-    def reserve_viewer_id(cls):
-        viewer_id = cls.VIEWER_ID
-        cls.VIEWER_ID += 1
-        return viewer_id
 
     def get_feedback(self):
         return self._feedback
