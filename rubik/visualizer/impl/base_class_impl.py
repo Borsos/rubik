@@ -24,12 +24,16 @@ __all__ = [
 from ... import conf
 
 class BaseClassImpl(object):
+    WINDOW_TITLE = None
     CURRENT_ID = 0
     ID_FORMAT = "{id}"
     def __init__(self, logger):
         self.logger = logger
         self.name = self.reserve_id()
-        self.window_title = self.default_window_title(self.name)
+        self.handlers = set()
+
+    def add_handler(self, handler):
+        self.handlers.add(handler)
 
     @classmethod
     def reserve_id(cls):
@@ -38,10 +42,22 @@ class BaseClassImpl(object):
         return cls.ID_FORMAT.format(id=cur_id)
             
     @classmethod
-    def default_window_title(cls, name=None):
-        if name is None:
-            name = cls.__name__
-        return "{} - Rubik {}".format(name, conf.VERSION)
+    def set_window_title(cls, title=None):
+        if title is None:
+            title = cls.ID_FORMAT.format(id=cls.CURRENT_ID)
+        cls.WINDOW_TITLE = title
+
+    @classmethod
+    def consume_window_title(cls):
+        title = cls.WINDOW_TITLE
+        cls.WINDOW_TITLE = None
+        return title
+
+    @classmethod
+    def default_window_title(cls):
+        if cls.WINDOW_TITLE is None:
+            cls.set_window_title()
+        return cls.consume_window_title()
 
     def has_trait(self, trait):
         return trait in self.editable_traits()

@@ -19,8 +19,8 @@ logger = set_logger(verbose_level=3)
 
 
 controller = Controller(logger=logger, attributes=attributes, shape=shape.shape())
-controller.add_visualizer(visualizer_class=VolumeSlicer, data=cube01)
-controller.add_visualizer(visualizer_class=VolumeSlicer, data=cube02)
+controller.add_view(view_class=VolumeSlicer, data=cube01)
+controller.add_view(view_class=VolumeSlicer, data=cube02)
 
 
 controller.run()

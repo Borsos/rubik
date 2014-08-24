@@ -35,7 +35,7 @@ from traitsui.api import \
     RangeEditor, EnumEditor, BooleanEditor
 
 from traitsui.menu import OKButton, UndoButton, RevertButton
-from traitsui.handler import Controller
+from traitsui.handler import Controller as TraitsController
 
 from .base_controller_impl import BaseControllerImpl
 
@@ -54,21 +54,15 @@ from .attributes import \
     LocateValueAttribute
 
     
-class ControllerHandler(Controller):
-    def setattr(self, info, object, name, value):
-        super(ControllerHandler, self).setattr(info, object, name, value)
-        if getattr(self, '_instance', None) is None:
-            self._instance = object
-            info.ui.title = self._instance.window_title
-        info.object._updated = True
+class ControllerHandler(TraitsController):
+    def init(self, info):
+        info.ui.title = Controller.default_window_title()
 
     def _on_close(self, info):
         info.ui.dispose()
-#        print self.__instance_traits__
-##        for view in info.object.views:
-#            print self._get_instance_handlers(view.name)
-#            view.done = True
-#        #    print view.close_button.action
+        for view in info.object.views:
+            for handler in view.handlers:
+                handler._on_close(info)
 
 class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
@@ -99,9 +93,6 @@ Controller for multiple views
     GLOBAL_AXIS_NAMES = ['w', 'x', 'y', 'z']
     GLOBAL_AXIS_NUMBERS = dict((axis_name, axis_number) for axis_number, axis_name in enumerate(GLOBAL_AXIS_NAMES))
     S_ALL = slice(None, None, None)
-
-    # window_title
-    window_title = Str()
 
     # The axis selectors
     ## w:
@@ -150,7 +141,6 @@ Controller for multiple views
     def __init__(self, logger, attributes, **traits):
         HasTraits.__init__(self, **traits)
         BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
-        self.window_title = self.name
         self.w_low, self.x_low, self.y_low, self.z_low = 0, 0, 0, 0
         rank = len(self.shape)
         if rank == 2:
@@ -530,4 +520,5 @@ Controller for multiple views
         buttons=[UndoButton, RevertButton, close_button],
         handler=ControllerHandler(),
         resizable=True,
+        title="untitled",
     )

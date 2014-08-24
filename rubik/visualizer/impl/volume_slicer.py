@@ -56,14 +56,12 @@ from .attributes import \
     LOCATE_MODE_VALUE, \
     LOCATE_MODES
 
-class VolumeSlicerHandler(Handler):
-    def setattr(self, info, object, name, value):
-        print object.name, name, value
-        super(VolumeSlicerHandler, self).setattr(info, object, name, value)
-        info.ui.title = info.object.window_title
-        info.object._updated = True
+class VolumeSlicerHandler(ModelView):
+    def init(self, info):
+        info.ui.title = VolumeSlicer.default_window_title()
+        info.object.add_handler(self)
 
-    def _done_changed(self, info):
+    def _on_close(self, info):
         info.ui.dispose()
 
 
