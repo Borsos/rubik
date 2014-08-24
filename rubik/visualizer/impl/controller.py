@@ -60,9 +60,9 @@ class ControllerHandler(TraitsController):
 
     def _on_close(self, info):
         info.ui.dispose()
-        for view in info.object.views:
-            for handler in view.handlers:
-                handler._on_close(info)
+#        for view in info.object.views:
+#            for handler in view.handlers:
+#                handler._on_close(info)
 
 class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
@@ -257,7 +257,7 @@ Controller for multiple views
         if self.attributes.get(axis_name, None) is None:
             h = getattr(self, "{}_high".format(axis_name))
             l = getattr(self, "{}_low".format(axis_name))
-            return (h - l + 1) // 2
+            return (h - l) // 2
         else:
             return self.attributes[axis_name]
 

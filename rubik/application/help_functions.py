@@ -824,15 +824,77 @@ def help_output():
 Output modes
 ============
 These are the available output modes:
-* writing the result to a file (--output-filename/-o); you can specify the file
-  format, dtype, etc...
-* print the result to a file (--print/-P)
-* print statistics about the resulting cube to a file (--stats/-S)
-* print an histogram of the resulting cube to a file (--histogram/-H)
+* print the result to a file (--print/-P, or function 'print_cube()')
+* print statistics about the resulting cube to a file (--stats/-S, or function 'print_stats()')
+* print an histogram of the resulting cube to a file (--histogram/-H, or function 'print_histogram(...)')
+* visualization of the resulting cube (--view/-V, or function 'view()')
+Moreover, cubes can be written to files (see below 'Writing output files')
 If the --dry-run/-d option is set, the previous mode are ignored, and no command
 is executed.
 It is possible to have a report of the rubik configuration, using the flag
 --report/-R; it can be repeated to increase the report level.
+
+Each output mode applies to the most recent result in the stack; so, for
+instance, the following command will show only the linear cube:
+
+$ rubik -e 'cb.linear_cube("5x3")' --print \
+        -e 'cb.const_cube("4x4", 2)'
+[[  0.   1.   2.]
+ [  3.   4.   5.]
+ [  6.   7.   8.]
+ [  9.  10.  11.]
+ [ 12.  13.  14.]]
+
+Options can be repeated, for instance:
+
+$ rubik -e 'cb.linear_cube("5x3")' --print --stats \
+        -e 'cb.const_cube("4x4", 2)' --print
+[[  0.   1.   2.]
+ [  3.   4.   5.]
+ [  6.   7.   8.]
+ [  9.  10.  11.]
+ [ 12.  13.  14.]]
+shape         = 5x3
+#elements     = 15
+min           = 0.0
+max           = 14.0
+sum           = 105.0
+ave           = 7.0
+#zero         = 1 [6.67%]
+#nonzero      = 14 [93.33%]
+#nan          = 0 [0.00%]
+#inf          = 0 [0.00%]
+
+[[ 2.  2.  2.  2.]
+ [ 2.  2.  2.  2.]
+ [ 2.  2.  2.  2.]
+ [ 2.  2.  2.  2.]]
+
+Visualization can be performed on multiple cubes, only if they all have the same
+shape.
+
+It is possible to use expressions to call specific output modes:
+
+$ rubik -e 'cb.linear_cube("5x3")' 'print_stats()'
+shape         = 5x3
+#elements     = 15
+min           = 0.0
+max           = 14.0
+sum           = 105.0
+ave           = 7.0
+#zero         = 1 [6.67%]
+#nonzero      = 14 [93.33%]
+#nan          = 0 [0.00%]
+#inf          = 0 [0.00%]
+
+
+Writing output files
+====================
+If the '--output-filename/-o' options is used, the resulting cube will be
+written to output file. The option can be repeated. This action is always
+performed at the end, on the last cube.
+
+
 """)
 
 def help_memory_usage():

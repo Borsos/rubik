@@ -333,7 +333,7 @@ Arguments for graphical visualization""")
         nargs=0,
         help="print an histogram; see histogram arguments below")
 
-    output_group.add_argument('--visualizer', '-V',
+    output_group.add_argument('--view', '-V',
         action=VisualizeAction,
         nargs=0,
         help="view the result graphically; see graphical visualizer arguments below")
@@ -379,44 +379,44 @@ Arguments for graphical visualization""")
         default="num",
         help="show number of elements per bin")
 
-    visualizer_group.add_argument('--visualizer-volume-slicer', '-Vs',
+    visualizer_group.add_argument('--view-volume-slicer', '-Vs',
         dest="visualizer_type",
         action="store_const",
         const="VolumeSlicer",
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    visualizer_group.add_argument('--visualizer-volume-render', '-Vr',
+    visualizer_group.add_argument('--view-volume-render', '-Vr',
         dest="visualizer_type",
         action="store_const",
         const="VolumeRender",
         default="auto",
         help="view the 3d cube with VolumeRender class")
 
-    visualizer_group.add_argument('--visualizer-volume-contour', '-Vc',
+    visualizer_group.add_argument('--view-volume-contour', '-Vc',
         dest="visualizer_type",
         action="store_const",
         const="VolumeContour",
         default="auto",
         help="view the 3d cube with VolumeContour class")
 
-    visualizer_group.add_argument('--visualizer-auto', '-VA',
+    visualizer_group.add_argument('--view-auto', '-VA',
         dest="visualizer_type",
         action="store_const",
         const="auto",
         default="auto",
         help="view the result with default visualizer")
 
-    visualizer_group.add_argument('--visualizer-attribute', '-Va',
+    visualizer_group.add_argument('--view-attribute', '-Va',
         metavar="VA",
         dest="visualizer_attributes",
         type=key_value_type,
         action="append",
         default=[],
         nargs='+',
-        help="add a visualizer attribute (e.g. colormap=\"black-white\"; see --visualizer-list/-Vl for a complete list of attributes)")
+        help="add a visualizer attribute (e.g. colormap=\"black-white\"; see --view-list/-Vl for a complete list of attributes)")
 
-    visualizer_group.add_argument('--visualizer-attribute-file', '-Vf',
+    visualizer_group.add_argument('--view-attribute-file', '-Vf',
         metavar="VF",
         dest="visualizer_attribute_files",
         type=str,
@@ -424,7 +424,7 @@ Arguments for graphical visualization""")
         default=[],
         help="load visualizer attributes from file")
 
-    visualizer_group.add_argument('--visualizer-list', '-Vl',
+    visualizer_group.add_argument('--view-list', '-Vl',
         dest="visualizer_list",
         action="store_true",
         default=False,

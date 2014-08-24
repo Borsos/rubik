@@ -286,13 +286,16 @@ Volume slicer visualizer
         return self.get_local_max()
 
     def _x_index_default(self):
-        return (self.data_src3d.scalar_data.shape[0] + 1) // 2
+        return self.data.shape[0] // 2
     
     def _y_index_default(self):
-        return (self.data_src3d.scalar_data.shape[0] + 1) // 2
+        return self.data.shape[1] // 2
     
     def _z_index_default(self):
-        return (self.data_src3d.scalar_data.shape[0] + 1) // 2
+        if len(self.data.shape) > 2:
+            return self.data.shape[2] // 2
+        else:
+            return 0
     
     def _data_value_default(self):
         return self.get_data_value()

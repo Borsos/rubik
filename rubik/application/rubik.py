@@ -480,16 +480,16 @@ class Rubik(object):
         
     def finalize(self):
         cube = self._result
-        self.do_write_cube(cube)
+        self.write_cube(cube)
         self.run_controller()
     
-    def do_write_cube_impl(self, cube, dlabels):
+    def write_cube_impl(self, cube, dlabels):
         if not self.output_filenames:
             return
         self._write_cube(cube, dlabels)
 
-    def do_write_cube(self, cube=None):
-        self.iterate_on_split(self.do_write_cube_impl, cube)
+    def write_cube(self, cube=None):
+        self.iterate_on_split(self.write_cube_impl, cube)
 
     def _write_cube(self, cube, dlabels=None):
         for output_label, output_filename in self.output_filenames.items():
@@ -579,16 +579,16 @@ class Rubik(object):
             dlabels_message = "## " + ', '.join("{0}={1}".format(dlabel, dvalue) for dlabel, dvalue in dlabels.items())
             log.PRINT(dlabels_message)
 
-    def do_print_cube(self, cube=None):
-        self.iterate_on_split(self.do_print_cube_impl, cube)
+    def print_cube(self, cube=None):
+        self.iterate_on_split(self.print_cube_impl, cube)
 
-    def do_print_cube_impl(self, cube, dlabels):
+    def print_cube_impl(self, cube, dlabels):
         log.PRINT(cube)
 
-    def do_print_stats(self, cube=None):
-        self.iterate_on_split(self.do_print_stats_impl, cube)
+    def print_stats(self, cube=None):
+        self.iterate_on_split(self.print_stats_impl, cube)
 
-    def do_print_stats_impl(self, cube, dlabels):
+    def print_stats_impl(self, cube, dlabels):
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cube_sum = cube.sum()
@@ -646,10 +646,10 @@ ave           = {ave}
         )
         log.PRINT(stat)
 
-    def do_print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
-        self.iterate_on_split(self.do_print_histogram_impl, cube, bins=bins, hrange=hrange, decimals=decimals, fmt=fmt)
+    def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
+        self.iterate_on_split(self.print_histogram_impl, cube, bins=bins, hrange=hrange, decimals=decimals, fmt=fmt)
 
-    def do_print_histogram_impl(self, cube, dlabels, bins=None, hrange=None, decimals=None, fmt=None):
+    def print_histogram_impl(self, cube, dlabels, bins=None, hrange=None, decimals=None, fmt=None):
         if cube is None:
             cube = self._result
         if bins is None:
@@ -811,11 +811,10 @@ ave           = {ave}
             'numpy': np,
             'cb': cubes,
             'cubes': cubes,
-            'print_stats': self.do_print_stats,
-            'print_cube': self.do_print_cube,
-            'print_histogram': self.do_print_histogram,
-            'write_cube': self.do_write_cube,
-            'visualize': self.do_visualization,
+            'print_stats': self.print_stats,
+            'print_cube': self.print_cube,
+            'print_histogram': self.print_histogram,
+            'view': self.view,
         }
         globals_d['_i'] = list(self.input_cubes.values())
         globals_d.update(self.input_cubes)
@@ -930,8 +929,6 @@ ave           = {ave}
             logger.info("")
     
         logger.info("### Commands")
-        #logger.info("Print: {}".format(self.print_cube))
-        #logger.info("Stats: {}".format(self.print_stats))
         logger.info("Histogram options:")
         logger.info("  bins = {}".format(self.histogram_bins))
         logger.info("  range = {}".format(self.histogram_range))
@@ -963,7 +960,7 @@ ave           = {ave}
 
     controller = property(get_controller)
 
-    def do_visualization(self, cube=None):
+    def view(self, cube=None):
         if cube is None:
             cube = self._result
         visualizer = visualizer_builder(
