@@ -65,7 +65,7 @@ class PrintHistogramAction(ConstExpressionAction):
     CONST = 'print_histogram()'
 
 class VisualizeAction(ConstExpressionAction):
-    CONST = 'visualize()'
+    CONST = 'view()'
 
 def main():
     try:
