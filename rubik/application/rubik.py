@@ -36,7 +36,8 @@ from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
 from ..format_filename import format_filename
-from ..visualizers.visualizer_builder import visualizer_builder
+from ..visualizer.controller_builder import controller_builder
+from ..visualizer.visualizer_builder import visualizer_builder
 from .. import conf
 from .. import cubes
 
@@ -75,12 +76,10 @@ class Rubik(object):
         self.set_memory_limit(self.config.default_memory_limit)
         self.set_split_dimensions(None)
         self.set_clobber(self.config.default_clobber)
-        self.set_print_cube(False)
-        self.set_print_stats(False)
-        self.set_visualizer_options(False)
+        self.set_visualizer_options()
         self.set_print_report(False)
         self.set_in_place(False)
-        self.set_histogram(False)
+        self.set_histogram_options(False)
         self.set_dry_run(False)
         self.set_dtype(default_dtype)
 
@@ -93,6 +92,7 @@ class Rubik(object):
         self._result = None
         self._locals = {}
 
+        self._controller = None
 
     def show_logo(self):
         log.PRINT(RUBIK)
@@ -142,20 +142,17 @@ class Rubik(object):
     def set_clobber(self, clobber):
         self.clobber = clobber
 
-    def set_print_cube(self, print_cube):
-        self.print_cube = print_cube
-
-    def set_print_stats(self, print_stats):
-        self.print_stats = print_stats
-
-    def set_visualizer_options(self, enable_visualizer, visualizer_type=None, visualizer_attributes=None, visualizer_attribute_files=None):
-        self.enable_visualizer = enable_visualizer
+    def set_visualizer_options(self,
+            controller_type=None,
+            visualizer_type=None,
+            visualizer_attributes=None,
+            visualizer_attribute_files=None):
+        self.controller_type = controller_type
         self.visualizer_type = visualizer_type
         self.visualizer_attributes = visualizer_attributes
         self.visualizer_attribute_files = visualizer_attribute_files
 
-    def set_histogram(self, print_histogram, bins=10, length=80, range=None, mode=None, decimals=None):
-        self.print_histogram = print_histogram
+    def set_histogram_options(self, bins=10, length=80, range=None, mode=None, decimals=None):
         self.histogram_bins = bins
         self.histogram_range = range
         self.histogram_length = length
@@ -199,7 +196,7 @@ class Rubik(object):
                         self.output_filenames.add(input_filename.filename())
             #print "I", InputFilename.__filenames__
             #print "O", OutputFilename.__filenames__
-            self.output()
+            self.finalize()
     
     def get_dtype_bytes(self, dtype):
         if not dtype in self._cache_dtype_bytes:
@@ -449,51 +446,27 @@ class Rubik(object):
                 yield subcube, dlabels
         else:
             yield cube, None
+
+    def iterate_on_split(self, function, cube, *p_args, **n_args):
+        if cube is None:
+            cube = self._result
+        for cube, dlabels in self.split_over_dimensions(cube):
+            function(cube, dlabels, *p_args, **n_args)
         
-    def output(self):
-        if not any((self.print_cube, self.print_stats, self.print_histogram, self.output_filenames, self.enable_visualizer)):
-            if self.config.preferred_output_action == self.config.OUTPUT_ACTION_PRINT:
-                self.print_cube = True
-            elif self.config.preferred_output_action == self.config.OUTPUT_ACTION_STATS:
-                self.print_stats = True
-            elif self.config.preferred_output_action == self.config.OUTPUT_ACTION_HISTOGRAM:
-                self.print_histogram = True
-            elif self.config.preferred_output_action == self.config.OUTPUT_ACTION_VISUALIZE:
-                self.enable_visualizer = True
-        useless_run = True
+    def finalize(self):
         cube = self._result
-        for subcube, dlabels in self.split_over_dimensions(cube):
-            if self.print_cube or self.print_stats:
-                self._log_dlabels(dlabels)
-            if self.print_cube:
-                self._print_cube(cube=subcube)
-                useless_run = False
-            if self.print_stats:
-                self._print_stats(cube=subcube)
-                useless_run = False
-            if self.print_histogram:
-                self._print_histogram(cube=subcube)
-                useless_run = False
-            if self.output_filenames:
-                useless_run = False
-                self._write_cube(cube=subcube, dlabels=dlabels)
-            if self.enable_visualizer:
-                self.visualize(cube=subcube)
-                useless_run = False
-        if useless_run:
-            #self.show_logo_once()
-            #self.logger.warning("warning: nothing to do; you should at least one of these options: --print/-P, --stats/-S, --output-filename/-o")
-            pass
+        self.do_write_cube(cube)
+        self.run_controller()
     
-    def write(self, cube):
+    def do_write_cube_impl(self, cube, dlabels):
         if not self.output_filenames:
             return
-        for subcube, dlabels in self.split_over_dimensions(cube):
-            self._write_cube(subcube, dlabels)
+        self._write_cube(cube, dlabels)
+
+    def do_write_cube(self, cube=None):
+        self.iterate_on_split(self.do_write_cube_impl, cube)
 
     def _write_cube(self, cube, dlabels=None):
-        #if not isinstance(cube, np.ndarray):
-        #    raise RubikError("cannot write result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         for output_label, output_filename in self.output_filenames.items():
             self._write(cube, output_label, output_filename, dlabels=dlabels)
         
@@ -581,18 +554,20 @@ class Rubik(object):
             dlabels_message = "## " + ', '.join("{0}={1}".format(dlabel, dvalue) for dlabel, dvalue in dlabels.items())
             log.PRINT(dlabels_message)
 
-    def _print_cube(self, cube):
+    def do_print_cube(self, cube=None):
+        self.iterate_on_split(self.do_print_cube_impl, cube)
+
+    def do_print_cube_impl(self, cube, dlabels):
         log.PRINT(cube)
 
-    def _print_stats(self, cube):
-        self.stats_cube(cube)
+    def do_print_stats(self, cube=None):
+        self.iterate_on_split(self.do_print_stats_impl, cube)
 
-    def stats_cube(self, cube):
+    def do_print_stats_impl(self, cube, dlabels):
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cube_sum = cube.sum()
         cube_ave = None
-        cobe_count = 0
         if cube.shape != 0:
             cube_count = 1
             for d in cube.shape:
@@ -646,17 +621,30 @@ ave           = {ave}
         )
         log.PRINT(stat)
 
-    def _print_histogram(self, cube):
+    def do_print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
+        self.iterate_on_split(self.do_print_histogram_impl, cube, bins=bins, hrange=hrange, decimals=decimals, fmt=fmt)
+
+    def do_print_histogram_impl(self, cube, dlabels, bins=None, hrange=None, decimals=None, fmt=None):
+        if cube is None:
+            cube = self._result
+        if bins is None:
+            bins = self.histogram_bins
+        if hrange is None:
+            hrange = self.histogram_range
+        if decimals is None:
+            decimals = self.histogram_decimals
+        if fmt is None:
+            fmt = self.histogram_fmt
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-        histogram, bins = np.histogram(cube, bins=self.histogram_bins, range=self.histogram_range)
+        histogram, bins = np.histogram(cube, bins=bins, range=hrange)
         start = bins[0]
         d_min = None
         for end in bins[1:]:
             d = abs(end - start)
             if d_min is None or d < d_min:
                 d_min = d
-        if self.histogram_decimals is None:
+        if decimals is None:
             power = 0
             f_d_min = d_min - int(d_min)
             if f_d_min > 0:
@@ -667,7 +655,7 @@ ave           = {ave}
             else:
                 power = 0
         else:
-            power = self.histogram_decimals
+            power = decimals
         if power:
             fmt_float = "{{:.{power}f}}".format(power=power)
         else:
@@ -696,7 +684,7 @@ ave           = {ave}
                 num_max = num
             start = end
         
-        fixed_text = self.histogram_fmt.format(
+        fixed_text = fmt.format(
             b='[',
             s_start='',
             l_start=l_start,
@@ -720,7 +708,7 @@ ave           = {ave}
             l_r = h_max - l_l
             #log.PRINT("@@@ h_max={}, num={}, num_max={}, l_l={}, l_r={}".format(h_max, num, num_max, l_l, l_r))
             h = '*' * l_l + ' ' * l_r
-            log.PRINT(self.histogram_fmt.format(
+            log.PRINT(fmt.format(
                 s_num=s_num,
                 l_num=l_num,
                 s_percentage=s_percentage,
@@ -799,6 +787,11 @@ ave           = {ave}
             'numpy': np,
             'cb': cubes,
             'cubes': cubes,
+            'print_stats': self.do_print_stats,
+            'print_cube': self.do_print_cube,
+            'print_histogram': self.do_print_histogram,
+            'write_cube': self.do_write_cube,
+            'visualize': self.do_visualization,
         }
         globals_d['_i'] = list(self.input_cubes.values())
         globals_d.update(self.input_cubes)
@@ -837,8 +830,9 @@ ave           = {ave}
                 self.logger.debug("executing {0!r} expression...".format(mode))
                 result = eval(compiled_expression, globals_d, locals_d)
                 if mode == 'eval':
-                    self._result = result
-                    locals_d['_r'] = self._result
+                    if result is not None:
+                        self._result = result
+                        locals_d['_r'] = self._result
                 else:
                     self._result = locals_d.get('_r', None)
             except Exception as err:
@@ -912,22 +906,49 @@ ave           = {ave}
             logger.info("")
     
         logger.info("### Commands")
-        logger.info("Print: {}".format(self.print_cube))
-        logger.info("Stats: {}".format(self.print_stats))
-        logger.info("Histogram: {}".format(self.print_histogram))
-        logger.debug("  bins = {}".format(self.histogram_bins))
-        logger.debug("  range = {}".format(self.histogram_range))
-        logger.debug("  length = {}".format(self.histogram_length))
-        logger.debug("  mode = {}".format(self.histogram_mode))
-        logger.debug("  decimals = {}".format(self.histogram_decimals))
+        #logger.info("Print: {}".format(self.print_cube))
+        #logger.info("Stats: {}".format(self.print_stats))
+        logger.info("Histogram options:")
+        logger.info("  bins = {}".format(self.histogram_bins))
+        logger.info("  range = {}".format(self.histogram_range))
+        logger.info("  length = {}".format(self.histogram_length))
+        logger.info("  mode = {}".format(self.histogram_mode))
+        logger.info("  decimals = {}".format(self.histogram_decimals))
+        logger.info("Visualizer options:")
+        logger.info("  controller_type = {}".format(self.controller_type))
+        logger.info("  visualizer_type = {}".format(self.visualizer_type))
+        logger.info("  visualizer_attributes = {}".format(self.visualizer_attributes))
+        logger.info("  visualizer_attribute_files = {}".format(self.visualizer_attribute_files))
 
-    def visualize(self, cube):
+    def do_viewer(self, cube=None):
+        if cube is None:
+            cube = self._result
+      
+    def get_controller(self, cube=None):
+        if cube is None:
+            cube = self._result
+        if self._controller is None:
+            self._controller = controller_builder(
+                logger=self.logger,
+                controller_type=self.controller_type,
+                data=cube,
+                attributes=self.visualizer_attributes,
+                attribute_files=self.visualizer_attribute_files,
+            )
+        return self._controller
+
+    controller = property(get_controller)
+
+    def do_visualization(self, cube=None):
+        if cube is None:
+            cube = self._result
         visualizer = visualizer_builder(
             logger=self.logger,
             visualizer_type=self.visualizer_type,
+            controller=self.controller,
             data=cube,
-            visualizer_attributes=self.visualizer_attributes,
-            visualizer_attribute_files=self.visualizer_attribute_files,
         )
-        visualizer.run()
       
+    def run_controller(self):
+        if self._controller is not None:
+            self.controller.run()

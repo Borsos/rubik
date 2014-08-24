@@ -297,6 +297,7 @@ Two functions are available to create big cubes out of core:
 $ rubik 'cb.write_linear_cube("l.{shape}.raw", "3x4x5", buffer_size=2, start=-1, increment=0.5)'
 $ rubik -i l.{shape}.raw -s 3x4x5 -v --print
 reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
+evaluating expression 'print_cube()'...
 [[[ -1.   -0.5   0.    0.5   1. ]
   [  1.5   2.    2.5   3.    3.5]
   [  4.    4.5   5.    5.5   6. ]
@@ -326,6 +327,7 @@ $ rubik -i l.3x{shape}.{format} \\
         --print -v
 reading 20 'float32' elements (80 bytes) from 'raw' file 'l.3x4x5.raw'...
 seeking 'l.3x4x5.raw'@80...
+evaluating expression 'print_cube()'...
 [[ 20.  21.  22.  23.  24.]
  [ 25.  26.  27.  28.  29.]
  [ 30.  31.  32.  33.  34.]
@@ -346,6 +348,7 @@ $ rubik -i l.{shape}.{format} \\
         -s 3x4x5 \
         --print -v
 reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
+evaluating expression 'print_cube()'...
 [[[  0.    1.    2.    3.    4. ]
   [  5.    6.    7.    8.    9. ]
   [ 10.   11.   12.   13.   14. ]

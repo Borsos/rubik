@@ -42,9 +42,6 @@ else:
 class Config(object):
     RUBIK_DIR = os.path.expanduser("~/.rubik")
     CONFIG_FILE = os.path.join(RUBIK_DIR, 'rubik.config')
-    VOLUME_SLICER_FILE = os.path.join(RUBIK_DIR, 'VolumeSlicer.defaults')
-    VOLUME_RENDER_FILE = os.path.join(RUBIK_DIR, 'VolumeRender.defaults')
-    VOLUME_CONTOUR_FILE = os.path.join(RUBIK_DIR, 'VolumeContour.defaults')
 
     OUTPUT_ACTION_VISUALIZE = 'visualize'
     OUTPUT_ACTION_PRINT = 'print'
@@ -57,15 +54,18 @@ class Config(object):
     else:
         DEFAULT_OUTPUT_ACTION = OUTPUT_ACTION_VISUALIZE
     
-    VISUALIZER_VOLUME_SLICER = 'VolumeSlicer'
-    VISUALIZER_VOLUME_RENDER = 'VolumeRender'
-    VISUALIZER_VOLUME_CONTOUR = 'VolumeContour'
-    VISUALIZERS = [VISUALIZER_VOLUME_SLICER, VISUALIZER_VOLUME_RENDER, VISUALIZER_VOLUME_CONTOUR]
+    VISUALIZER_VolumeSlicer = 'VolumeSlicerViewer'
+    VISUALIZERS = [VISUALIZER_VolumeSlicer]
     DEFAULT_VISUALIZER = VISUALIZERS[0]
+
+    CONTROLLER_Controller = 'Controller'
+    CONTROLLERS = [CONTROLLER_Controller]
+    DEFAULT_CONTROLLER = CONTROLLERS[0]
 
     CONFIG_DEFAULTS = OrderedDict((
         ('preferred_output_action',	'visualize'),
-        ('preferred_visualizer',        'VolumeSlicer'),
+        ('preferred_controller',        'Controller'),
+        ('preferred_visualizer',        DEFAULT_VISUALIZER),
         ('default_options',             ''),
         ('default_data_type',           conf.DEFAULT_DATA_TYPE),
         ('default_clobber',             str(conf.DEFAULT_CLOBBER)),
@@ -90,6 +90,7 @@ class Config(object):
             config.add_section("general")
         try:
             self.preferred_output_action = config.get("general", "preferred_output_action")
+            self.preferred_controller = config.get("general", "preferred_controller")
             self.preferred_visualizer = config.get("general", "preferred_visualizer")
             self.default_options = shlex.split(config.get("general", "default_options"))
             self.default_data_type = config.get("general", "default_data_type")
@@ -105,10 +106,23 @@ class Config(object):
         except Exception as err:
             raise RubikError("invalid config file {}: {}: {}".format(self.CONFIG_FILE, type(err).__name__, err))
         self.visualizer_attributes = {
-            'VolumeSlicer': self.read_attribute_file(self.VOLUME_SLICER_FILE),
-            'VolumeRender': self.read_attribute_file(self.VOLUME_RENDER_FILE),
-            'VolumeContour': self.read_attribute_file(self.VOLUME_CONTOUR_FILE),
+            self.VISUALIZER_VolumeSlicer: self.read_attribute_file(self.get_visualizer_defaults_filename(self.VISUALIZER_VolumeSlicer)),
         }
+        self.controller_attributes = {
+            self.CONTROLLER_Controller: self.read_attribute_file(self.get_controller_defaults_filename(self.CONTROLLER_Controller)),
+        }
+
+    @classmethod
+    def get_defaults_filename(cls, type, name):
+        return os.path.join(cls.RUBIK_DIR, '{}-{}.defaults'.format(type, name))
+
+    @classmethod
+    def get_visualizer_defaults_filename(cls, name):
+        return cls.get_defaults_filename("VISUALIZER", name)
+
+    @classmethod
+    def get_controller_defaults_filename(cls, name):
+        return cls.get_defaults_filename("CONTROLLER", name)
 
     def create_missing_files(self):
         if not os.path.exists(self.RUBIK_DIR):
@@ -119,9 +133,10 @@ class Config(object):
                f_out.write("[general]\n")
                for key, value in self.CONFIG_DEFAULTS.iteritems():
                    f_out.write("# {} = {}\n".format(key, value))
-        for visualizer, filename in (('VolumeSlicer', self.VOLUME_SLICER_FILE),
-                                     ('VolumeRender', self.VOLUME_RENDER_FILE),
-                                     ('VolumeContour', self.VOLUME_CONTOUR_FILE)):
+        for visualizer, filename in (
+                                     (self.VISUALIZER_VolumeSlicer, self.get_visualizer_defaults_filename(self.VISUALIZER_VolumeSlicer)),
+                                     (self.CONTROLLER_Controller, self.get_controller_defaults_filename(self.CONTROLLER_Controller)),
+                                    ):
             if not os.path.exists(filename):
                 with open(filename, 'w') as f_out:
                     f_out.write("# Rubik {}\n".format(conf.VERSION))

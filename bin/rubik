@@ -49,6 +49,24 @@ def key_value_type(value):
     k, v = value.split('=', 2)
     return k.strip(), v.strip()
 
+class ConstExpressionAction(argparse.Action):
+    RUBIK = None
+    CONST = None
+    def __call__(self, parser, namespace, values, option_string):
+        self.RUBIK.expressions.store(self.CONST)
+        
+class PrintStatsAction(ConstExpressionAction):
+    CONST = 'print_stats()'
+
+class PrintCubeAction(ConstExpressionAction):
+    CONST = 'print_cube()'
+
+class PrintHistogramAction(ConstExpressionAction):
+    CONST = 'print_histogram()'
+
+class VisualizeAction(ConstExpressionAction):
+    CONST = 'visualize()'
+
 def main():
     try:
         config = get_config()
@@ -76,6 +94,7 @@ Rubik can:
     epilog = ""
     
     rubik = Rubik()
+    ConstExpressionAction.RUBIK = rubik
 
     parser = CommandLineArgumentParser(
         #fromfile_prefix_chars='%',
@@ -299,28 +318,24 @@ Arguments for graphical visualization""")
         type=rubik.output_filenames.store,
         help="output filename (--help-filename/-hf for an explanation about filenames)")
 
-    output_group.add_argument('--print', '-P',
-        dest="print_cube",
-        action="store_true",
-        default=False,
+    output_group.add_argument('--print-cube', '--print', '-P',
+        action=PrintCubeAction,
+        nargs=0,
         help="print the result cube")
 
-    output_group.add_argument('--stats', '-S',
-        dest="print_stats",
-        action="store_true",
-        default=False,
+    global_group.add_argument("--print-stats", "--stats", "-S",
+        action=PrintStatsAction,
+        nargs=0,
         help="print statistics about the result cube")
 
     output_group.add_argument('--histogram', '-H',
-        dest="print_histogram",
-        action="store_true",
-        default=False,
+        action=PrintHistogramAction,
+        nargs=0,
         help="print an histogram; see histogram arguments below")
 
     output_group.add_argument('--visualizer', '-V',
-        dest="view",
-        action="store_true",
-        default=False,
+        action=VisualizeAction,
+        nargs=0,
         help="view the result graphically; see graphical visualizer arguments below")
 
     histogram_output_group.add_argument('--histogram-bins', '-Hb',
@@ -587,11 +602,11 @@ Options to show help on specific topics """)
     rubik.set_memory_limit(args.memory_limit)
     rubik.set_split_dimensions(args.split_dimensions)
     rubik.set_clobber(args.clobber)
-    rubik.set_print_cube(args.print_cube)
-    rubik.set_print_stats(args.print_stats)
-    rubik.set_visualizer_options(args.view, args.visualizer_type, utils.flatten_list(args.visualizer_attributes, depth=1), args.visualizer_attribute_files)
+    #rubik.set_print_cube(args.print_cube)
+    #rubik.set_print_stats(args.print_stats)
+    rubik.set_visualizer_options(visualizer_type=args.visualizer_type, visualizer_attributes=utils.flatten_list(args.visualizer_attributes, depth=1), visualizer_attribute_files=args.visualizer_attribute_files)
     rubik.set_print_report(args.report_level > 0)
-    rubik.set_histogram(args.print_histogram,
+    rubik.set_histogram_options(
         bins=args.histogram_bins,
         range=args.histogram_range,
         length=args.histogram_length,
