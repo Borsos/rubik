@@ -38,6 +38,7 @@ from traitsui.menu import OKButton, UndoButton, RevertButton
 from traitsui.handler import Controller as TraitsController
 
 from .base_controller_impl import BaseControllerImpl
+from .base_handler_mixin import BaseHandlerMixIn
 
 from .mayavi_data import \
     COLORMAPS
@@ -54,15 +55,18 @@ from .attributes import \
     LocateValueAttribute
 
     
-class ControllerHandler(TraitsController):
+class ControllerHandler(TraitsController, BaseHandlerMixIn):
     def init(self, info):
-        info.ui.title = Controller.default_window_title()
+        TraitsController.init(self, info)
+        BaseHandlerMixIn.init(self, info)
+
+    def get_title(self):
+        return Controller.default_window_title()
 
     def _on_close(self, info):
-        info.ui.dispose()
-#        for view in info.object.views:
-#            for handler in view.handlers:
-#                handler._on_close(info)
+        BaseHandlerMixIn._on_close(self, info)
+        #info.object.close_ui()
+
 
 class Controller(HasTraits, BaseControllerImpl):
     ATTRIBUTES = collections.OrderedDict((
@@ -239,6 +243,11 @@ Controller for multiple views
         self.clip_symmetric = clip_symmetric
         self.clip_auto = clip_auto
 
+    def close_uis(self):
+        super(Controller, self).close_uis()
+        # locks on exit !
+        #for view in self.views:
+        #    view.close_uis()
         
     ### D e f a u l t s :
     def _colorbar_default(self):

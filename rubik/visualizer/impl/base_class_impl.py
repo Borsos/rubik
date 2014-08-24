@@ -21,6 +21,7 @@ __all__ = [
     'BaseClassImpl',
 ]
 
+import weakref
 from ... import conf
 
 class BaseClassImpl(object):
@@ -30,10 +31,12 @@ class BaseClassImpl(object):
     def __init__(self, logger):
         self.logger = logger
         self.name = self.reserve_id()
-        self.handlers = set()
+        self.handlers = []
+        self.uis = []
 
-    def add_handler(self, handler):
-        self.handlers.add(handler)
+    def add_handler_ui(self, handler, ui):
+        self.handlers.append(weakref.ref(handler))
+        self.uis.append(weakref.ref(ui))
 
     @classmethod
     def reserve_id(cls):
@@ -65,3 +68,11 @@ class BaseClassImpl(object):
     def log_trait_change(self, traits):
         self.logger.info("{}: changed traits: {}".format(self.name, traits))
 
+    def close_uis(self):
+        self.logger.info("{}: closing windows".format(self.name))
+        for ui_ref in reversed(self.uis):
+            ui = ui_ref()
+            if ui is not None:
+                self.logger.info("{}: closing ui {}".format(self.name, ui))
+                #ui.dispose()
+                ui.finish()

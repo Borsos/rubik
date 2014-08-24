@@ -50,6 +50,8 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .base_visualizer_impl import BaseVisualizerImpl
+from .base_handler_mixin import BaseHandlerMixIn
+
 from .attributes import \
     LocateModeAttribute, \
     LocateValueAttribute
@@ -60,14 +62,13 @@ from .attributes import \
     LOCATE_MODE_VALUE, \
     LOCATE_MODES
 
-class VolumeSlicerHandler(ModelView):
+class VolumeSlicerHandler(ModelView, BaseHandlerMixIn):
     def init(self, info):
-        info.ui.title = VolumeSlicer.default_window_title()
-        info.object.add_handler(self)
+        ModelView.init(self, info)
+        BaseHandlerMixIn.init(self, info)
 
-    def _on_close(self, info):
-        info.ui.dispose()
-
+    def get_title(self):
+        return VolumeSlicer.default_window_title()
 
 class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = collections.OrderedDict((
