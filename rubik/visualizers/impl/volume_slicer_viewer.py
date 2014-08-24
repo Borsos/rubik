@@ -24,10 +24,19 @@ __all__ = [
 import numpy as np
 
 from traits.api import HasTraits, Instance, Array, \
-    Int, Str, Float, \
+    Int, Str, Float, Bool, Enum, \
+    Button, Range, \
     on_trait_change
 
-from traitsui.api import View, Item, HGroup, Group
+from traitsui.api import View, \
+    Item, \
+    HGroup, \
+    Group, \
+    HSplit, \
+    EnumEditor, \
+    RangeEditor, \
+    ButtonEditor
+
 from traitsui.handler import Handler
 
 from tvtk.api import tvtk
@@ -39,6 +48,12 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .base_viewer_impl import BaseViewerImpl
+
+from .attributes import \
+    LOCATE_MODE_MIN, \
+    LOCATE_MODE_MAX, \
+    LOCATE_MODE_VALUE, \
+    LOCATE_MODES
 
 class VolumeSlicerViewerHandler(Handler):
     pass
@@ -69,9 +84,21 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     clip_max = Float()
 
     data_value = Str()
+
+    locate_mode = Enum(*LOCATE_MODES)
+    locate_low = Float()
+    locate_high = Float()
+    locate_value = Range(low='locate_low', high='locate_high')
+    locate_mode_is_value = Bool()
+    locate_prev_button = Button()
+    locate_nearest_button = Button()
+    locate_next_button = Button()
     
-    SCENE_WIDTH = -300
-    SCENE_HEIGHT = -300
+    LABEL_WIDTH = 20
+    SCENE_WIDTH = 200
+    SCENE_HEIGHT = 200
+    WINDOW_WIDTH = 900
+    WINDOW_HEIGHT = 650
 
     def __init__(self, controller, **traits):
         HasTraits.__init__(self, **traits)
@@ -81,6 +108,30 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         self.ipw_3d_y
         self.ipw_3d_z
 
+    @classmethod
+    def get_geometry(cls, geometry):
+        if isinstance(geometry, str):
+            try:
+                ws, hs = geometry.split('x', 2)
+                return int(ws), int(hs)
+            except Exception as err:
+                raise ValueError("invalid geometry {}: {}: {}".format(geometry, type(err).__name__, err))
+        elif isinstance(geometry, (list, tuple)) and len(geometry) == 2:
+            return geometry
+        else:
+            raise ValueError("invalid geometry {}".format(geometry))
+
+    @classmethod
+    def set_window_geometry(cls, geometry):
+        width, height = self.get_geometry(geometry)
+        cls.WINDOW_WIDTH = width
+        cls.WINDOW_HEIGHT = height
+
+    @classmethod
+    def set_scene_geometry(cls, geometry):
+        width, height = self.get_geometry(geometry)
+        cls.SCENE_WIDTH = width
+        cls.SCENE_HEIGHT = height
 
     ### U t i l i t i e s :
     def get_value(self):
@@ -97,10 +148,16 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         self.data_value = self.get_data_value()
 
     def set_volume(self, data):
+        self.data = data
         self.data_src3d.scalar_data = data
+        self.set_locate_range()
 
-    def update_volume(self, clip_min, clip_max):
+    def update_clip_range(self, clip_min, clip_max):
         data_range = clip_min, clip_max
+        if not hasattr(self, 'view3d'):
+            # too early!
+            return
+        self.logger.info("{}: applying clip {} <-> {}".format(self.name, clip_min, clip_max))
         self.view3d.module_manager.scalar_lut_manager.data_range = data_range
 #        mlab.clf(self.scene3d.mayavi_scene)
 #        self.display_scene3d()
@@ -120,12 +177,93 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
         self.update_data_value()
         self.redraw_axis_names()
 
+    def enable_colorbar(self, enable):
+        self.logger.debug("{}: colorbar={}".format(self.name, enable))
+        self.view3d.module_manager.scalar_lut_manager.show_scalar_bar = enable
+
+    def set_colormap(self, colormap):
+        self.logger.debug("{}: colormap={}".format(self.name, colormap))
+        self.view3d.module_manager.scalar_lut_manager.lut_mode = colormap
+        self.ipw_x.module_manager.scalar_lut_manager.lut_mode = colormap
+        self.ipw_y.module_manager.scalar_lut_manager.lut_mode = colormap
+        self.ipw_z.module_manager.scalar_lut_manager.lut_mode = colormap
+
+    def get_local_min(self):
+        return float(self.data.min())
+
+    def get_local_max(self):
+        return float(self.data.max())
+
+    def get_locate_value(self):
+        if self.locate_mode == LOCATE_MODE_MIN:
+            return self.get_local_min()
+        elif self.locate_mode == LOCATE_MODE_MAX:
+            return self.get_local_max()
+        elif self.locate_mode == LOCATE_MODE_VALUE:
+            return self.locate_value
+
+    def locate_nearest(self):
+        data = self.data
+        diff = abs(data - self.locate_value)
+        position = np.unravel_index(diff.argmin(), diff.shape)
+        self.goto_position(position)
+        value = float(data[position])
+        self.locate_value = value
+
+    def goto_position(self, position):
+        if len(position) == 2:
+            self.x_index, self.y_index = position
+        else:
+            self.x_index, self.y_index, self.z_index = position
+
+    def locate_sign(self, sign):
+        self.locate_mode = LOCATE_MODE_VALUE
+        data = self.data
+        diff = sign * (data - self.locate_value)
+        diff =  np.where(diff <= 0, diff.max() + 1, diff)
+        n = 1
+        for d in diff.shape:
+            n *= d
+        l = diff.reshape((n, )).argsort()
+        for i in l:
+            position = np.unravel_index(i, data.shape)
+            break
+        else:
+            # not found
+            return
+        value = float(data[position])
+        if (sign > 0 and value > self.locate_value) or (sign < 0 and value < self.locate_value):
+            self.locate_value = value
+            self.goto_position(position)
+
+    def locate_next(self):
+        self.locate_sign(+1)
+
+    def locate_prev(self):
+        self.locate_sign(-1)
+
+    def set_locate_range(self):
+        self.locate_low = self.get_local_min()
+        self.locate_high = self.get_local_max()
+
+
     ### D e f a u l t s :
+    def _locate_value_default(self):
+        if self.locate_mode == LOCATE_MODE_MIN:
+            return self.get_local_min()
+        elif self.locate_mode == LOCATE_MODE_MAX:
+            return self.get_local_max()
+        elif self.locate_mode == LOCATE_MODE_VALUE:
+            if self.controller.attributes["locate_value"] is not None:
+                return self.controller.attributes["locate_value"]
+            else:
+                return self.get_local_max()
+
     def _clip_min_default(self):
-        return self.data_src3d.scalar_data.min()
+        return self.get_local_min()
 
     def _clip_max_default(self):
-        return self.data_src3d.scalar_data.max()
+        return self.get_local_max()
 
     def _x_index_default(self):
         return (self.data_src3d.scalar_data.shape[0] + 1) // 2
@@ -195,6 +333,32 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
     def on_change_z_index(self):
         self.on_change_axis('z')
 
+    @on_trait_change('locate_mode')
+    def on_change_locate_mode(self):
+        self.log_trait_change("locate_mode")
+        self.locate_mode_is_value = (self.locate_mode == LOCATE_MODE_VALUE)
+        self.locate_value = self.get_locate_value()
+
+    @on_trait_change('locate_value')
+    def on_change_locate_value(self):
+        self.log_trait_change("locate_value")
+        self.locate_nearest()
+
+    @on_trait_change('locate_nearest_button')
+    def on_change_locate_nearest_button(self):
+        self.log_trait_change("locate_nearest_button")
+        self.locate_nearest()
+
+    @on_trait_change('locate_prev_button')
+    def on_change_locate_prev_button(self):
+        self.log_trait_change("locate_prev_button")
+        self.locate_prev()
+
+    @on_trait_change('locate_next_button')
+    def on_change_locate_next_button(self):
+        self.log_trait_change("locate_next_button")
+        self.locate_next()
+
     #---------------------------------------------------------------------------
     # Scene activation callbaks
     #---------------------------------------------------------------------------
@@ -204,6 +368,7 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
             self.data_src3d,
             figure=self.scene3d.mayavi_scene,
         )
+        self.set_locate_range()
         self.scene3d.mlab.view(40, 50)
         # Interaction properties can only be changed after the scene
         # has been created, and thus the interactor exists
@@ -318,30 +483,74 @@ class VolumeSlicerViewer(HasTraits, BaseViewerImpl):
             Group(
                 Item('scene_y',
                     editor=SceneEditor(scene_class=Scene),
-                    height=SCENE_HEIGHT, width=SCENE_WIDTH
+                    height=SCENE_HEIGHT, width=SCENE_WIDTH,
+                    resizable=True,
                 ),
                 Item('scene_z',
                     editor=SceneEditor(scene_class=Scene),
-                    height=SCENE_HEIGHT, width=SCENE_WIDTH
+                    height=SCENE_HEIGHT, width=SCENE_WIDTH,
+                    resizable=True,
                 ),
                 show_labels=False,
             ),
             Group(
                 Item('scene_x',
-                     editor=SceneEditor(scene_class=Scene),
-                     height=SCENE_HEIGHT, width=SCENE_WIDTH),
+                    editor=SceneEditor(scene_class=Scene),
+                    height=SCENE_HEIGHT, width=SCENE_WIDTH,
+                    resizable=True,
+                ),
                 Item('scene3d',
-                     editor=SceneEditor(scene_class=MayaviScene),
-                     height=SCENE_HEIGHT, width=SCENE_WIDTH
+                    editor=SceneEditor(scene_class=MayaviScene),
+                    height=SCENE_HEIGHT, width=SCENE_WIDTH,
+                    resizable=True,
                 ),
                 show_labels=False,
             ),
             Group(
                 Item('data_value'),
+                '_',
+                Item(
+                    'locate_mode',
+                    editor=EnumEditor(values=LOCATE_MODES),
+                    label="Locate mode",
+                    tooltip="Set locate mode",
+                ),
+                Item(
+                    'locate_value',
+                    editor=RangeEditor(
+                        enter_set=True,
+                        low_name='locate_low',
+                        high_name='locate_high',
+                        label_width=LABEL_WIDTH,
+                        format="%g",
+                        mode="slider",
+                        is_float=True,
+                    ),
+                    enabled_when='locate_mode_is_value',
+                ),
+                HSplit(
+                        Item(
+                            'locate_prev_button',
+                            editor=ButtonEditor(),
+                            label="Prev",
+                        ),
+                        Item(
+                            'locate_nearest_button',
+                            editor=ButtonEditor(),
+                            label="Nearest",
+                        ),
+                        Item(
+                            'locate_next_button',
+                            editor=ButtonEditor(),
+                            label="Next",
+                        ),
+                        show_labels=False,
+                ),
                 show_labels=True,
             ),
         ),
         handler=VolumeSlicerViewerHandler(),
+        height=WINDOW_HEIGHT, width=WINDOW_WIDTH,
         resizable=True,
         title='Volume Slicer',
     )

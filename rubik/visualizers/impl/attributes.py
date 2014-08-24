@@ -31,6 +31,7 @@ __all__ = [
     'IndexAttribute',
     'Dimension4DAttribute',
     'ClipAttribute',
+    'AutoClipAttribute',
     'SymmetricClipAttribute',
     'LocateModeAttribute',
     'LocateValueAttribute',
@@ -129,9 +130,18 @@ Available values: any float
 """
         super(ClipAttribute, self).__init__(default=default, description=description, attribute_type=FloatAttributeType())
 
+class AutoClipAttribute(Attribute):
+    def __init__(self):
+        default = None
+        description = """\
+Set automatic clip.
+Available values: {values}
+""".format(values=', '.join(repr(v) for v in (True, False)))
+        super(AutoClipAttribute, self).__init__(default=default, description=description, attribute_type=BooleanAttributeType())
+
 class SymmetricClipAttribute(Attribute):
     def __init__(self):
-        default = False
+        default = None
         description = """\
 Set symmetric clip.
 Available values: {values}

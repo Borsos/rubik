@@ -8,6 +8,7 @@ from rubik.shape import Shape
 
 shape = Shape("20x30x40x50")
 cube01 = cb.random_cube(shape)
+cube01[3:8, :, :, :] *= 10
 cube02 = cb.random_cube(shape)
 attributes = {
     'x': 7,
@@ -19,7 +20,7 @@ logger = set_logger(verbose_level=3)
 
 controller = Controller(logger=logger, attributes=attributes, shape=shape.shape())
 controller.add_viewer(viewer_class=VolumeSlicerViewer, data=cube01)
-#controller.add_viewer(viewer_class=VolumeSlicerViewer, data=cube02)
+controller.add_viewer(viewer_class=VolumeSlicerViewer, data=cube02)
 
 
 controller.run()

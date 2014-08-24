@@ -40,11 +40,19 @@ from traitsui.handler import Handler
 
 from .base_controller_impl import BaseControllerImpl
 
+from .mayavi_data import \
+    COLORMAPS
+
 from .attributes import \
     IndexAttribute, \
     Dimension4DAttribute, \
+    ColormapAttribute, \
+    ColorbarAttribute, \
     ClipAttribute, \
-    SymmetricClipAttribute
+    AutoClipAttribute, \
+    SymmetricClipAttribute, \
+    LocateModeAttribute, \
+    LocateValueAttribute
 
     
 class ControllerHandler(Handler):
@@ -57,11 +65,17 @@ class Controller(HasTraits, BaseControllerImpl):
         ('x', IndexAttribute('x')),
         ('y', IndexAttribute('y')),
         ('z', IndexAttribute('z')),
+        ('colormap', ColormapAttribute()),
+        ('colorbar', ColorbarAttribute()),
         ('slicing_axis', Dimension4DAttribute()),
         ('clip', ClipAttribute()),
         ('clip_min', ClipAttribute()),
         ('clip_max', ClipAttribute()),
+        ('clip_auto', AutoClipAttribute()),
         ('clip_symmetric', SymmetricClipAttribute()),
+# passed to viewers
+        ('locate_mode', LocateModeAttribute()),
+        ('locate_value', LocateValueAttribute()),
     ))
     DIMENSIONS = "2D, 3D, ..., nD"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) >= 2)
@@ -103,14 +117,21 @@ Controller for multiple viewers
     data_shape = Str("")
     close_button = Action(name='Close', action='_on_close')
 
+    colorbar = Bool()
+    colormap = Str()
+
     data_min = Float()
     data_max = Float()
 
     clip = Float()
     clip_min = Float()
     clip_max = Float()
+    clip_auto = Bool()
     clip_symmetric = Bool()
-    clip_asymmetric = Bool()
+    clip_readonly = Bool()
+    clip_visible = Bool()
+    clip_range_readonly = Bool()
+    clip_range_visible = Bool()
 
     def __init__(self, logger, attributes, **traits):
         BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
@@ -127,6 +148,7 @@ Controller for multiple viewers
         elif rank == 4:
             wh, xh, yh, zh = self.shape
         self.w_high, self.x_high, self.y_high, self.z_high = wh - 1, xh - 1, yh - 1, zh - 1
+        self.set_default_clips()
         self.set_axis_mapping()
 
 
@@ -154,6 +176,7 @@ Controller for multiple viewers
                     data_max_l.append(local_volume.max())
             self.data_min = float(min(data_min_l))
             self.data_max = float(max(data_max_l))
+            self.logger.info("{}: data range: {} <-> {}".format(self.name, self.data_min, self.data_max))
         else:
             self.data_min = 0.0
             self.data_max = 0.0
@@ -188,49 +211,38 @@ Controller for multiple viewers
     def get_local_axis_name(self, global_axis_name):
         return self._m_global2local[global_axis_name]
         
-    def get_clips(self):
-        if self.attributes["clip_min"] is not None:
-            clip_min = self.attributes["clip_min"]
-        elif self.attributes["clip"] is not None:
-            clip_min = -abs(self.attributes["clip"])
-        else:
-            clip_min = self.data_min
-        if self.attributes["clip_max"] is not None:
-            clip_max = self.attributes["clip_max"]
-        elif self.attributes["clip"] is not None:
-            clip_max = +abs(self.attributes["clip"])
-        else:
-            clip_max = self.data_max
-        clip = max(abs(clip_min), abs(clip_max))
-        if self.clip_symmetric:
-            clip_min = -clip
-            clip_max = +clip
-        return clip, clip_min, clip_max
+    def set_default_clips(self):
+        clip_symmetric = self.attributes["clip_symmetric"]
+        clip_auto = self.attributes["clip_auto"]
+        clip = self.attributes["clip"]
+        clip_min = self.attributes["clip_min"]
+        clip_max = self.attributes["clip_max"]
+        if clip is not None:
+            self.clip = clip
+        if clip_min is not None:
+            self.clip_min = clip_min
+        if clip_max is not None:
+            self.clip_max = clip_max
+        if clip_symmetric is None:
+            if clip is not None:
+                clip_symmetric = True
+            else:
+                clip_symmetric = False
+        if clip_auto is None:
+            if clip is None and (clip_min is None or clip_max is None):
+                clip_auto = True
+            else:
+                clip_auto = False
+        self.clip_symmetric = clip_symmetric
+        self.clip_auto = clip_auto
 
         
     ### D e f a u l t s :
-    def _clip_symmetric_default(self):
-        if self.attributes["clip_symmetric"] is not None:
-            clip_symmetric = self.attributes["clip_symmetric"]
-        else:
-            clip_symmetric = False
-        self.clip_asymmetric = not clip_symmetric
-        return clip_symmetric
+    def _colorbar_default(self):
+        return self.attributes["colorbar"]
 
-    def _clip_default(self):
-        clip, clip_min, clip_max = self.get_clips()
-        #print "CLIP_DEF: ", clip
-        return clip
-
-    def _clip_min_default(self):
-        clip, clip_min, clip_max = self.get_clips()
-        #print "CLIP_MIN: ", clip_min
-        return clip_min
-
-    def _clip_max_default(self):
-        clip, clip_min, clip_max = self.get_clips()
-        #print "CLIP_MAX: ", clip_max
-        return clip_max
+    def _colormap_default(self):
+        return self.attributes["colormap"]
 
     def _data_shape_default(self):
         return 'x'.join(str(d) for d in self.shape)
@@ -267,26 +279,83 @@ Controller for multiple viewers
     def on_change_axis(self, global_axis_name):
         if global_axis_name == self.slicing_axis:
             self.logger.error("{}: changing the slicing axis is not supported yet".format(self.name))
-            gmin, gmax = [], []
             for viewer in self.viewers:
                 local_volume = self.get_local_volume(self.viewers_data[viewer])
                 viewer.set_volume(local_volume)
-                gmin.append(local_volume.min())
-                gmax.append(local_volume.max())
             self.update_data_range()
-            clip, clip_min, clip_max = self.get_clips()
-            for viewer in self.viewers:
-                viewer.update_volume(clip_min, clip_max)
+            self.update_clip_range()
         else:
             local_axis_name = self.get_local_axis_name(global_axis_name)
             self.log_trait_change('{}_index'.format(global_axis_name))
             self.apply_attribute('{}_index'.format(local_axis_name))
 
+    def set_clip(self):
+        if self.clip_auto:
+            self.clip_min, self.clip_max = self.data_min, self.data_max
+            self.clip = max(abs(self.clip_min), abs(self.clip_max))
+        self.clip_readonly = not self.clip_auto
+        self.clip_range_readonly = not self.clip_auto
+        self.clip_visible = self.clip_symmetric
+        self.clip_range_visible = not self.clip_symmetric
+
+    def get_clip_range(self):
+        if self.clip_auto:
+            clip_min = float(self.data_min)
+            clip_max = float(self.data_max)
+            clip = max(abs(clip_min), abs(clip_max))
+        else:
+            clip_min = self.clip_min
+            clip_max = self.clip_max
+            clip = self.clip
+        if self.clip_symmetric:
+            return -clip, clip
+        else:
+            return clip_min, clip_max
+
+    def update_clip_range(self):
+        clip_min, clip_max = self.get_clip_range()
+        self.logger.info("{}: applying clip {} <-> {}".format(self.name, clip_min, clip_max))
+        for viewer in self.viewers:
+            viewer.update_clip_range(clip_min, clip_max)
+
     ### T r a t s   c h a n g e s :
+    @on_trait_change('colorbar')
+    def on_change_colorbar(self):
+        for viewer in self.viewers:
+            viewer.enable_colorbar(self.colorbar)
+
+    @on_trait_change('colormap')
+    def on_change_colormap(self):
+        for viewer in self.viewers:
+            viewer.set_colormap(self.colormap)
+
+    @on_trait_change('data_min,data_max')
+    def on_change_data_range(self):
+        self.set_clip()
+        self.update_clip_range()
+
     @on_trait_change('clip_symmetric')
     def on_change_clip_symmetric(self):
-        self.clip_asymmetric = not self.clip_symmetric
+        self.set_clip()
+        self.update_clip_range()
 
+    @on_trait_change('clip_auto')
+    def on_change_clip_auto(self):
+        self.set_clip()
+        self.update_clip_range()
+
+    @on_trait_change('clip')
+    def on_change_clip(self):
+        self.logger.debug("{}: clip: auto={}, symmetric={}, clip={}".format(self.name, self.clip_auto, self.clip_symmetric, self.clip))
+        if self.clip_symmetric:
+            self.update_clip_range()
+     
+    @on_trait_change('clip_min,clip_max')
+    def on_change_clip(self):
+        self.logger.debug("{}: clip: auto={}, symmetric={}, clip_min={}, clip_max={}".format(self.name, self.clip_auto, self.clip_symmetric, self.clip_min, self.clip_max))
+        if not self.clip_symmetric:
+            self.update_clip_range()
+     
     @on_trait_change('w_index')
     def on_change_w_index(self):
         self.on_change_axis('w')
@@ -386,6 +455,21 @@ Controller for multiple viewers
                 ),
                 '_',
                 Item(
+                    'colorbar',
+                    editor=BooleanEditor(
+                    ),
+                    label="Colorbar",
+                ),
+                Item(
+                    'colormap',
+                    editor=EnumEditor(
+                        values=COLORMAPS,
+
+                    ),
+                    label="Colormap",
+                ),
+                '_',
+                Item(
                     'data_min',
                     label="Data min",
                     style="readonly",
@@ -396,19 +480,11 @@ Controller for multiple viewers
                     style="readonly",
                 ),
                 Item(
-                    'clip',
-                    label="Clip",
-                    visible_when='clip_symmetric',
-                ),
-                Item(
-                    'clip_min',
-                    label="Clip min",
-                    visible_when='clip_asymmetric',
-                ),
-                Item(
-                    'clip_max',
-                    label="Clip max",
-                    visible_when='clip_asymmetric',
+                    'clip_auto',
+                    editor=BooleanEditor(),
+                    label="Automatic",
+                    tooltip="makes clip automatic",
+                    help="if set, clip is taken from data range"
                 ),
                 Item(
                     'clip_symmetric',
@@ -416,6 +492,24 @@ Controller for multiple viewers
                     label="Symmetric",
                     tooltip="makes clip symmetric",
                     help="if set, clip_min=-clip, clip_max=+clip",
+                ),
+                Item(
+                    'clip',
+                    label="Clip",
+                    visible_when='clip_visible',
+                    enabled_when='clip_readonly',
+                ),
+                Item(
+                    'clip_min',
+                    label="Clip min",
+                    visible_when='clip_range_visible',
+                    enabled_when='clip_range_readonly',
+                ),
+                Item(
+                    'clip_max',
+                    label="Clip max",
+                    visible_when='clip_range_visible',
+                    enabled_when='clip_range_readonly',
                 ),
 
             ),
