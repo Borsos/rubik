@@ -22,6 +22,8 @@ __all__ = [
     'get_controller_types',
     'get_visualizer_class',
     'get_visualizer_types',
+    'list_controller',
+    'list_controllers',
     'list_visualizer',
     'list_visualizers',
 ]
@@ -77,6 +79,30 @@ def get_visualizer_types():
 def get_controller_types():
     return _CONTROLLER_TYPES
 
+def list_controllers(logger=None, print_function=None):
+    for controller_type in _CONTROLLER_TYPES:
+        list_controller(controller_type, logger=logger, print_function=print_function)
+
+def list_controller(controller_type, logger=None, print_function=None):
+    if print_function is None:
+        print_function = lambda message: sys.stdout.write('{}\n'.format(message))
+    controller_class = get_controller_class(controller_type, logger)
+    if controller_class is not None:
+        print_function("=== CONTROLLER {}:".format(controller_type))
+        print_function("    TARGET DIMENSIONS: {}".format(controller_class.DIMENSIONS))
+        print_function("    DESCRIPTION: {}".format(textwrap.fill(controller_class.DESCRIPTION,
+                                                                  initial_indent="", subsequent_indent="                 ")))
+        for attribute_name, attribute in controller_class.ATTRIBUTES.iteritems():
+            print_function("    * ATTRIBUTE {}:".format(attribute_name))
+            print_function("      TYPE: {}".format(textwrap.fill(str(attribute.attribute_type()),
+                                                          initial_indent="",
+                                                          subsequent_indent="          ",
+                                                          break_on_hyphens=False)))
+            print_function("      DEFAULT: {!r}".format(attribute.default()))
+            print_function("      DESCRIPTION: {}".format(textwrap.fill(attribute.description(),
+                                                          initial_indent="",
+                                                          subsequent_indent="          ",
+                                                          break_on_hyphens=False)))
 def list_visualizers(logger=None, print_function=None):
     for visualizer_type in _VISUALIZER_TYPES:
         list_visualizer(visualizer_type, logger=logger, print_function=print_function)

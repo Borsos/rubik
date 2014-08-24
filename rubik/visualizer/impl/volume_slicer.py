@@ -22,6 +22,7 @@ __all__ = [
 ]
 
 import numpy as np
+import collections
 
 from traits.api import HasTraits, Instance, Array, \
     Int, Str, Float, Bool, Enum, \
@@ -49,6 +50,9 @@ from mayavi.core.ui.api import SceneEditor, MayaviScene, \
                                 MlabSceneModel
 
 from .base_visualizer_impl import BaseVisualizerImpl
+from .attributes import \
+    LocateModeAttribute, \
+    LocateValueAttribute
 
 from .attributes import \
     LOCATE_MODE_MIN, \
@@ -66,6 +70,10 @@ class VolumeSlicerHandler(ModelView):
 
 
 class VolumeSlicer(HasTraits, BaseVisualizerImpl):
+    ATTRIBUTES = collections.OrderedDict((
+        ('locate_mode', LocateModeAttribute()),
+        ('locate_value', LocateValueAttribute()),
+    ))
     DIMENSIONS = "2D, 3D, 4D"
     DATA_CHECK = classmethod(lambda cls, data: 2 <= len(data.shape) <= 4)
     DESCRIPTION = """\

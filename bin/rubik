@@ -635,7 +635,8 @@ Options to show help on specific topics """)
         random.seed(args.random_seed)
 
     if args.visualizer_list:
-        from rubik.visualizers import list_visualizers
+        from rubik.visualizer import list_controllers, list_visualizers
+        list_controllers(logger)
         list_visualizers(logger)
         return 0
 
