@@ -118,6 +118,8 @@ Volume slicer visualizer
     locate_prev_button = Button()
     locate_nearest_button = Button()
     locate_next_button = Button()
+
+    coords = Str()
     
     done = Bool(False)
 
@@ -275,8 +277,14 @@ Volume slicer visualizer
         self.locate_low = self.get_local_min()
         self.locate_high = self.get_local_max()
 
+    def set_coords(self):
+        tpl = tuple(getattr(self, '{}_index'.format(local_axis_name)) for local_axis_name in self.controller.LOCAL_AXIS_NAMES)
+        self.coords = str(tpl)
 
     ### D e f a u l t s :
+    def _coords_default(self):
+        return "" #(self.x_index, self.y_index, self.z_index)
+
     def _locate_value_default(self):
         if self.locate_mode == LOCATE_MODE_MIN:
             return self.get_local_min()
@@ -345,10 +353,12 @@ Volume slicer visualizer
             index_value = index_high
             setattr(self, index_name, index_value)
             return
+        self.set_coords()
         # log:
         self.log_trait_change(index_name)
         # feedback:
-        self.feedback_attribute(index_name)
+        global_axis_name = self.controller.get_global_axis_name(axis_name)
+        self.feedback_attribute("{}_index".format(global_axis_name), index_value)
         getattr(self, 'ipw_3d_{}'.format(axis_name)).ipw.slice_position = \
             index_value + 1
         self.update_data_value()
@@ -539,7 +549,12 @@ Volume slicer visualizer
                 show_labels=False,
             ),
             Group(
-                Item('data_value'),
+                Item('data_value',
+                    style="readonly"
+                ),
+                Item('coords',
+                    style="readonly"
+                ),
                 '_',
                 Item(
                     'locate_mode',
@@ -553,8 +568,8 @@ Volume slicer visualizer
                         enter_set=True,
                         low_name='locate_low',
                         high_name='locate_high',
-                        label_width=LABEL_WIDTH,
-                        format="%g",
+                        #label_width=LABEL_WIDTH,
+                        format="%.2g",
                         mode="slider",
                         is_float=True,
                     ),

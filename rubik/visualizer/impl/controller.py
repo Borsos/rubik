@@ -172,12 +172,20 @@ Controller for multiple views
             raise ValueError("{}: cannot create {} view: data shape {} is not {}".format(self.name, view_class.__name__, data.shape, self.shape))
         local_volume = self.get_local_volume(data)
         view = self.create_view(view_class, local_volume)
+        self.set_view_axis(view)
         self.views.append(view)
         self.views_data[view] = data
         #self.add_class_trait(view.name, Instance(view_class))
         #self.add_trait(view.name, view)
         self.update_data_range()
         return view
+
+    def set_view_axis(self, view):
+        for global_axis_name in self.GLOBAL_AXIS_NAMES:
+            if global_axis_name != self.slicing_axis:
+                local_axis_name = self.get_local_axis_name(global_axis_name)
+                setattr(view, "{}_index".format(local_axis_name), getattr(self, "{}_index".format(global_axis_name)))
+
 
     def update_data_range(self):
         if self.views:
@@ -213,6 +221,8 @@ Controller for multiple views
                 self._m_local2global[local_axis_name] = global_axis_name
                 self._m_global2local[global_axis_name] = local_axis_name
                 local_axis_number += 1
+        self.logger.info("{}: local2global: {}".format(self.name, self._m_local2global))
+        self.logger.info("{}: global2local: {}".format(self.name, self._m_global2local))
 
     def get_global_axis_name(self, local_axis_name):
         return self._m_local2global[local_axis_name]
@@ -294,8 +304,10 @@ Controller for multiple views
         return slicing_axis
 
     def on_change_axis(self, global_axis_name):
+        global_attribute = '{}_index'.format(global_axis_name)
+        self.log_trait_change(global_attribute)
         if global_axis_name == self.slicing_axis:
-            self.logger.error("{}: changing the slicing axis is not supported yet".format(self.name))
+            #self.logger.error("{}: changing the slicing axis is not supported yet".format(self.name))
             for view in self.views:
                 local_volume = self.get_local_volume(self.views_data[view])
                 view.set_volume(local_volume)
@@ -303,8 +315,8 @@ Controller for multiple views
             self.update_clip_range()
         else:
             local_axis_name = self.get_local_axis_name(global_axis_name)
-            self.log_trait_change('{}_index'.format(global_axis_name))
-            self.apply_attribute('{}_index'.format(local_axis_name))
+            local_attribute = '{}_index'.format(local_axis_name)
+            self.apply_attribute(local_attribute, getattr(self, global_attribute))
 
     def set_clip(self):
         if self.clip_auto:
@@ -424,7 +436,7 @@ Controller for multiple views
                         low_name='w_low',
                         high_name='w_high',
                         format="%d",
-                        label_width=LABEL_WIDTH,
+                        #label_width=LABEL_WIDTH,
                         mode="auto",
                     ),
                     enabled_when='is4D',
@@ -438,7 +450,7 @@ Controller for multiple views
                         low_name='x_low',
                         high_name='x_high',
                         format="%d",
-                        label_width=LABEL_WIDTH,
+                        #label_width=LABEL_WIDTH,
                         mode="slider",
                     ),
                     format_str="%<8s",
@@ -451,7 +463,7 @@ Controller for multiple views
                         low_name='y_low',
                         high_name='y_high',
                         format="%d",
-                        label_width=LABEL_WIDTH,
+                        #label_width=LABEL_WIDTH,
                         mode="slider",
                     ),
                     format_str="%<8s",
@@ -464,7 +476,7 @@ Controller for multiple views
                         low_name='z_low',
                         high_name='z_high',
                         format="%d",
-                        label_width=LABEL_WIDTH,
+                        #label_width=LABEL_WIDTH,
                         mode="slider",
                     ),
                     format_str="%<8s",

@@ -43,8 +43,10 @@ class BaseVisualizerImpl(BaseClassImpl):
         self._feedback = bool(feedback)
     feedback = property(get_feedback, set_feedback)
 
-    def feedback_attribute(self, attribute_name):
+    def feedback_attribute(self, attribute_name, attribute_value=None):
+        if attribute_value is None:
+            attribute_value = getattr(self, attribute_name)
         if self.feedback:
-            self.logger.info("{}: sending feedback for attribute {}={!r} to controller {}".format(self.name, attribute_name, getattr(self, attribute_name), self.controller.name))
-            setattr(self.controller, attribute_name, getattr(self, attribute_name))
+            self.logger.info("{}: sending feedback for attribute {}={!r} to controller {}".format(self.name, attribute_name, attribute_value, self.controller.name))
+            setattr(self.controller, attribute_name, attribute_value)
 

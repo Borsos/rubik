@@ -64,16 +64,18 @@ class BaseControllerImpl(BaseClassImpl):
         for attribute_name in self.ATTRIBUTES:
             self.apply_attribute(attribute_name)
 
-    def apply_attribute(self, attribute_name):
+    def apply_attribute(self, attribute_name, attribute_value):
+        if attribute_value is None:
+            attribute_value = getattr(self, attribute_name)
         for view in self.views:
-            self.apply_attribute_to_view(view, attribute_name)
+            self.apply_attribute_to_view(view, attribute_name, attribute_value)
 
-    def apply_attribute_to_view(self, view, attribute_name):
+    def apply_attribute_to_view(self, view, attribute_name, attribute_value):
         if view.has_trait(attribute_name):
             view.feedback = False
             try:
-                self.logger.info("{}: applying attribute {}={!r} to view {}".format(self.name, attribute_name, getattr(self, attribute_name), view.name))
-                setattr(view, attribute_name, getattr(self, attribute_name))
+                self.logger.info("{}: applying attribute {}={!r} to view {}".format(self.name, attribute_name, attribute_value, view.name))
+                setattr(view, attribute_name, attribute_value)
             finally:
                 view.feedback = True
         else:
