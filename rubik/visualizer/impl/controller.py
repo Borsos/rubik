@@ -60,9 +60,6 @@ class ControllerHandler(TraitsController, BaseHandlerMixIn):
         TraitsController.init(self, info)
         BaseHandlerMixIn.init(self, info)
 
-    def get_title(self):
-        return Controller.default_window_title()
-
     def _on_close(self, info):
         BaseHandlerMixIn._on_close(self, info)
 

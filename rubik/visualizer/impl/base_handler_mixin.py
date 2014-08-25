@@ -24,11 +24,9 @@ __all__ = [
 
 class BaseHandlerMixIn(object):
     def init(self, info):
-        info.ui.title = self.get_title()
+        title = info.object.name
+        info.ui.title = title
         info.object.add_handler_info(self, info)
-
-    def get_title(self):
-        return "untitled"
 
     def _on_close(self, info):
         info.object.close_uis()

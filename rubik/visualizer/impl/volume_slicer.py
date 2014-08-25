@@ -67,9 +67,6 @@ class VolumeSlicerHandler(ModelView, BaseHandlerMixIn):
         ModelView.init(self, info)
         BaseHandlerMixIn.init(self, info)
 
-    def get_title(self):
-        return VolumeSlicer.default_window_title()
-
 class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     ATTRIBUTES = collections.OrderedDict((
         ('locate_mode', LocateModeAttribute()),
@@ -80,9 +77,6 @@ class VolumeSlicer(HasTraits, BaseVisualizerImpl):
     DESCRIPTION = """\
 Volume slicer visualizer
 """
-
-    # window_title
-    window_title = Str()
 
     # The data to plot
     data = Array()
@@ -120,6 +114,7 @@ Volume slicer visualizer
     locate_next_button = Button()
 
     coords = Str()
+    size = Str()
     
     done = Bool(False)
 
@@ -132,8 +127,6 @@ Volume slicer visualizer
     def __init__(self, controller, **traits):
         HasTraits.__init__(self, **traits)
         BaseVisualizerImpl.__init__(self, controller=controller)
-        # set window_title
-        self.window_title = self.name
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y
@@ -180,6 +173,7 @@ Volume slicer visualizer
 
     def set_volume(self, data):
         self.data = data
+        self.set_size()
         self.data_src3d.scalar_data = data
         self.set_locate_range()
 
@@ -281,9 +275,16 @@ Volume slicer visualizer
         tpl = tuple(getattr(self, '{}_index'.format(local_axis_name)) for local_axis_name in self.controller.LOCAL_AXIS_NAMES)
         self.coords = str(tpl)
 
+    def set_size(self):
+        print self.data.shape, self.data_src3d.scalar_data.shape
+        self.size = str(self.data.shape)
+
     ### D e f a u l t s :
     def _coords_default(self):
         return "" #(self.x_index, self.y_index, self.z_index)
+
+    def _size_default(self):
+        return str(self.data.shape)
 
     def _locate_value_default(self):
         if self.locate_mode == LOCATE_MODE_MIN:
@@ -555,6 +556,9 @@ Volume slicer visualizer
                 Item('coords',
                     style="readonly"
                 ),
+#                Item('size',
+#                    style="readonly"
+#                ),
                 '_',
                 Item(
                     'locate_mode',
