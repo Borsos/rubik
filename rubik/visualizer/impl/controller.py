@@ -141,9 +141,9 @@ Controller for multiple views
     clip_range_readonly = Bool()
     clip_range_visible = Bool()
 
-    def __init__(self, logger, attributes, **traits):
+    def __init__(self, logger, attributes, title=None, **traits):
         HasTraits.__init__(self, **traits)
-        BaseControllerImpl.__init__(self, logger=logger, attributes=attributes)
+        BaseControllerImpl.__init__(self, logger=logger, title=title, attributes=attributes)
         self.w_low, self.x_low, self.y_low, self.z_low = 0, 0, 0, 0
         rank = len(self.shape)
         if rank == 2:
@@ -161,14 +161,14 @@ Controller for multiple views
 
 
     ### U t i l i t i e s :
-    def create_view(self, view_class, data):
-        return view_class(controller=self, data=data)
+    def create_view(self, view_class, data, title=None):
+        return view_class(controller=self, data=data, title=title)
 
-    def add_view(self, view_class, data):
+    def add_view(self, view_class, data, title=None):
         if data.shape != self.shape:
             raise ValueError("{}: cannot create {} view: data shape {} is not {}".format(self.name, view_class.__name__, data.shape, self.shape))
         local_volume = self.get_local_volume(data)
-        view = self.create_view(view_class, local_volume)
+        view = self.create_view(view_class, local_volume, title=title)
         self.set_view_axis(view)
         self.views.append(view)
         self.views_data[view] = data

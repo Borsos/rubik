@@ -28,13 +28,13 @@ from ... import conf
 
 class BaseControllerImpl(BaseClassImpl):
     CURRENT_ID = 0
-    ID_FORMAT = "controller_{id}"
+    ID_FORMAT = "Controller[{id}]"
     ATTRIBUTES = collections.OrderedDict()
     DIMENSIONS = "3D"
     DATA_CHECK = classmethod(lambda cls, data: len(data.shape) == 3)
     DESCRIPTION = None
-    def __init__(self, logger, attributes):
-        super(BaseControllerImpl, self).__init__(logger)
+    def __init__(self, logger, attributes, title=None):
+        super(BaseControllerImpl, self).__init__(logger, title=title)
         self.views = []
         self.views_data = {}
         self.attributes = {}

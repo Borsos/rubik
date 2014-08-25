@@ -29,11 +29,11 @@ from ... import conf
 
 class BaseVisualizerImpl(BaseClassImpl):
     CURRENT_ID = 0
-    ID_FORMAT = "view_{id}"
-    def __init__(self, controller, logger=None):
+    ID_FORMAT = "View[{id}]"
+    def __init__(self, controller, logger=None, title=None):
         if logger is None:
             logger = controller.logger
-        super(BaseVisualizerImpl, self).__init__(logger=logger)
+        super(BaseVisualizerImpl, self).__init__(logger=logger, title=title)
         self.feedback = True
         self.controller = controller
 

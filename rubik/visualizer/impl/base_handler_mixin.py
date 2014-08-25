@@ -24,7 +24,7 @@ __all__ = [
 
 class BaseHandlerMixIn(object):
     def init(self, info):
-        title = info.object.name
+        title = info.object.title
         info.ui.title = title
         info.object.add_handler_info(self, info)
 

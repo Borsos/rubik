@@ -27,7 +27,7 @@ from . import get_controller_class, get_controller_types
 from ..errors import RubikError
 from ..application.config import get_config
 
-def controller_builder(logger, controller_type, data, attributes=None, attribute_files=None):
+def controller_builder(logger, controller_type, data, attributes=None, attribute_files=None, title=None):
     # defaults:
     if attributes is None:
         attributes = {}
@@ -84,4 +84,4 @@ def controller_builder(logger, controller_type, data, attributes=None, attribute
     controller_attributes.update(dict(attributes))
     # build:
     logger.info("creating {} controller...".format(controller_class.__name__))
-    return controller_class(logger=logger, shape=data.shape, attributes=controller_attributes)
+    return controller_class(logger=logger, shape=data.shape, attributes=controller_attributes, title=title)

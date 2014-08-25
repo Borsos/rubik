@@ -976,17 +976,21 @@ ave           = {ave}
                 data=cube,
                 attributes=self.visualizer_attributes,
                 attribute_files=self.visualizer_attribute_files,
+                title="Controller",
             )
         return self._controller
 
     controller = property(get_controller)
 
-    def view(self, cube=None):
+    def view(self, cube=None, visualizer_type=None, title=None):
         if cube is None:
             cube = self._result
+        if visualizer_type is None:
+            visualizer_type = self.visualizer_type
         visualizer = visualizer_builder(
             logger=self.logger,
-            visualizer_type=self.visualizer_type,
+            title=title,
+            visualizer_type=visualizer_type,
             controller=self.controller,
             data=cube,
         )

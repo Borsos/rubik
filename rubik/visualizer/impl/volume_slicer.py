@@ -124,9 +124,9 @@ Volume slicer visualizer
     WINDOW_WIDTH = 900
     WINDOW_HEIGHT = 650
 
-    def __init__(self, controller, **traits):
+    def __init__(self, controller, title=None, **traits):
         HasTraits.__init__(self, **traits)
-        BaseVisualizerImpl.__init__(self, controller=controller)
+        BaseVisualizerImpl.__init__(self, controller=controller, title=title)
         # Force the creation of the image_plane_widgets:
         self.ipw_3d_x
         self.ipw_3d_y

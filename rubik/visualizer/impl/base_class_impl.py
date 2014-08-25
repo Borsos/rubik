@@ -29,9 +29,12 @@ class BaseClassImpl(object):
     WINDOW_TITLE = None
     CURRENT_ID = 0
     ID_FORMAT = "{id}"
-    def __init__(self, logger):
+    def __init__(self, logger, title=None):
         self.logger = logger
         self.name = self.reserve_id()
+        if title is None:
+            title = self.name
+        self.title = title
         self.handler_infos = []
 
     def add_handler_info(self, handler, info):

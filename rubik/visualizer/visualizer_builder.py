@@ -27,7 +27,7 @@ from . import get_visualizer_class, get_visualizer_types
 from ..errors import RubikError
 from ..application.config import get_config
 
-def visualizer_builder(logger, controller, visualizer_type, data, attributes=None, attribute_files=None):
+def visualizer_builder(logger, controller, visualizer_type, data, attributes=None, attribute_files=None, title=None):
     # defaults:
     if attributes is None:
         attributes = {}
@@ -85,5 +85,5 @@ def visualizer_builder(logger, controller, visualizer_type, data, attributes=Non
 
     # build:
     logger.info("creating {} visualizer...".format(visualizer_class.__name__))
-    visualizer = controller.add_view(visualizer_class, data=data) ###, attributes=visualizer_attributes)
+    visualizer = controller.add_view(visualizer_class, data=data, title=title)
     return visualizer
