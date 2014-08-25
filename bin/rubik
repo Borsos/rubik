@@ -71,12 +71,15 @@ class VisualizeAction(ConstExpressionAction):
 
 class InputAction(RubikAction):
     def __call__(self, parser, namespace, values, option_string):
-        #print "InputAction: {!r}".format(values)
         for value in values:
-            #print "  value={!r}".format(value)
             label, input_filename = self.RUBIK.input_filenames.add(value)
-            #print "    store_result: {!r}={!r}".format(label, input_filename)
             self.RUBIK.expressions.store("read_cube(label={!r})".format(label))
+
+class OutputAction(RubikAction):
+    def __call__(self, parser, namespace, values, option_string):
+        for value in values:
+            label, output_filename = self.RUBIK.output_filenames.add(value)
+            self.RUBIK.expressions.store("write_cube(label={!r})".format(label))
 
 def main():
     try:
@@ -327,7 +330,9 @@ Arguments for graphical visualization""")
     write_output_filename_group.add_argument("--output-filename", "-o",
         metavar='O',
         dest="output_filenames",
-        type=rubik.output_filenames.store,
+        action=OutputAction,
+        nargs='+',
+        #type=rubik.output_filenames.store,
         help="output filename (--help-filename/-hf for an explanation about filenames)")
 
     output_group.add_argument('--print-cube', '--print', '-P',

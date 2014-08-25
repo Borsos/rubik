@@ -25,14 +25,14 @@ for line in \
     expr_args="$expr_args'$line' "
 done
 
-test_prex "-o a_{shape}.{format} -- $expr_args"
+test_prex "$expr_args -o a_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "-o b_{shape}.{format} @${expr_file}"
+test_prex "@${expr_file} -o b_{shape}.{format}"
 check_file_exists_and_has_size b_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal a_${X}x${Y}.raw b_${X}x${Y}.raw
 
-test_prex "-o c_{shape}.{format} -f ${expr_file}"
+test_prex "-f ${expr_file} -o c_{shape}.{format}"
 check_file_exists_and_has_size c_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal a_${X}x${Y}.raw c_${X}x${Y}.raw
 

@@ -9,37 +9,37 @@ typeset -i H=30
 typeset -i bytes_float16=2
 typeset -i bytes_float32=4
 typeset -i bytes_float64=8
-test_prex "-o a_{shape}.{format} -e 'cb.linear_cube(($X, $Y))'"
+test_prex "-e 'cb.linear_cube(($X, $Y))' -o a_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "-o a_{shape}.{format} -e 'cb.linear_cube(($X, $Y))' -Of text"
+test_prex "-e 'cb.linear_cube(($X, $Y))' -o a_{shape}.{format} -Of text"
 check_file_exists a_${X}x${Y}.text
 test_prex "-i a_{shape}.{format} -s "${X}x${Y}" -o tmp_{shape}.text2{format} -If text -Of raw"
 check_file_exists tmp_${X}x${Y}.text2raw
 check_files_are_equal a_${X}x${Y}.raw tmp_${X}x${Y}.text2raw
 
-test_prex "-o a_{shape}.{format} -e 'cb.linear_cube(($X, $Y))' -Of csv"
+test_prex "-e 'cb.linear_cube(($X, $Y))' -o a_{shape}.{format} -Of csv"
 check_file_exists a_${X}x${Y}.csv
 test_prex "-i a_{shape}.{format} -s "${X}x${Y}" -o tmp_{shape}.csv2{format} -If csv -Of raw"
 check_file_exists tmp_${X}x${Y}.csv2raw
 check_files_are_equal a_${X}x${Y}.raw tmp_${X}x${Y}.csv2raw
 
-test_prex "-o b_{shape}.{format} -e 'cb.linear_cube((${X}, ${Y}))'"
+test_prex "-e 'cb.linear_cube((${X}, ${Y}))' -o b_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "-o c_{shape}.{format} -e 'cb.linear_cube((${X}, ${Y}))'"
+test_prex "-e 'cb.linear_cube((${X}, ${Y}))' -o c_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "-o l_{shape}.{format} -e 'cb.linear_cube((${X}, ${Y}))'"
+test_prex "-e 'cb.linear_cube((${X}, ${Y}))' -o l_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "-o a_{shape}.{format} -e 'cb.linear_cube((${X}, ${H}, ${Y}))'"
+test_prex "-e 'cb.linear_cube((${X}, ${H}, ${Y}))' -o a_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${H}x${Y}.raw $(( $X * $H * $Y * ${bytes_float32} ))
 
-test_prex "-o f_{shape}.{dtype}.{format} -t float16 -e 'cb.linear_cube((8, 10))'"
+test_prex "-t float16 -e 'cb.linear_cube((8, 10))' -o f_{shape}.{dtype}.{format}"
 check_file_exists_and_has_size f_${X}x${Y}.float16.raw $(( $X * $Y * ${bytes_float16} ))
 
-test_prex "-o g_{shape}.{dtype}.{format} -t float64 -e 'cb.linear_cube((8, 10))'"
+test_prex "-t float64 -e 'cb.linear_cube((8, 10))' -o g_{shape}.{dtype}.{format}"
 check_file_exists_and_has_size g_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_float64} ))
 
 typeset -i D0=6
@@ -55,7 +55,7 @@ typeset -i D4f=1
 typeset -i D5f=8
 typeset D6_EXTRACTOR=${D0f}x:x${D2f}x:x${D4f}x${D5f}
 typeset D2_SHAPE=${D1}x${D3}
-test_prex "-o d{rank}_{shape}.{format} -e 'cb.linear_cube(($D0, $D1, $D2, $D3, $D4, $D5))'"
+test_prex "-e 'cb.linear_cube(($D0, $D1, $D2, $D3, $D4, $D5))' -o d{rank}_{shape}.{format}"
 check_file_exists_and_has_size d6_${D6_SHAPE}.raw $(( $D0 * $D1 * $D2 * $D3 * $D4 * $D5 * ${bytes_float32} ))
 
 ## checks
@@ -81,18 +81,18 @@ check_files_are_equal out0_${X}x${Y}.raw out2_${X}x${Y}.raw
 test_prex "-i f_{shape}.{dtype}.{format} -It float16 -o tmp_f_{shape}.{dtype}.{format} -Ot float64 -s 8x10"
 check_file_exists_and_has_size tmp_f_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_float64} ))
 
-test_prex "-i g_{shape}.{dtype}.{format} -i tmp_f_{shape}.{dtype}.{format} -t float64 -o out0_{shape}.{dtype}.{format} -s 8x10 -e 'i0 - i1'"
+test_prex "-i g_{shape}.{dtype}.{format} -i tmp_f_{shape}.{dtype}.{format} -t float64 -e 'i0 - i1' -o out0_{shape}.{dtype}.{format} -s 8x10"
 check_file_exists_and_has_size out0_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_float64} ))
 
-test_prex "-i g_{shape}.{dtype}.{format} -It float64 -i f_{shape}.{dtype}.{format} -It float16 -s 8x10 -o out1_{shape}.{dtype}.{format} -e 'i0 - i1' -Ot float64"
+test_prex "-i g_{shape}.{dtype}.{format} -It float64 -i f_{shape}.{dtype}.{format} -It float16 -s 8x10 -e 'i0 - i1' -o out1_{shape}.{dtype}.{format} -Ot float64"
 check_file_exists_and_has_size out1_${X}x${Y}.float64.raw $(( $X * $Y * ${bytes_float64} ))
 check_files_are_equal out0_${X}x${Y}.float64.raw out1_${X}x${Y}.float64.raw
 
 ## --- user defined variables ---
-test_prex "-i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -o r0_{shape}.{format} -e f_a=10.0 -e f_b=-5.0 -e 'f_a * a + f_b * b'"
+test_prex "-i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -e f_a=10.0 -e f_b=-5.0 -e 'f_a * a + f_b * b' -o r0_{shape}.{format}"
 check_file_exists_and_has_size r0_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
-test_prex "-i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -o r1_{shape}.{format} -e c='10.0 * a' -e d='-5.0 * b' -e 'c + d'"
+test_prex "-i a=a_{shape}.{format} -i b=b_{shape}.{format} -s 8x10 -e c='10.0 * a' -e d='-5.0 * b' -e 'c + d' -o r1_{shape}.{format}"
 check_file_exists_and_has_size r1_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal r0_${X}x${Y}.raw r1_${X}x${Y}.raw
 
@@ -157,21 +157,21 @@ test_prex "-e 'cb.linear_cube(($_x, $_y, $_z))' -o a_{shape[0]}_{shape[1]}_{shap
 check_file_exists_and_has_size a_${_x}_${_y}_${_z}.raw $(( $_x * $_y * $_z * ${bytes_float32} ))
 
 ## --- merge ---
-test_prex "-i a=a_{shape}.{format} -i b=b_{shape}.{format} -i c=c_{shape}.{format} -s 8x10 -o res_{shape}.{format} -e 'np.array([a, b, c])'"
+test_prex "-i a=a_{shape}.{format} -i b=b_{shape}.{format} -i c=c_{shape}.{format} -s 8x10 -e 'np.array([a, b, c])' -o res_{shape}.{format}"
 check_file_exists_and_has_size res_3x${X}x${Y}.raw $(( 3 * $X * $Y * $bytes_float32 ))
 
 ## --- split ---
-test_prex "-i a_{shape}.{format} -s 8x10 -o r0_x{d0}_{shape}.{format} --split 0"
+test_prex "-i a_{shape}.{format} -s 8x10 --split 0 -o r0_x{d0}_{shape}.{format}"
 for _x in $X_INDICES ; do
     check_file_exists_and_has_size r0_x${_x}_${Y}.raw $(( $Y * $bytes_float32 ))
 done
 
-test_prex "-i a_{shape}.{format} -s 8x10 -o r1_y{d1}_{shape}.{format} --split 1"
+test_prex "-i a_{shape}.{format} -s 8x10 --split 1 -o r1_y{d1}_{shape}.{format}"
 for _y in $Y_INDICES ; do
     check_file_exists_and_has_size r1_y${_y}_${X}.raw $(( $X * $bytes_float32 ))
 done
 
-test_prex "-i a_{shape}.{format} -s 8x10 -o r01_x{d0}_y{d1}.{format} --split 0 --split 1"
+test_prex "-i a_{shape}.{format} -s 8x10 --split 0 --split 1 -o r01_x{d0}_y{d1}.{format}"
 for _x in $X_INDICES ; do
     for _y in $Y_INDICES ; do
         check_file_exists_and_has_size r01_x${_x}_y${_y}.raw $(( $bytes_float32 ))

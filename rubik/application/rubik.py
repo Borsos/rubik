@@ -202,7 +202,7 @@ class Rubik(object):
         if self.print_report:
             self._print_report()
         if not self.dry_run:
-            self.read()
+            self.initialize()
             if self.expressions:
                 self.evaluate_expressions(*self.expressions)
             else:
@@ -238,13 +238,14 @@ class Rubik(object):
         input_filename = self.input_filenames[label]
         return self._read(label, input_filename)
 
-    def read(self):
-        return
-        self._result = None
-        if not self.input_filenames:
-            return
-        for input_label, input_filename in self.input_filenames.items():
-            self._result = self._read(input_label, input_filename)
+    def write_cube(self, label, cube=None):
+        if cube is None:
+            cube = self._result
+        output_filename = self.output_filenames[label]
+        return self._write(label, output_filename)
+
+    def initialize(self):
+        pass
 
     def _check_memory_limit(self, input_label, input_filename):
         input_ordinal = self.input_filenames.get_ordinal(input_label)
@@ -481,25 +482,21 @@ class Rubik(object):
         if cube is None:
             cube = self._result
         for cube, dlabels in self.split_over_dimensions(cube):
-            function(cube, dlabels, *p_args, **n_args)
+            function(cube=cube, dlabels=dlabels, *p_args, **n_args)
         
     def finalize(self):
         cube = self._result
-        self.write_cube(cube)
         self.run_controller()
     
-    def write_cube_impl(self, cube, dlabels):
-        if not self.output_filenames:
-            return
-        self._write_cube(cube, dlabels)
+    def write_cube_impl(self, label, cube, dlabels):
+        output_filename = self.output_filenames[label]
+        self._write(cube, label, output_filename, dlabels=dlabels)
 
-    def write_cube(self, cube=None):
-        self.iterate_on_split(self.write_cube_impl, cube)
+    def write_cube(self, label, cube=None):
+        if cube is None:
+            cube = self._result
+        self.iterate_on_split(self.write_cube_impl, cube, label=label)
 
-    def _write_cube(self, cube, dlabels=None):
-        for output_label, output_filename in self.output_filenames.items():
-            self._write(cube, output_label, output_filename, dlabels=dlabels)
-        
     def _write(self, cube, output_label, output_filename, dlabels=None):
         output_ordinal = self.output_filenames.get_ordinal(output_label)
         output_format = self.output_formats.get(output_label, output_ordinal)
@@ -817,6 +814,7 @@ ave           = {ave}
             'cb': cubes,
             'cubes': cubes,
             'read_cube': self.read_cube,
+            'write_cube': self.write_cube,
             'print_stats': self.print_stats,
             'print_cube': self.print_cube,
             'print_histogram': self.print_histogram,
