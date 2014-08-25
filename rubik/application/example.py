@@ -370,8 +370,8 @@ class Command(Node):
                     actual_output.split('\n'),
                     fromfile='Expected output',
                     tofile='Actual output',
-                    n=max(len(expected_output),
-                    len(actual_output)), lineterm=''):
+                    n=max(len(expected_output), len(actual_output)),
+                    lineterm=''):
                 PRINT(line)
             raise RubikTestError("demo test failed")
 

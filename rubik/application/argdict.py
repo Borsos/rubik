@@ -36,6 +36,7 @@ class ArgDict(Storage, OrderedDict):
         self._automatic_labels = {}
         self._ordinals = {}
 
+ 
     def add(self, value):
         label, value = self.label_split(value)
         value = self.factory(value)
@@ -46,8 +47,8 @@ class ArgDict(Storage, OrderedDict):
             self._automatic_labels[ordinal] = label
         self[label] = value
         self._ordinals[label] = ordinal
-        return self
-        
+        return label, value
+
     def get_ordinal(self, label):
         return self._ordinals.get(label, None)
 

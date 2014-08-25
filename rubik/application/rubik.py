@@ -234,7 +234,12 @@ class Rubik(object):
     def result(self):
         return self._result
 
+    def read_cube(self, label):
+        input_filename = self.input_filenames[label]
+        return self._read(label, input_filename)
+
     def read(self):
+        return
         self._result = None
         if not self.input_filenames:
             return
@@ -811,18 +816,19 @@ ave           = {ave}
             'numpy': np,
             'cb': cubes,
             'cubes': cubes,
+            'read_cube': self.read_cube,
             'print_stats': self.print_stats,
             'print_cube': self.print_cube,
             'print_histogram': self.print_histogram,
             'view': self.view,
         }
-        globals_d['_i'] = list(self.input_cubes.values())
-        globals_d.update(self.input_cubes)
         locals_d = {
             '_r': self._result,
         }
         result = self._result
         for expression in expressions:
+            globals_d.update(self.input_cubes)
+            globals_d['_i'] = list(self.input_cubes.values())
             if expression.startswith('@'):
                 source_filename = expression[1:]
                 self.log_info("loading source from file {0!r}...".format(source_filename))
@@ -857,7 +863,10 @@ ave           = {ave}
                         self._result = result
                         locals_d['_r'] = self._result
                 else:
-                    self._result = locals_d.get('_r', None)
+                    result = locals_d.get('_r', None)
+                    if result is not None:
+                        self._result = result
+                #print "expression: {!r} -> {!r}".format(expression, locals_d['_r'])
             except Exception as err:
                 raise RubikError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
             #if result.dtype != self.dtype:

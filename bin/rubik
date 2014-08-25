@@ -49,8 +49,10 @@ def key_value_type(value):
     k, v = value.split('=', 2)
     return k.strip(), v.strip()
 
-class ConstExpressionAction(argparse.Action):
+class RubikAction(argparse.Action):
     RUBIK = None
+
+class ConstExpressionAction(RubikAction):
     CONST = None
     def __call__(self, parser, namespace, values, option_string):
         self.RUBIK.expressions.store(self.CONST)
@@ -66,6 +68,15 @@ class PrintHistogramAction(ConstExpressionAction):
 
 class VisualizeAction(ConstExpressionAction):
     CONST = 'view()'
+
+class InputAction(RubikAction):
+    def __call__(self, parser, namespace, values, option_string):
+        #print "InputAction: {!r}".format(values)
+        for value in values:
+            #print "  value={!r}".format(value)
+            label, input_filename = self.RUBIK.input_filenames.add(value)
+            #print "    store_result: {!r}={!r}".format(label, input_filename)
+            self.RUBIK.expressions.store("read_cube(label={!r})".format(label))
 
 def main():
     try:
@@ -94,7 +105,7 @@ Rubik can:
     epilog = ""
     
     rubik = Rubik()
-    ConstExpressionAction.RUBIK = rubik
+    RubikAction.RUBIK = rubik
 
     parser = CommandLineArgumentParser(
         #fromfile_prefix_chars='%',
@@ -238,7 +249,8 @@ see --help-labeled-options for more information.""")
         metavar='I',
         dest="input_filenames",
         nargs='+',
-        type=rubik.input_filenames.store,
+        #type=rubik.input_filenames.store,
+        action=InputAction,
         help="input filename (--help-filename/-hf for an explanation about filenames)")
 
     input_group.add_argument("--shape", "-s",
