@@ -145,3 +145,13 @@ function check_files_are_equal {
     fi
 }
 
+function check_files_are_not_equal {
+    typeset _filename_a="$1"
+    typeset _filename_b="$2"
+    if ! prex "cmp $_filename_a $_filename_b" ; then # 1>/dev/null 2>&1 ; then
+        echo ".... OK, $_filename_a and $_filename_b are not equal"
+    else
+        die "file $_filename_a is equal to $_filename_b: $(cmp $_filename_a $_filename_b)"
+    fi
+}
+

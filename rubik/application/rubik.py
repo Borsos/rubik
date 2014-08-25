@@ -234,15 +234,29 @@ class Rubik(object):
     def result(self):
         return self._result
 
-    def read_cube(self, label):
-        input_filename = self.input_filenames[label]
-        return self._read(label, input_filename)
+    def get_label_filename(self, function_name, adict, label, filename, shape=None):
+        if label is None:
+            if filename is None:
+                raise RubikError("invalid call to {}: missing both label and filename arguments".format(function_name))
+            else:
+                result = adict.add(filename)
+                if shape is not None:
+                    self.shapes.add("{}".format(shape))
+                return result
+        else:
+            if filename is not None:
+                result = adict.add("{}={}".format(label, filename))
+                if shape is not None:
+                    self.shapes.add("{}={}".format(label, shape))
+                return result
+            else:
+                result = label, adict[label]
+                return result
+       
 
-    def write_cube(self, label, cube=None):
-        if cube is None:
-            cube = self._result
-        output_filename = self.output_filenames[label]
-        return self._write(label, output_filename)
+    def read_cube(self, filename=None, label=None, shape=None):
+        input_label, input_filename = self.get_label_filename('read_cube', self.input_filenames, label, filename, shape)
+        return self._read(input_label, input_filename)
 
     def initialize(self):
         pass
@@ -488,14 +502,14 @@ class Rubik(object):
         cube = self._result
         self.run_controller()
     
-    def write_cube_impl(self, label, cube, dlabels):
-        output_filename = self.output_filenames[label]
-        self._write(cube, label, output_filename, dlabels=dlabels)
+    def write_cube_impl(self, filename, label, cube, dlabels):
+        self._write(cube, label, filename, dlabels=dlabels)
 
-    def write_cube(self, label, cube=None):
+    def write_cube(self, filename=None, label=None, cube=None):
+        output_label, output_filename = self.get_label_filename('write_cube', self.output_filenames, label, filename)
         if cube is None:
             cube = self._result
-        self.iterate_on_split(self.write_cube_impl, cube, label=label)
+        self.iterate_on_split(self.write_cube_impl, cube, label=output_label, filename=output_filename)
 
     def _write(self, cube, output_label, output_filename, dlabels=None):
         output_ordinal = self.output_filenames.get_ordinal(output_label)
