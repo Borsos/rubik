@@ -9,6 +9,9 @@ typeset -i bytes_float16=2
 typeset -i bytes_float32=4
 typeset -i bytes_float64=8
 
+typeset -i EX=2
+typeset -i EY=3
+
 expr_file="source.txt"
 expr_args=" "
 rm -f $expr_file
@@ -65,3 +68,17 @@ EOFCAT
 test_prex "-f ${expr_file}"
 check_file_exists_and_has_size c5bis_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 check_files_are_equal c5bis_${X}x${Y}.raw c5_${X}x${Y}.raw
+
+expr_file="expr.x"
+cat > "${expr_file}" << EOFCAT
+a = read_cube(filename="c2_{shape}.{format}", shape="${X}x${Y}", extractor=":$EX,:$EY")
+b = read_cube(filename="c3_{shape}.{format}", shape="${X}x${Y}", extractor=":$EX,:$EY")
+write_cube(filename="c5a_{shape}.{format}", cube=a + b)
+c = read_cube(filename="c5_{shape}.{format}", shape="${X}x${Y}", extractor=":$EX,:$EY")
+write_cube(filename="c5b_{shape}.{format}", cube=c)
+EOFCAT
+
+test_prex "-f ${expr_file}"
+check_file_exists_and_has_size c5a_${EX}x${EY}.raw $(( $EX * $EY * ${bytes_float32} ))
+check_file_exists_and_has_size c5b_${EX}x${EY}.raw $(( $EX * $EY * ${bytes_float32} ))
+check_files_are_equal c5a_${EX}x${EY}.raw c5b_${EX}x${EY}.raw

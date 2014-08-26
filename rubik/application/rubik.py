@@ -217,15 +217,14 @@ class Rubik(object):
         return self._result
 
     def set_labeled_attributes(self, label, attributes):
-        for attribute_name, attribute_value in attributes.iteritems():
-            print "{}: {!r}={!r}".format(label, attribute_name, attribute_value)
+        for attribute_name, attribute_value in attributes.items():
             if attribute_value is not None:
                 if label is None: 
                     option = str(attribute_value)
                 else:
                     option = "{}={}".format(label, attribute_value)
-                print " option={!r}".format(option)
-                getattr(self, attribute_name + 's').add(option)
+                attribute_label, attribute_value = getattr(self, attribute_name + 's').add(option)
+                attributes[attribute_name] = attribute_value
 
     def get_label_filename(self, function_name, adict, label, filename, attributes):
         if label is None:
@@ -268,7 +267,7 @@ class Rubik(object):
             input_text_delimiter=text_delimiter, 
         )
         input_label, input_filename = self.get_label_filename('read_cube', self.input_filenames, label, filename, attributes)
-        return self.read_impl(input_label, input_filename, attributes=attributes)
+        return self.read_cube_impl(input_label, input_filename, attributes=attributes)
 
     def initialize(self):
         pass
@@ -305,12 +304,12 @@ class Rubik(object):
                     self.memory_limit))
         self.total_read_bytes += input_bytes_sub
 
-    def read_impl(self, input_label, input_filename, attributes):
+    def read_cube_impl(self, input_label, input_filename, attributes):
         self._check_memory_limit(input_label, input_filename)
         if self.read_mode == conf.READ_MODE_SAFE:
-            return self.read_impl_safe(input_label, input_filename, attributes)
+            return self.read_cube_impl_safe(input_label, input_filename, attributes)
         elif self.read_mode == conf.READ_MODE_OPTIMIZED:
-            return self.read_impl_optimized(input_label, input_filename, attributes)
+            return self.read_cube_impl_optimized(input_label, input_filename, attributes)
         else:
             raise RubikError("invalid read mode {0!r}".format(self.read_mode))
 
@@ -322,7 +321,7 @@ class Rubik(object):
             attribute_value = getattr(self, attribute_name + 's').get(label, ordinal)
             return attribute_value
         
-    def read_impl_safe(self, input_label, input_filename, attributes):
+    def read_cube_impl_safe(self, input_label, input_filename, attributes):
         self.log_debug("executing safe read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.get_attribute('shape', attributes, input_label, input_ordinal)
@@ -342,8 +341,8 @@ class Rubik(object):
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
         extractor = self.get_attribute('extractor', attributes, input_label, input_ordinal)
-        assert isinstance(input_filename, InputFilename)
-        assert (extractor is None) or isinstance(extractor, Extractor)
+        assert isinstance(input_filename, InputFilename), "not an InputFilename: {!r} [{}]".format(input_filename, type(input_filename))
+        assert (extractor is None) or isinstance(extractor, Extractor), "not a valid extractor: {!r} [{}]".format(extractor, type(extractor))
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
@@ -424,7 +423,7 @@ class Rubik(object):
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
-    def read_impl_optimized(self, input_label, input_filename, attributes):
+    def read_cube_impl_optimized(self, input_label, input_filename, attributes):
         self.log_debug("executing optimized read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.get_attribute('shape', attributes, input_label, input_ordinal)
@@ -444,8 +443,8 @@ class Rubik(object):
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
         extractor = self.get_attribute('extractor', attributes, input_label, input_ordinal)
-        assert isinstance(input_filename, InputFilename)
-        assert (extractor is None) or isinstance(extractor, Extractor)
+        assert isinstance(input_filename, InputFilename), "not an InputFilename: {!r} [{}]".format(input_filename, type(input_filename))
+        assert (extractor is None) or isinstance(extractor, Extractor), "not a valid extractor: {!r} [{}]".format(extractor, type(extractor))
         input_filename = input_filename.filename
         if not isinstance(shape, Shape):
             shape = Shape(shape)
@@ -566,7 +565,7 @@ class Rubik(object):
         output_dtype_bytes = self.get_dtype_bytes(output_dtype)
         if cube.dtype != output_dtype:
             cube = cube.astype(output_dtype)
-        assert isinstance(output_filename, OutputFilename), (output_filename, type(output_filename))
+        assert isinstance(output_filename, OutputFilename), "not an OutputFilename: {!r} [{}]".format(output_filename, type(output_filename))
         output_filename = output_filename.filename
         numpy_function = None
         numpy_function_pargs = []
