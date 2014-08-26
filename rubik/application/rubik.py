@@ -216,29 +216,59 @@ class Rubik(object):
     def result(self):
         return self._result
 
-    def get_label_filename(self, function_name, adict, label, filename, shape=None):
+    def set_labeled_attributes(self, label, attributes):
+        for attribute_name, attribute_value in attributes.iteritems():
+            print "{}: {!r}={!r}".format(label, attribute_name, attribute_value)
+            if attribute_value is not None:
+                if label is None: 
+                    option = str(attribute_value)
+                else:
+                    option = "{}={}".format(label, attribute_value)
+                print " option={!r}".format(option)
+                getattr(self, attribute_name + 's').add(option)
+
+    def get_label_filename(self, function_name, adict, label, filename, attributes):
         if label is None:
             if filename is None:
                 raise RubikError("invalid call to {}: missing both label and filename arguments".format(function_name))
             else:
                 result = adict.add(filename)
-                if shape is not None:
-                    self.shapes.add("{}".format(shape))
+                self.set_labeled_attributes(label, attributes)
                 return result
         else:
             if filename is not None:
                 result = adict.add("{}={}".format(label, filename))
-                if shape is not None:
-                    self.shapes.add("{}={}".format(label, shape))
+                self.set_labeled_attributes(label, attributes)
                 return result
             else:
                 result = label, adict[label]
                 return result
        
 
-    def read_cube(self, filename=None, label=None, shape=None):
-        input_label, input_filename = self.get_label_filename('read_cube', self.input_filenames, label, filename, shape)
-        return self._read(input_label, input_filename)
+    def read_cube(self,
+        filename=None,
+        label=None,
+        shape=None,
+        extractor=None,
+        mode=None,
+        offset=None,
+        dtype=None,
+        format=None,
+        csv_separator=None,
+        text_delimiter=None,
+    ):
+        attributes = dict(
+            shape=shape, 
+            extractor=extractor, 
+            input_mode=mode, 
+            input_offset=offset, 
+            input_dtype=dtype, 
+            input_format=format, 
+            input_csv_separator=csv_separator, 
+            input_text_delimiter=text_delimiter, 
+        )
+        input_label, input_filename = self.get_label_filename('read_cube', self.input_filenames, label, filename, attributes)
+        return self.read_impl(input_label, input_filename, attributes=attributes)
 
     def initialize(self):
         pass
@@ -275,35 +305,43 @@ class Rubik(object):
                     self.memory_limit))
         self.total_read_bytes += input_bytes_sub
 
-    def _read(self, input_label, input_filename):
+    def read_impl(self, input_label, input_filename, attributes):
         self._check_memory_limit(input_label, input_filename)
         if self.read_mode == conf.READ_MODE_SAFE:
-            return self._read_safe(input_label, input_filename)
+            return self.read_impl_safe(input_label, input_filename, attributes)
         elif self.read_mode == conf.READ_MODE_OPTIMIZED:
-            return self._read_optimized(input_label, input_filename)
+            return self.read_impl_optimized(input_label, input_filename, attributes)
         else:
             raise RubikError("invalid read mode {0!r}".format(self.read_mode))
 
-    def _read_safe(self, input_label, input_filename):
+    def get_attribute(self, attribute_name, attributes, label, ordinal):
+        attribute_value = attributes.get(attribute_name, None)
+        if attribute_value is not None:
+            return attribute_value
+        else:
+            attribute_value = getattr(self, attribute_name + 's').get(label, ordinal)
+            return attribute_value
+        
+    def read_impl_safe(self, input_label, input_filename, attributes):
         self.log_debug("executing safe read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
-        shape = self.shapes.get(input_label, input_ordinal)
+        shape = self.get_attribute('shape', attributes, input_label, input_ordinal)
         if shape is None:
             raise RubikError("missing shape for filename {0}".format(input_filename))
-        input_format = self.input_formats.get(input_label, input_ordinal)
+        input_format = self.get_attribute('input_format', attributes, input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
-        input_mode = self.input_modes.get(input_label, input_ordinal)
+        input_mode = self.get_attribute('input_mode', attributes, input_label, input_ordinal)
         if input_mode is None:
             input_mode = 'rb'
         else:
             input_mode = input_mode.mode
-        input_offset = self.input_offsets.get(input_label, input_ordinal)
-        input_dtype = self.input_dtypes.get(input_label, input_ordinal)
+        input_offset = self.get_attribute('input_offset', attributes, input_label, input_ordinal)
+        input_dtype = self.get_attribute('input_dtype', attributes, input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        extractor = self.extractors.get(input_label, input_ordinal)
+        extractor = self.get_attribute('extractor', attributes, input_label, input_ordinal)
         assert isinstance(input_filename, InputFilename)
         assert (extractor is None) or isinstance(extractor, Extractor)
         input_filename = input_filename.filename
@@ -323,14 +361,15 @@ class Rubik(object):
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.fromfile
-            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label, input_ordinal)
+            input_csv_separator = self.get_attribute('input_csv_separator', attributes, input_label, input_ordinal)
+            numpy_function_nargs['sep'] = input_csv_separator
         elif input_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
             # read all elements (must check number of elements)
             numpy_function = np.loadtxt
-            text_delimiter = self.input_text_delimiters.get(input_label, input_ordinal)
-            if text_delimiter is not None:
-                numpy_function_nargs['delimiter'] = text_delimiter
+            input_text_delimiter = self.get_attribute('input_text_delimiter', attributes, input_label, input_ordinal)
+            if input_text_delimiter is not None:
+                numpy_function_nargs['delimiter'] = input_text_delimiter
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
@@ -385,26 +424,26 @@ class Rubik(object):
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
-    def _read_optimized(self, input_label, input_filename):
+    def read_impl_optimized(self, input_label, input_filename, attributes):
         self.log_debug("executing optimized read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
-        shape = self.shapes.get(input_label, input_ordinal)
+        shape = self.get_attribute('shape', attributes, input_label, input_ordinal)
         if shape is None:
             raise RubikError("missing shape for filename {0}".format(input_filename))
-        input_format = self.input_formats.get(input_label, input_ordinal)
+        input_format = self.get_attribute('input_format', attributes, input_label, input_ordinal)
         if input_format is None:
             input_format = conf.DEFAULT_FILE_FORMAT
-        input_mode = self.input_modes.get(input_label, input_ordinal)
+        input_mode = self.get_attribute('input_mode', attributes, input_label, input_ordinal)
         if input_mode is None:
             input_mode = 'rb'
         else:
             input_mode = input_mode.mode
-        input_offset = self.input_offsets.get(input_label, input_ordinal)
-        input_dtype = self.input_dtypes.get(input_label, input_ordinal)
+        input_offset = self.get_attribute('input_offset', attributes, input_label, input_ordinal)
+        input_dtype = self.get_attribute('input_dtype', attributes, input_label, input_ordinal)
         if input_dtype is None:
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        extractor = self.extractors.get(input_label, input_ordinal)
+        extractor = self.get_attribute('extractor', attributes, input_label, input_ordinal)
         assert isinstance(input_filename, InputFilename)
         assert (extractor is None) or isinstance(extractor, Extractor)
         input_filename = input_filename.filename
@@ -423,12 +462,13 @@ class Rubik(object):
             msg_bytes = "({b} bytes) ".format(b=num_bytes)
         elif input_format == conf.FILE_FORMAT_CSV:
             msg_bytes = ''
-            numpy_function_nargs['sep'] = self.input_csv_separators.get(input_label, input_ordinal)
+            input_csv_separator = self.get_attribute('input_csv_separator', attributes, input_label, input_ordinal)
+            numpy_function_nargs['sep'] = input_csv_separator
         elif input_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
-            text_delimiter = self.input_text_delimiters.get(input_label, input_ordinal)
-            if text_delimiter is not None:
-                numpy_function_nargs['delimiter'] = text_delimiter
+            input_text_delimiter = self.get_attribute('input_text_delimiter', attributes, input_label, input_ordinal)
+            if input_text_delimiter is not None:
+                numpy_function_nargs['delimiter'] = input_text_delimiter
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
         input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
@@ -489,22 +529,38 @@ class Rubik(object):
     def notify_output_mode(self):
         del self._pointless_expressions[:]
 
-    def write_cube_impl(self, filename, label, cube, dlabels):
-        self._write(cube, label, filename, dlabels=dlabels)
-
-    def write_cube(self, filename=None, label=None, cube=None):
+    def write_cube(self, filename=None, label=None, cube=None,
+        mode=None,
+        offset=None,
+        dtype=None,
+        format=None,
+        csv_separator=None,
+        text_delimiter=None,
+        text_newline=None,
+        text_converter=None,
+    ):
+        attributes = dict(
+            output_mode=mode,
+            output_offset=offset,
+            output_dtype=dtype,
+            output_format=format,
+            output_csv_separator=csv_separator,
+            output_text_delimiter=text_delimiter,
+            output_text_newline=text_newline,
+            output_text_converter=text_converter,
+        )
         self.notify_output_mode()
-        output_label, output_filename = self.get_label_filename('write_cube', self.output_filenames, label, filename)
+        output_label, output_filename = self.get_label_filename('write_cube', self.output_filenames, label, filename, attributes)
         if cube is None:
             cube = self._result
-        self.iterate_on_split(self.write_cube_impl, cube, label=output_label, filename=output_filename)
+        self.iterate_on_split(self.write_cube_impl, cube, output_label=output_label, output_filename=output_filename, attributes=attributes)
 
-    def _write(self, cube, output_label, output_filename, dlabels=None):
+    def write_cube_impl(self, output_filename, output_label, cube, dlabels, attributes):
         output_ordinal = self.output_filenames.get_ordinal(output_label)
-        output_format = self.output_formats.get(output_label, output_ordinal)
+        output_format = self.get_attribute('output_format', attributes, output_label, output_ordinal)
         if output_format is None:
             output_format = conf.DEFAULT_FILE_FORMAT
-        output_dtype = self.output_dtypes.get(output_label, output_ordinal)
+        output_dtype = self.get_attribute('output_dtype', attributes, output_label, output_ordinal)
         if output_dtype is None:
             output_dtype = self.dtype
         output_dtype_bytes = self.get_dtype_bytes(output_dtype)
@@ -516,8 +572,8 @@ class Rubik(object):
         numpy_function_pargs = []
         numpy_function_nargs = {}
         output_filename = format_filename(output_filename, cube.shape, output_format, output_dtype, keywords=dlabels)
-        output_offset = self.output_offsets.get(output_label, output_ordinal)
-        output_mode = self.output_modes.get(output_label, output_ordinal)
+        output_offset = self.get_attribute('output_offset', attributes, output_label, output_ordinal)
+        output_mode = self.get_attribute('output_mode', attributes, output_label, output_ordinal)
         if output_mode is None:
             if output_offset is not None:
                 if os.path.lexists(output_filename):
@@ -535,7 +591,8 @@ class Rubik(object):
         elif output_format == conf.FILE_FORMAT_CSV:
             msg_bytes = ''
             numpy_function = cube.tofile
-            numpy_function_nargs['sep'] = self.output_csv_separators.get(output_label, output_ordinal)
+            output_csv_separator = self.get_attribute('output_csv_separator', attributes, output_label, output_ordinal)
+            numpy_function_nargs['sep'] = output_csv_separator
             #numpy_function_pargs.append(output_filename)
         elif output_format == conf.FILE_FORMAT_TEXT:
             msg_bytes = ''
@@ -546,15 +603,15 @@ class Rubik(object):
             else:
                 c2d = cube.reshape((cube.shape[0], cube.size // cube.shape[0]))
             numpy_function_pargs.append(c2d)
-            text_delimiter = self.output_text_delimiters.get(output_label, output_ordinal)
-            text_newline = self.output_text_newlines.get(output_label, output_ordinal)
-            text_converter = self.output_text_converters.get(output_label, output_ordinal)
-            if text_delimiter is not None:
-                numpy_function_nargs['delimiter'] = text_delimiter
-            if text_newline is not None:
-                numpy_function_nargs['newline'] = text_newline
-            if text_converter is not None:
-                numpy_function_nargs['fmt'] = text_convert
+            output_text_delimiter = self.get_attribute('output_text_delimiter', attributes, output_label, output_ordinal)
+            output_text_newline = self.get_attribute('output_text_newline', attributes, output_label, output_ordinal)
+            output_text_converter = self.get_attribute('output_text_converter', attributes, output_label, output_ordinal)
+            if output_text_delimiter is not None:
+                numpy_function_nargs['delimiter'] = output_text_delimiter
+            if output_text_newline is not None:
+                numpy_function_nargs['newline'] = output_text_newline
+            if output_text_converter is not None:
+                numpy_function_nargs['fmt'] = output_text_convert
         else:
             raise RubikError("invalid file format {0!r}".format(output_format))
         if output_mode.is_append_mode():
