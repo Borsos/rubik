@@ -526,9 +526,67 @@ Inside an expression/source you can access:
 * all the input cubes (by default 'i0', 'i1', ..., 'iN');
 * the list of the input cubes '_i';
 * the current result '_r' (which is generally a cube, but not necessarily).
+* input/output functions
 
 The 'cubes' module provides some numpy-based functions to operate with
 cubes; see --help-cubes.
+
+Input functions
+===============
+It is possible to read input files by using the following function:
+* read_cube(
+        filename=None,
+        label=None,
+        shape=None,
+        extractor=None,
+        mode=None,
+        offset=None,
+        dtype=None,
+        format=None,
+        csv_separator=None,
+        text_delimiter=None,
+  )
+  This is automatically set by '--input-filename/-i' option (and related
+  input labeled options)
+
+Output functions
+================
+It is possible to print/view the results using the following functions:
+* write_cube(
+        filename=None, 
+        label=None, 
+        cube=None,
+        mode=None,
+        offset=None,
+        dtype=None,
+        format=None,
+        csv_separator=None,
+        text_delimiter=None,
+        text_newline=None,
+        text_converter=None,
+  )
+  This is automatically set by '--output-filename/-o' option (and related
+  output labeled options)
+* print_cube()
+  This is automatically set by '--print/-P' option
+* print_stats()
+  This is automatically set by '--stats/-S' option
+* print_histogram(
+        cube=None, 
+        bins=None, 
+        hrange=None, 
+        decimals=None, 
+        fmt=None,
+  )
+  This is automatically set by '--histogram/-H' option (and related
+  histogram options)
+* view(
+        cube=None, 
+        visualizer_type=None, 
+        title=None,
+  )
+  This is automatically set by '--view/-V' option (and related
+  visualizer options)
 
 Expressions starting with '-'
 =============================
@@ -618,15 +676,6 @@ $ rubik @expr.txt --print
  [ 14.5   5.5  16.5  17.5]
  [  8.5  -0.5  10.5  11.5]]
 $
-
-It is possible to read input files or get output using input and
-output mode functions:
-* read_cube(filename=...)
-* write_cube(filename=..., cube=...)
-* print_cube(cube)
-* print_stats(cube)
-* print_histogram(cube, ...)
-* view(cube)
 
 """)
 
