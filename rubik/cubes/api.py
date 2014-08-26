@@ -28,9 +28,7 @@ __all__ = [
            'where_indices',
            'nonzero_cube',
            'join',
-           'StatsInfo',
-           'stats_cube',
-           'print_stats',
+           'StatsInfo', 'CubeInfo', 'stats_info', 'cube_info', 'print_stats',
           ]
 
 from .creation import linear_cube, random_cube, const_cube, const_blocks_cube, \
@@ -46,4 +44,6 @@ from .comparison import not_equals_cube, not_equals_num, not_equals, \
                         where_indices, \
                         nonzero_cube
 
-from .stats import stats_cube, print_stats
+from .stats import StatsInfo, stats_info, \
+                   CubeInfo, cube_info, \
+                   print_stats

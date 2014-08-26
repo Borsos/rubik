@@ -18,8 +18,10 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
+           'CubeInfo',
            'StatsInfo',
-           'stats_cube',
+           'stats_info',
+           'cube_info',
            'print_stats',
           ]
 
@@ -29,7 +31,56 @@ import numpy as np
 from ..errors import RubikError
 from .internals import output_mode_callback
 
-class StatsInfo(object):
+class Info(object):
+    @classmethod
+    def get_print_function(cls, print_function=None):
+        if print_function is None:
+            print_function = lambda x: sys.stdout.write(x + '\n')
+        return print_function
+
+    def print_report(self, print_function=None):
+        print_function = self.get_print_function(print_function)
+        print_function(self.report())
+        
+    def report(self):
+        pass
+
+class CubeInfo(Info):
+    """CubeInfo(...)
+       information about a cube:
+        o shape
+    """
+    def __init__(self,
+            cube_shape=None,
+    ):
+        self.cube_shape = cube_shape
+    
+    @classmethod
+    def cube_info(cls, cube):
+        """cube_info(cube) -> CubeInfo
+           creates a CubeInfo object from a cube
+        """
+        if not isinstance(cube, np.ndarray):
+            raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        cube_info = CubeInfo(
+            cube_shape=cube.shape,
+        )
+        return cube_info
+
+    def report(self):
+        """report(self) -> CubeInfo report
+        """
+        s_shape = "<undefined>"
+        if self.cube_shape is not None:
+            s_shape = 'x'.join(str(e) for e in self.cube_shape)
+        return """\
+shape         = {shape}""".format(
+            shape=s_shape,
+        )
+
+cube_info = CubeInfo.cube_info
+
+class StatsInfo(Info):
     """StatsInfo(...)
        collect statistics about a cube:
         o cube_shape
@@ -44,7 +95,6 @@ class StatsInfo(object):
         o cube_count_inf
     """
     def __init__(self,
-            cube_shape=None,
             cube_count=0,
             cube_sum=0,
             cube_ave=None, 
@@ -54,7 +104,6 @@ class StatsInfo(object):
             cube_count_nonzero=0,
             cube_count_nan=0,
             cube_count_inf=0):
-        self.cube_shape = cube_shape
         self.cube_sum = cube_sum
         self.cube_count = cube_count
         self.cube_count_zero = cube_count_zero
@@ -63,6 +112,41 @@ class StatsInfo(object):
         self.cube_count_inf = cube_count_inf
         self.cube_min = cube_min
         self.cube_max = cube_max
+
+    @classmethod
+    def stats_info(cls, cube):
+        """stats_cube(cube) -> StatsInfo
+           creates a StatsInfo object from a cube
+        """
+        if not isinstance(cube, np.ndarray):
+            raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+        cube_sum = cube.sum()
+        cube_ave = None
+        if cube.shape != 0:
+            cube_count = 1
+            for d in cube.shape:
+                cube_count *= d
+        else:
+            cube_count = 0
+        if cube_count:
+            cube_ave = cube_sum / float(cube_count)
+        else:
+            cube_ave = None
+        cube_count_nonzero = np.count_nonzero(cube)
+        cube_count_zero = cube_count - cube_count_nonzero
+        cube_count_nan = np.count_nonzero(np.isnan(cube))
+        cube_count_inf = np.count_nonzero(np.isinf(cube))
+        stats_info = StatsInfo(
+            cube_sum=cube_sum,
+            cube_count=cube_count,
+            cube_min=cube.min(),
+            cube_max=cube.max(),
+            cube_count_zero=cube_count_zero,
+            cube_count_nonzero=cube_count_nonzero,
+            cube_count_nan=cube_count_nan,
+            cube_count_inf=cube_count_inf,
+        )
+        return stats_info
 
     @property
     def cube_fraction_zero(self):
@@ -109,10 +193,6 @@ class StatsInfo(object):
     def __iadd__(self, stats_info):
         if not isinstance(stats_info, StatsInfo):
             raise RubikError("cannot sum {} with {}".format(type(self).__name__, type(stats_info).__name__))
-        if self.cube_shape is None:
-            self.cube_shape = stats_info.cube_shape
-        elif stats_info.cube_shape is not None and stats_info.cube_shape != self.cube_shape:
-            raise RubikError("cannot sum {} objects with mismatching shapes: {} {}".format(type(self).__name__, self.cube_shape, stats_info.cube_shape))
         self.cube_sum += stats_info.cube_sum
         self.cube_count += stats_info.cube_count
         self.cube_count_zero += stats_info.cube_count_zero
@@ -129,58 +209,11 @@ class StatsInfo(object):
         result += stats_info
         return result
 
-def stats_cube(cube):
-    """stats_cube(cube) -> StatsInfo
-       creates a StatsInfo object from a cube
-    """
-    if not isinstance(cube, np.ndarray):
-        raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-    cube_sum = cube.sum()
-    cube_ave = None
-    if cube.shape != 0:
-        cube_count = 1
-        for d in cube.shape:
-            cube_count *= d
-    else:
-        cube_count = 0
-    if cube_count:
-        cube_ave = cube_sum / float(cube_count)
-    else:
-        cube_ave = None
-    cube_count_nonzero = np.count_nonzero(cube)
-    cube_count_zero = cube_count - cube_count_nonzero
-    cube_count_nan = np.count_nonzero(np.isnan(cube))
-    cube_count_inf = np.count_nonzero(np.isinf(cube))
-    stats_info = StatsInfo(
-        cube_shape=cube.shape,
-        cube_sum=cube_sum,
-        cube_count=cube_count,
-        cube_min=cube.min(),
-        cube_max=cube.max(),
-        cube_count_zero=cube_count_zero,
-        cube_count_nonzero=cube_count_nonzero,
-        cube_count_nan=cube_count_nan,
-        cube_count_inf=cube_count_inf,
-    )
-    return stats_info
+    def report(self):
+        """report(self) -> StatsInfo report
+        """
 
-def print_stats(stats_info, stream=None, print_function=None):
-    """print_stats(stats_info, stream=None, print_function=None)
-       print a StatsInfo object
-    """
-
-    output_mode_callback()
-    if stream is None:
-        stream = sys.stdout
-    if print_function is None:
-        print_function = lambda x: stream.write(x + '\n')
-    
-    s_shape = "<undefined>"
-    if stats_info.cube_shape is not None:
-        s_shape = 'x'.join(str(e) for e in stats_info.cube_shape)
-
-    print_function("""\
-shape         = {shape}
+        return """\
 #elements     = {count}
 min           = {min}
 max           = {max}
@@ -191,21 +224,28 @@ ave           = {ave}
 #nan          = {count_nan} [{fraction_nan:.2%}]
 #inf          = {count_inf} [{fraction_inf:.2%}]
 """.format(
-            shape=s_shape,
-            min=stats_info.cube_min,
-            max=stats_info.cube_max,
-            sum=stats_info.cube_sum,
-            ave=stats_info.cube_ave,
-            count=stats_info.cube_count,
-            count_zero=stats_info.cube_count_zero,
-            fraction_zero=stats_info.cube_fraction_zero,
-            count_nonzero=stats_info.cube_count_nonzero,
-            fraction_nonzero=stats_info.cube_fraction_nonzero,
-            count_nan=stats_info.cube_count_nan,
-            fraction_nan=stats_info.cube_fraction_nan,
-            count_inf=stats_info.cube_count_inf,
-            fraction_inf=stats_info.cube_fraction_inf,
+            min=self.cube_min,
+            max=self.cube_max,
+            sum=self.cube_sum,
+            ave=self.cube_ave,
+            count=self.cube_count,
+            count_zero=self.cube_count_zero,
+            fraction_zero=self.cube_fraction_zero,
+            count_nonzero=self.cube_count_nonzero,
+            fraction_nonzero=self.cube_fraction_nonzero,
+            count_nan=self.cube_count_nan,
+            fraction_nan=self.cube_fraction_nan,
+            count_inf=self.cube_count_inf,
+            fraction_inf=self.cube_fraction_inf,
         )
-    )
 
+stats_info = StatsInfo.stats_info
+
+def print_stats(cube, stream=None, print_function=None):
+    output_mode_callback()
+    cube_info = CubeInfo.cube_info(cube)
+    cube_info.print_report()
+    stats_info = StatsInfo.stats_info(cube)
+    stats_info.print_report()
+    
 

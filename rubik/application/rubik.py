@@ -653,7 +653,7 @@ class Rubik(object):
     def print_stats_impl(self, cube, dlabels):
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-        cubes_api.print_stats(cubes_api.stats_cube(cube), print_function=log.PRINT)
+        cubes_api.print_stats(cube, print_function=log.PRINT)
 
     def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
         self.notify_output_mode()
