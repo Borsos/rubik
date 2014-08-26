@@ -41,6 +41,7 @@ from ..visualizer.controller_builder import controller_builder
 from ..visualizer.visualizer_builder import visualizer_builder
 from .. import conf
 from .. import cubes
+from ..cubes import internals
 
 class Rubik(object):
     def __init__(self):
@@ -81,7 +82,6 @@ class Rubik(object):
         self.set_clobber(self.config.default_clobber)
         self.set_visualizer_options()
         self.set_print_report(False)
-        self.set_in_place(False)
         self.set_histogram_options(False)
         self.set_dry_run(False)
         self.set_dtype(default_dtype)
@@ -94,6 +94,8 @@ class Rubik(object):
 
         self._result = None
         self._locals = {}
+        self._pointless_expressions = []
+        internals.set_output_mode_callback(self.notify_output_mode)
 
         self._controller = None
 
@@ -149,9 +151,6 @@ class Rubik(object):
     def set_read_mode(self, read_mode):
         self.read_mode = read_mode
 
-    def set_in_place(self, in_place):
-        self.in_place = in_place
-
     def set_optimized_min_size(self, optimized_min_size):
         self.optimized_min_size = optimized_min_size
 
@@ -203,24 +202,7 @@ class Rubik(object):
             self._print_report()
         if not self.dry_run:
             self.initialize()
-            if self.expressions:
-                self.evaluate_expressions(*self.expressions)
-            else:
-                if self.input_filenames is None or len(self.input_filenames) == 0:
-                    #self.show_logo_once()
-                    self.log_warning("nothing to do; you should use at least one option between '--input-filename/-i', '--expression/-e'")
-                    return
-                elif len(self.input_filenames) == 0:
-                    self.log_warning("loading more than an input file is useless if '--expression/-e' is not used")
-    
-            if self.in_place:
-                if self.output_filenames:
-                    raise RubikError("--in-place/-Oi is not compatible with --output-filename/-o")
-                else:
-                    for input_filename in self.input_filenames.values():
-                        self.output_filenames.add(input_filename.filename())
-            #print "I", InputFilename.__filenames__
-            #print "O", OutputFilename.__filenames__
+            self.evaluate_expressions(*self.expressions)
             self.finalize()
     
     def get_dtype_bytes(self, dtype):
@@ -499,13 +481,19 @@ class Rubik(object):
             function(cube=cube, dlabels=dlabels, *p_args, **n_args)
         
     def finalize(self):
+        for expression in self._pointless_expressions:
+            self.log_warning("pointless expression {!r}".format(expression))
         cube = self._result
         self.run_controller()
     
+    def notify_output_mode(self):
+        del self._pointless_expressions[:]
+
     def write_cube_impl(self, filename, label, cube, dlabels):
         self._write(cube, label, filename, dlabels=dlabels)
 
     def write_cube(self, filename=None, label=None, cube=None):
+        self.notify_output_mode()
         output_label, output_filename = self.get_label_filename('write_cube', self.output_filenames, label, filename)
         if cube is None:
             cube = self._result
@@ -596,12 +584,14 @@ class Rubik(object):
             log.PRINT(dlabels_message)
 
     def print_cube(self, cube=None):
+        self.notify_output_mode()
         self.iterate_on_split(self.print_cube_impl, cube)
 
     def print_cube_impl(self, cube, dlabels):
         log.PRINT(cube)
 
     def print_stats(self, cube=None):
+        self.notify_output_mode()
         self.iterate_on_split(self.print_stats_impl, cube)
 
     def print_stats_impl(self, cube, dlabels):
@@ -663,6 +653,7 @@ ave           = {ave}
         log.PRINT(stat)
 
     def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
+        self.notify_output_mode()
         self.iterate_on_split(self.print_histogram_impl, cube, bins=bins, hrange=hrange, decimals=decimals, fmt=fmt)
 
     def print_histogram_impl(self, cube, dlabels, bins=None, hrange=None, decimals=None, fmt=None):
@@ -839,6 +830,7 @@ ave           = {ave}
         }
         result = self._result
         for expression in expressions:
+            self._pointless_expressions.append(expression)
             globals_d.update(self.input_cubes)
             globals_d['_i'] = list(self.input_cubes.values())
             if expression.startswith('@'):
@@ -983,6 +975,7 @@ ave           = {ave}
     controller = property(get_controller)
 
     def view(self, cube=None, visualizer_type=None, title=None):
+        self.notify_output_mode()
         if cube is None:
             cube = self._result
         if visualizer_type is None:

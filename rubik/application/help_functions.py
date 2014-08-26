@@ -536,45 +536,64 @@ If an expression starts with a '-' sign, rubik can try to parse it as an
 option:
 
 $ rubik '-cb.linear_cube("3x4")' --print
-usage: rubik [-h] [--verbose] [--version] [--trace-errors] [--safe]
-             [--optimized] [--optimized-min-size S] [--memory-limit L[units]]
-             [--dtype D] [--accept-bigger-raw-files] [--clobber]
-             [--no-clobber] [--random-seed RANDOM_SEED]
+usage: rubik [-h] [--verbose] [--quiet] [--report] [--dry-run] [--version]
+             [--logo] [--trace-errors] [--safe] [--optimized]
+             [--optimized-min-size S] [--memory-limit L[units]] [--dtype D]
+             [--accept-bigger-raw-files] [--clobber] [--no-clobber]
+             [--random-seed RANDOM_SEED] [--warnings {RuntimeWarning,all}]
              [--source-file E [E ...]] [--expression E [E ...]]
-             [--input-filename I] [--shape [D0[:D1[...]]]] [--extract X]
-             [--input-dtype D] [--input-format INPUT_FORMATS]
-             [--input-csv-separator S] [--input-text-delimiter D]
-             [--in-place | --output-filename O] [--print] [--stats]
-             [--split D] [--output-dtype D] [--output-format OUTPUT_FORMATS]
+             [--input-filename I [I ...]] [--shape [D0[:D1[...]]]]
+             [--extract X] [--input-mode INPUT_MODES]
+             [--input-offset INPUT_OFFSETS] [--input-dtype D]
+             [--input-format INPUT_FORMATS] [--input-csv-separator S]
+             [--input-text-delimiter D] [--output-filename O [O ...]]
+             [--print-cube] [--print-stats] [--histogram] [--view]
+             [--histogram-bins Hb] [--histogram-range Hr Hr]
+             [--histogram-decimals Hd] [--histogram-length Hl]
+             [--histogram-percentage] [--histogram-num] [--view-volume-slicer]
+             [--view-volume-render] [--view-volume-contour] [--view-auto]
+             [--view-attribute VA [VA ...]] [--view-attribute-file VF]
+             [--view-list] [--split D] [--output-mode Om] [--output-offset Oo]
+             [--output-dtype D] [--output-format Of]
              [--output-csv-separator S] [--output-text-delimiter D]
              [--output-text-newline N] [--output-text-converter C]
              [--help-dtypes] [--help-labeled-options] [--help-expression]
              [--help-extractor] [--help-user-defined-variables] [--help-numpy]
              [--help-cubes] [--help-filenames] [--help-split]
              [--help-environment-variables] [--help-creating-cubes]
-             [--help-output] [--help-memory-usage] [--help-usage]
+             [--help-output] [--help-memory-usage] [--help-usage] [--demo]
              [expression [expression ...]]
 rubik: error: unrecognized arguments: -cb.linear_cube("3x4")
 
-In this case, you can pass all the expressions positionally after '--':
+In this case, there are some alternatives:
 
-$ rubik --print -- '-cb.linear_cube("3x4")'
+$ rubik -e'-cb.linear_cube("3x4")' --print
+...
+$ rubik -e='-cb.linear_cube("3x4")' --print
+...
+$ rubik --expression='-cb.linear_cube("3x4")' --print
+...
+$ rubik '0 - cb.linear_cube("3x4")' --print
+...
+
+It is also possible to use the '--' option to mark the end of options; 
+nevertheless, in this case the '--print' option will not be recognized,
+so the 'print_cube()' function must be called instead:
+
+$ rubik -- '-cb.linear_cube("3x4")' 'print_cube()'
 [[ -0.  -1.  -2.  -3.]
  [ -4.  -5.  -6.  -7.]
  [ -8.  -9. -10. -11.]]
 
-Other working alternatives are:
+or also
 
-$ rubik --print -e'-cb.linear_cube("3x4")'
-...
-$ rubik --print -e='-cb.linear_cube("3x4")'
-...
-$ rubik --print --expression='-cb.linear_cube("3x4")'
-...
+$ rubik 'print_cube(-cb.linear_cube("3x4"))'
+[[ -0.  -1.  -2.  -3.]
+ [ -4.  -5.  -6.  -7.]
+ [ -8.  -9. -10. -11.]]
 
-or, more tricky:
-$ rubik '0 - cb.linear_cube("3x4")' --print
-...
+In the latter case, the '--' option is not necessary, since the expression
+does not start with '-'.
 
 Loading expressions from files
 ==============================
@@ -599,6 +618,15 @@ $ rubik @expr.txt --print
  [ 14.5   5.5  16.5  17.5]
  [  8.5  -0.5  10.5  11.5]]
 $
+
+It is possible to read input files or get output using input and
+output mode functions:
+* read_cube(filename=...)
+* write_cube(filename=..., cube=...)
+* print_cube(cube)
+* print_stats(cube)
+* print_histogram(cube, ...)
+* view(cube)
 
 """)
 

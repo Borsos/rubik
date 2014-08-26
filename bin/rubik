@@ -323,10 +323,6 @@ Arguments for histogram generation""")
 Arguments for graphical visualization""")
 
     write_output_filename_group = output_group.add_mutually_exclusive_group()
-    write_output_filename_group.add_argument("--in-place", "-Oi",
-        action="store_true",
-        help="output filename is input filename (notice that, due to interpolation, output file can be different from input file)")
-
     write_output_filename_group.add_argument("--output-filename", "-o",
         metavar='O',
         dest="output_filenames",
@@ -614,7 +610,6 @@ Options to show help on specific topics """)
     rubik.set_logger(logger, report_logger)
     rubik.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
     rubik.set_read_mode(args.read_mode)
-    rubik.set_in_place(args.in_place)
     rubik.set_optimized_min_size(args.optimized_min_size)
     rubik.set_memory_limit(args.memory_limit)
     rubik.set_split_dimensions(args.split_dimensions)
