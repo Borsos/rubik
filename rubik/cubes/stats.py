@@ -19,17 +19,28 @@ __author__ = "Simone Campagna"
 
 __all__ = [
            'CubeInfo',
+           'cube_info',
            'StatsInfo',
            'stats_info',
-           'cube_info',
+           'DiffInfo',
+           'diff_info',
            'print_stats',
+           'print_diff',
+           'stats_file',
+           'print_stats_file',
+           'diff_files',
+           'print_diff_files',
           ]
 
 import sys
 import numpy as np
 
 from ..errors import RubikError
+from ..shape import Shape
 from .internals import output_mode_callback
+from .comparison import reldiff_cube, absdiff_cube
+from .input_output import fromfile_raw
+from .out_of_core import iterate_over_blocks
 
 class Info(object):
     @classmethod
@@ -37,6 +48,23 @@ class Info(object):
         if print_function is None:
             print_function = lambda x: sys.stdout.write(x + '\n')
         return print_function
+
+    @classmethod
+    def get_op(cls, op, v0, v1):
+        if v0 is None:
+            return v1
+        elif v1 is None:
+            return v0
+        else:
+            return op(v0, v1)
+
+    @classmethod
+    def get_min(cls, v0, v1):
+        return cls.get_op(min, v0, v1)
+
+    @classmethod
+    def get_max(cls, v0, v1):
+        return cls.get_op(max, v0, v1)
 
     def print_report(self, print_function=None):
         print_function = self.get_print_function(print_function)
@@ -53,7 +81,7 @@ class CubeInfo(Info):
     def __init__(self,
             cube_shape=None,
     ):
-        self.cube_shape = cube_shape
+        self.cube_shape = Shape(cube_shape)
     
     @classmethod
     def cube_info(cls, cube):
@@ -61,7 +89,7 @@ class CubeInfo(Info):
            creates a CubeInfo object from a cube
         """
         if not isinstance(cube, np.ndarray):
-            raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+            raise RubikError("cannot stat object of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cube_info = CubeInfo(
             cube_shape=cube.shape,
         )
@@ -119,7 +147,7 @@ class StatsInfo(Info):
            creates a StatsInfo object from a cube
         """
         if not isinstance(cube, np.ndarray):
-            raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
+            raise RubikError("cannot stat object of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cube_sum = cube.sum()
         cube_ave = None
         if cube.shape != 0:
@@ -152,43 +180,36 @@ class StatsInfo(Info):
     def cube_fraction_zero(self):
         if self.cube_count:
             return self.cube_count_zero / float(self.cube_count)
+        else:
+            return 0.0
 
     @property
     def cube_fraction_nonzero(self):
         if self.cube_count:
             return self.cube_count_nonzero / float(self.cube_count)
+        else:
+            return 0.0
 
     @property
     def cube_fraction_nan(self):
         if self.cube_count:
             return self.cube_count_nan / float(self.cube_count)
+        else:
+            return 0.0
 
     @property
     def cube_fraction_inf(self):
         if self.cube_count:
             return self.cube_count_inf / float(self.cube_count)
+        else:
+            return 0.0
 
     @property
     def cube_ave(self):
         if self.cube_count:
             return self.cube_sum / float(self.cube_count)
-
-    @classmethod
-    def get_op(cls, op, v0, v1):
-        if v0 is None:
-            return v1
-        elif v1 is None:
-            return v0
         else:
-            return op(v0, v1)
-
-    @classmethod
-    def get_min(cls, v0, v1):
-        return cls.get_op(min, v0, v1)
-
-    @classmethod
-    def get_max(cls, v0, v1):
-        return cls.get_op(max, v0, v1)
+            return 0.0
 
     def __iadd__(self, stats_info):
         if not isinstance(stats_info, StatsInfo):
@@ -199,13 +220,13 @@ class StatsInfo(Info):
         self.cube_count_nonzero += stats_info.cube_count_nonzero
         self.cube_count_nan += stats_info.cube_count_nan
         self.cube_count_inf += stats_info.cube_count_inf
-        print self.cube_min, self.cube_max
         self.cube_min = self.get_min(self.cube_min, stats_info.cube_min)
-        self.cube_max = self.get_max(self.cube_min, stats_info.cube_max)
+        self.cube_max = self.get_max(self.cube_max, stats_info.cube_max)
         return self
 
     def __add__(self, stats_info):
         result = self.__class__()
+        result += self
         result += stats_info
         return result
 
@@ -241,11 +262,173 @@ ave           = {ave}
 
 stats_info = StatsInfo.stats_info
 
-def print_stats(cube, stream=None, print_function=None):
+class DiffInfo(Info):
+    """DiffInfo(...)
+       collect statistics about differences between two cubes:
+        o stats_info_0
+        o stats_info_1
+        o min_rel_err
+        o max_rel_err
+        o min_abs_err
+        o max_abs_err"""
+    def __init__(self,
+        stats_info_0=None,
+        stats_info_1=None,
+        min_rel_err=None,
+        max_rel_err=None,
+        min_abs_err=None,
+        max_abs_err=None,
+    ):
+        if stats_info_0 is None:
+            stats_info_0 = StatsInfo()
+        if stats_info_1 is None:
+            stats_info_1 = StatsInfo()
+        self.stats_info_0 = stats_info_0
+        self.stats_info_1 = stats_info_1
+        self.min_rel_err = min_rel_err
+        self.max_rel_err = max_rel_err
+        self.min_abs_err = min_abs_err
+        self.max_abs_err = max_abs_err
+
+    def __iadd__(self, diff_info):
+        self.stats_info_0 += diff_info.stats_info_0
+        self.stats_info_1 += diff_info.stats_info_1
+        self.min_rel_err = self.get_min(self.min_rel_err, diff_info.min_rel_err)
+        self.max_rel_err = self.get_max(self.max_rel_err, diff_info.max_rel_err)
+        self.min_abs_err = self.get_min(self.min_abs_err, diff_info.min_abs_err)
+        self.max_abs_err = self.get_max(self.max_abs_err, diff_info.max_abs_err)
+        return self
+
+    def __add__(self, diff_info):
+        result = self.__class__()
+        result += self
+        result += diff_info
+        return result
+
+    @classmethod
+    def diff_info(cls, cube_0, cube_1, in_threshold=None, out_threshold=None):
+        rcube = reldiff_cube(cube_0, cube_1, in_threshold=in_threshold, out_threshold=out_threshold)
+        min_rel_err = rcube.min()
+        max_rel_err = rcube.max()
+        acube = absdiff_cube(cube_0, cube_1, in_threshold=in_threshold, out_threshold=out_threshold)
+        min_abs_err = acube.min()
+        max_abs_err = acube.max()
+        return cls(
+            stats_info_0=StatsInfo.stats_info(cube_0),
+            stats_info_1=StatsInfo.stats_info(cube_1),
+            min_rel_err=min_rel_err,
+            max_rel_err=max_rel_err,
+            min_abs_err=min_abs_err,
+            max_abs_err=max_abs_err,
+        )
+
+    def report(self):
+        return """\
+=== cube[0]:
+{stats_info_0}
+=== cube[1]:
+{stats_info_1}
+=== diff:
+min_rel_err   = {min_rel_err}
+max_rel_err   = {max_rel_err}
+min_abs_err   = {min_abs_err}
+max_abs_err   = {max_abs_err}
+""".format(
+            stats_info_0=self.stats_info_0.report(),
+            stats_info_1=self.stats_info_1.report(),
+            min_rel_err=self.min_rel_err,
+            max_rel_err=self.max_rel_err,
+            min_abs_err=self.min_abs_err,
+            max_abs_err=self.max_abs_err,
+        )
+
+diff_info = DiffInfo.diff_info
+
+def print_stats(cube, print_function=None):
     output_mode_callback()
     cube_info = CubeInfo.cube_info(cube)
-    cube_info.print_report()
+    cube_info.print_report(print_function=print_function)
     stats_info = StatsInfo.stats_info(cube)
-    stats_info.print_report()
+    stats_info.print_report(print_function=print_function)
     
+def print_diff(cube_0, cube_1, print_function=None):
+    output_mode_callback()
+    cube_info_0 = CubeInfo.cube_info(cube_0)
+    cube_info_1 = CubeInfo.cube_info(cube_1)
+    if cube_info_0.cube_shape != cube_info_1.cube_shape:
+        raise RubikError("cannot diff cubes with different shape {} and {}".format(
+            cube_info_0.cube_shape,
+            cube_info_1.cube_shape,
+        ))
+    cube_info_0.print_report(print_function=print_function, in_threshold=None, out_threshold=None)
+    diff_info = DiffInfo.diff_info(cube_0, cube_1, in_threshold=in_threshold, out_threshold=out_threshold)
+    diff_info.print_report(print_function=print_function)
 
+def stats_file(filename, shape, dtype=None, ooc=True, block_size=None):
+    if ooc:
+        stats_info = stats_info_ooc(filename, shape=shape, dtype=dtype, block_size=block_size)
+    else:
+        cube = fromfile_raw(filename, shape=shape, dtype=dtype)
+        stats_info = StatsInfo.stats_info(cube)
+    return stats_info
+
+def print_stats_file(filename, shape, dtype=None, ooc=True, block_size=None, print_function=None):
+    output_mode_callback()
+    cube_info = CubeInfo(cube_shape=shape)
+    stats_info = stats_file(filename, shape=shape, dtype=dtype, ooc=ooc, block_size=block_size)
+    cube_info.print_report(print_function=print_function)
+    stats_info.print_report(print_function=print_function)
+    
+def diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=None, in_threshold=None, out_threshold=None):
+    output_mode_callback()
+    if ooc:
+        diff_info = diff_info_ooc(filename_0, filename_1, shape=shape, dtype=dtype, block_size=block_size,
+                                  in_threshold=in_threshold, out_threshold=out_threshold)
+    else:
+        cube_0 = fromfile_raw(filename_0, shape=shape, dtype=dtype)
+        cube_1 = fromfile_raw(filename_1, shape=shape, dtype=dtype)
+        diff_info = DiffInfo.diff_info(cube_0, cube_1,
+                                       in_threshold=in_threshold, out_threshold=out_threshold)
+    return diff_info
+
+def print_diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=None, in_threshold=None, out_threshold=None, print_function=None):
+    output_mode_callback()
+    cube_info = CubeInfo(cube_shape=shape)
+    diff_info = diff_files(filename_0, filename_1, shape=shape, dtype=dtype, ooc=ooc, block_size=block_size,
+                           in_threshold=None, out_threshold=None)
+    cube_info.print_report(print_function=print_function)
+    diff_info.print_report(print_function=print_function)
+
+def stats_info_ooc(filename, shape, dtype=None, block_size=None):
+    def cumulate_stats_info(cubes, stats_info):
+        #print cubes[0]
+        stats_info += StatsInfo.stats_info(cubes[0])
+
+    stats_info = StatsInfo()
+    iterate_over_blocks(
+        filenames=[filename],
+        shape=shape,
+        dtype=dtype,
+        block_size=block_size,
+        cumulate_function=cumulate_stats_info,
+        cumulate_n_args={'stats_info': stats_info},
+    )
+    return stats_info
+
+def diff_info_ooc(filename_0, filename_1, shape, dtype=None, block_size=None, in_threshold=None, out_threshold=None):
+    def cumulate_diff_info(cubes, diff_info, in_threshold=None, out_threshold=None):
+        diff_info += DiffInfo.diff_info(cubes[0], cubes[1], in_threshold=in_threshold, out_threshold=out_threshold)
+
+    diff_info = DiffInfo()
+    iterate_over_blocks(
+        filenames=[filename_0, filename_1],
+        shape=shape,
+        dtype=dtype,
+        block_size=block_size,
+        cumulate_function=cumulate_diff_info,
+        cumulate_n_args={'diff_info': diff_info,
+                         'in_threshold': in_threshold,
+                         'out_threshold': out_threshold
+                        },
+    )
+    return diff_info
