@@ -789,8 +789,7 @@ the cube extracted from 'a_8x10.raw' by 2.5.
 Output filenames
 ================
 Also the output filenames have a label (by default 'o0'); the label can be used
-to set specific parameters on the output file, for instance the format. It
-cannot be used in expressions.
+to set specific parameters on the output file, for instance the format.
 
 For instance, '-o x=x_8x10.raw --output-dtype x=float64' applies the dtype
 'float64' to the output file 'x_8x10.raw'.
