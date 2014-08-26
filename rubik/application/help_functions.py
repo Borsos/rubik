@@ -474,7 +474,7 @@ $
 
 """
 def help_cubes():
-    help(cubes)
+    help(cubes.api)
 
 def help_numpy():
     help(numpy)

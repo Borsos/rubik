@@ -23,7 +23,7 @@ __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
 
 import numpy as np
 
-from .settings import *
+from .internals import *
 
 from ..py23 import irange
 from ..errors import RubikError

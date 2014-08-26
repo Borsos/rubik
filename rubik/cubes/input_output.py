@@ -23,9 +23,8 @@ __all__ = ['fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
 
 import numpy as np
 
-from .settings import *
+from .internals import *
 from .creation import linear_cube, random_cube, const_cube
-from . import internals
 
 from .. import conf
 from ..py23 import irange
@@ -235,7 +234,7 @@ def write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None):
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
-    internals.output_mode_callback()
+    output_mode_callback()
     lcw = LinearCubeWriter(file=file, shape=shape, buffer_size=buffer_size, start=start, increment=increment)
     lcw.write()
         
@@ -255,7 +254,7 @@ def write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None):
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
-    internals.output_mode_callback()
+    output_mode_callback()
     rcw = RandomCubeWriter(file=file, shape=shape, buffer_size=buffer_size, min=min, max=max)
     rcw.write()
         
@@ -274,6 +273,6 @@ def write_const_cube(file, shape, value=0.0, buffer_size=None):
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
-    internals.output_mode_callback()
+    output_mode_callback()
     rcw = ConstCubeWriter(file=file, shape=shape, buffer_size=buffer_size, value=value)
     rcw.write()

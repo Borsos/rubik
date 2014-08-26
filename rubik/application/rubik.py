@@ -40,8 +40,8 @@ from ..format_filename import format_filename
 from ..visualizer.controller_builder import controller_builder
 from ..visualizer.visualizer_builder import visualizer_builder
 from .. import conf
-from .. import cubes
-from ..cubes import internals
+from ..cubes import internals as cubes_internals
+from ..cubes import api as cubes_api
 
 class Rubik(object):
     def __init__(self):
@@ -95,7 +95,7 @@ class Rubik(object):
         self._result = None
         self._locals = {}
         self._pointless_expressions = []
-        internals.set_output_mode_callback(self.notify_output_mode)
+        cubes_internals.set_output_mode_callback(self.notify_output_mode)
 
         self._controller = None
 
@@ -135,7 +135,7 @@ class Rubik(object):
 
     def set_dtype(self, dtype):
         self.dtype = dtype
-        cubes.settings.set_default_dtype(self.dtype)
+        cubes_internals.set_default_dtype(self.dtype)
         self.dtype_bytes = self.dtype().itemsize
         self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
 
@@ -453,7 +453,7 @@ class Rubik(object):
         else:
             expected_input_count = shape.count()
             expected_read_count = expected_input_count
-        numpy_function = cubes.fromfile_generic
+        numpy_function = cubes_api.fromfile_generic
         numpy_function_nargs = {}
         numpy_function_pargs = []
         if input_format == conf.FILE_FORMAT_RAW:
@@ -653,60 +653,7 @@ class Rubik(object):
     def print_stats_impl(self, cube, dlabels):
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-        cube_sum = cube.sum()
-        cube_ave = None
-        if cube.shape != 0:
-            cube_count = 1
-            for d in cube.shape:
-                cube_count *= d
-        else:
-            cube_count = 0
-        if cube_count:
-            cube_ave = cube_sum / float(cube_count)
-        else:
-            cube_ave = None
-        cube_count_nonzero = np.count_nonzero(cube)
-        cube_count_zero = cube_count - cube_count_nonzero
-        cube_fraction_nonzero = 0.0
-        if cube_count:
-            cube_fraction_nonzero = cube_count_nonzero / float(cube_count)
-        cube_fraction_zero = 0.0
-        if cube_count:
-            cube_fraction_zero = cube_count_zero / float(cube_count)
-        cube_count_nan = np.count_nonzero(np.isnan(cube))
-        if cube_count:
-            cube_fraction_nan = cube_count_nan / float(cube_count)
-        cube_count_inf = np.count_nonzero(np.isinf(cube))
-        if cube_count:
-            cube_fraction_inf = cube_count_inf / float(cube_count)
-        stat = """\
-shape         = {shape}
-#elements     = {count}
-min           = {min}
-max           = {max}
-sum           = {sum}
-ave           = {ave}
-#zero         = {count_zero} [{fraction_zero:.2%}]
-#nonzero      = {count_nonzero} [{fraction_nonzero:.2%}]
-#nan          = {count_nan} [{fraction_nan:.2%}]
-#inf          = {count_inf} [{fraction_inf:.2%}]
-""".format(
-            shape='x'.join(str(i) for i in cube.shape),
-            count=cube_count,
-            min=cube.min(),
-            max=cube.max(),
-            sum=cube_sum,
-            ave=cube_ave,
-            count_zero=cube_count_zero,
-            fraction_zero=cube_fraction_zero,
-            count_nonzero=cube_count_nonzero,
-            fraction_nonzero=cube_fraction_nonzero,
-            count_nan=cube_count_nan,
-            fraction_nan=cube_fraction_nan,
-            count_inf=cube_count_inf,
-            fraction_inf=cube_fraction_inf,
-        )
-        log.PRINT(stat)
+        cubes_api.print_stats(cubes_api.stats_cube(cube), print_function=log.PRINT)
 
     def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
         self.notify_output_mode()
@@ -872,8 +819,8 @@ ave           = {ave}
         globals_d = {
             'np': np,
             'numpy': np,
-            'cb': cubes,
-            'cubes': cubes,
+            'cb': cubes_api,
+            'cubes': cubes_api,
             'read_cube': self.read_cube,
             'write_cube': self.write_cube,
             'print_stats': self.print_stats,

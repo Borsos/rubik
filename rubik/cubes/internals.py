@@ -21,9 +21,15 @@ __all__ = [
            'output_mode_callback',
            'get_output_mode_callback',
            'set_output_mode_callback',
+           'set_default_dtype',
+           'as_default_dtype',
+           'DEFAULT_DTYPE',
           ]
 
+import numpy as np
+
 OUTPUT_MODE_CALLBACK = None
+DEFAULT_DTYPE = np.float32
 
 def set_output_mode_callback(callback):
     global OUTPUT_MODE_CALLBACK
@@ -37,3 +43,14 @@ def output_mode_callback():
     global OUTPUT_MODE_CALLBACK
     if OUTPUT_MODE_CALLBACK is not None:
         OUTPUT_MODE_CALLBACK()
+
+def set_default_dtype(dtype):
+    global DEFAULT_DTYPE
+    DEFAULT_DTYPE = dtype
+
+def as_default_dtype(cube):
+    if cube.dtype != DEFAULT_DTYPE:
+        return cube.astype(DEFAULT_DTYPE)
+    else:
+        return cube
+

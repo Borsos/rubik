@@ -26,7 +26,7 @@ __all__ = ['not_equals_cube', 'not_equals_num', 'not_equals',
 
 import numpy as np
 
-from .settings import *
+from .internals import *
 
 def not_equals_cube(cube_0, cube_1, tolerance=0.0):
     """not_equals_cube(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
