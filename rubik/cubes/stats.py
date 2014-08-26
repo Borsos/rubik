@@ -345,6 +345,9 @@ max_abs_err   = {max_abs_err}
 diff_info = DiffInfo.diff_info
 
 def print_stats(cube, print_function=None):
+    """print_stats(cube, print_function=None)
+    print statistics about cube
+    """
     output_mode_callback()
     cube_info = CubeInfo.cube_info(cube)
     cube_info.print_report(print_function=print_function)
@@ -352,6 +355,9 @@ def print_stats(cube, print_function=None):
     stats_info.print_report(print_function=print_function)
     
 def print_diff(cube_0, cube_1, print_function=None):
+    """print_diff(cube_0, cube_1, print_function=None)
+    print statistics about cube_0, cube_1, and their diff
+    """
     output_mode_callback()
     cube_info_0 = CubeInfo.cube_info(cube_0)
     cube_info_1 = CubeInfo.cube_info(cube_1)
@@ -365,6 +371,10 @@ def print_diff(cube_0, cube_1, print_function=None):
     diff_info.print_report(print_function=print_function)
 
 def stats_file(filename, shape, dtype=None, ooc=True, block_size=None):
+    """stats_file(filename, shape, dtype=None, ooc=True, block_size=None) -> StatsInfo object
+    returns a StatsInfo about the content of 'filename', which is a cube with 'shape'.
+    If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
+    """
     if ooc:
         stats_info = stats_info_ooc(filename, shape=shape, dtype=dtype, block_size=block_size)
     else:
@@ -373,6 +383,10 @@ def stats_file(filename, shape, dtype=None, ooc=True, block_size=None):
     return stats_info
 
 def print_stats_file(filename, shape, dtype=None, ooc=True, block_size=None, print_function=None):
+    """print_stats_file(filename, shape, dtype=None, ooc=True, block_size=None, print_function=None)
+    prints the StatsInfo about the content of 'filename', which is a cube with 'shape'.
+    If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
+    """
     output_mode_callback()
     cube_info = CubeInfo(cube_shape=shape)
     stats_info = stats_file(filename, shape=shape, dtype=dtype, ooc=ooc, block_size=block_size)
@@ -380,6 +394,11 @@ def print_stats_file(filename, shape, dtype=None, ooc=True, block_size=None, pri
     stats_info.print_report(print_function=print_function)
     
 def diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=None, in_threshold=None, out_threshold=None):
+    """diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=None) -> DiffInfo object
+    returns a DiffInfo about the content of 'filename_0' and 'filename_1', which are
+    two cubes with 'shape'.
+    If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
+    """
     output_mode_callback()
     if ooc:
         diff_info = diff_info_ooc(filename_0, filename_1, shape=shape, dtype=dtype, block_size=block_size,
@@ -392,6 +411,11 @@ def diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=N
     return diff_info
 
 def print_diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=None, in_threshold=None, out_threshold=None, print_function=None):
+    """print_diff_files(filename_0, filename_1, shape, dtype=None, ooc=True, block_size=None, print_function=None)
+    prints the DiffInfo about the content of 'filename_0' and 'filename_1', which are
+    two cubes with 'shape'.
+    If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
+    """
     output_mode_callback()
     cube_info = CubeInfo(cube_shape=shape)
     diff_info = diff_files(filename_0, filename_1, shape=shape, dtype=dtype, ooc=ooc, block_size=block_size,

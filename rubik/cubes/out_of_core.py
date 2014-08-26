@@ -50,6 +50,8 @@ def multiopen(filenames, mode):
     
 def iterate_over_blocks(filenames, shape, cumulate_function, dtype=None, block_size=None, cumulate_p_args=None, cumulate_n_args=None):
     filenames = filelist(filenames)
+    if not filenames:
+        return
     if block_size is None:
         block_size = Memory('1gb')
     elif not isinstance(block_size, Memory):
@@ -67,11 +69,9 @@ def iterate_over_blocks(filenames, shape, cumulate_function, dtype=None, block_s
         cumulate_p_args = {}
     expected_count = shape.count()
     itemsize_b = dtype().itemsize
-    block_count = max(1, block_size_b // itemsize_b)
+    block_count = max(1, block_size_b // (itemsize_b * len(filenames)))
     read_count = 0
     with multiopen(filenames, 'rb') as filehandles:
-        if not filehandles:
-            return
         while read_count < expected_count:
             blocks = []
             step_count = min(expected_count - read_count, block_count)
