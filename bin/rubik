@@ -399,19 +399,19 @@ Arguments for graphical visualization""")
         default="auto",
         help="view the 3d cube with VolumeSlicer class")
 
-    visualizer_group.add_argument('--view-volume-render', '-Vr',
-        dest="visualizer_type",
-        action="store_const",
-        const="VolumeRender",
-        default="auto",
-        help="view the 3d cube with VolumeRender class")
-
-    visualizer_group.add_argument('--view-volume-contour', '-Vc',
-        dest="visualizer_type",
-        action="store_const",
-        const="VolumeContour",
-        default="auto",
-        help="view the 3d cube with VolumeContour class")
+#    visualizer_group.add_argument('--view-volume-render', '-Vr',
+#        dest="visualizer_type",
+#        action="store_const",
+#        const="VolumeRender",
+#        default="auto",
+#        help="view the 3d cube with VolumeRender class")
+#
+#    visualizer_group.add_argument('--view-volume-contour', '-Vc',
+#        dest="visualizer_type",
+#        action="store_const",
+#        const="VolumeContour",
+#        default="auto",
+#        help="view the 3d cube with VolumeContour class")
 
     visualizer_group.add_argument('--view-auto', '-VA',
         dest="visualizer_type",
