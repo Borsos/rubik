@@ -37,6 +37,8 @@ from ..format_filename import format_filename
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_size):
+        if dtype is None:
+            dtype = DEFAULT_DTYPE
         self.dtype = dtype
         self.dtype_bytes = dtype().itemsize
         if not isinstance(shape, Shape):

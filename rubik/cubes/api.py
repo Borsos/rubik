@@ -28,8 +28,6 @@ __all__ = [
            'where_indices',
            'nonzero_cube',
            'join',
-           'CubeInfo',
-           'cube_info',
            'StatsInfo',
            'stats_info',
            'DiffInfo',
@@ -56,8 +54,6 @@ from .comparison import not_equals_cube, not_equals_num, not_equals, \
                         nonzero_cube
 
 from .stats import \
-           CubeInfo, \
-           cube_info, \
            StatsInfo, \
            stats_info, \
            DiffInfo, \
