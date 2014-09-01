@@ -48,7 +48,7 @@ _DEMO_TEXT = """\
 
 ## 1. Create a random cube with a given shape:
 
-$ rubik -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
+$ rubik -r 100 -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
 $ echo ciao
 ciao
 $
@@ -213,17 +213,24 @@ $
 <<<BREAK>>>
 ### 12. Show statistics about a cube:
 
-$ rubik -i rdiff_8x20.raw -s 8x20 --stats
-shape         = 8x20
-#elements     = 160
-min           = 0.0
-max           = 0.0
-sum           = 0.0
-ave           = 0.0
-#zero         = 160 [100.00%]
-#nonzero      = 0 [0.00%]
-#nan          = 0 [0.00%]
-#inf          = 0 [0.00%]
+$ rubik -i rsub_y2_8x20.raw -s 8x20 --stats
+shape     = 8x20
+#elements = 160
+%elements = 100.00%
+min       = 0.017823184
+min_index = (1, 10)
+max       = 0.99523103
+max_index = (5, 18)
+sum       = 79.374161
+ave       = 0.496089
+#zero     = 0
+%zero     = 0.00%
+#nonzero  = 160
+%nonzero  = 100.00%
+#nan      = 0
+%nan      = 0.00%
+#inf      = 0
+%inf      = 0.00%
 $
 
 <<<BREAK>>>

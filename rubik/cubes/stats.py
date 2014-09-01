@@ -69,7 +69,7 @@ class InfoProgress(object):
             dump = False
         if dump:
             report = self.info_obj.report()
-            self.print_function("=== {:%} {}".format(fraction, n))
+            self.print_function("=== {:%}".format(fraction))
             self.print_function(report)
             self.print_function('')
             self._ns.add(n)
@@ -118,11 +118,11 @@ class Info(object):
         print_function(self.report())
         
     def get_key_repr(self, key):
-        value = getattr(self, key)
         get_key_method = getattr(self, 'get_{}'.format(key), None)
         if get_key_method is not None:
             return get_key_method()
-        elif isinstance(value, float):
+        value = getattr(self, key)
+        if isinstance(value, float):
             return '{:g}'.format(value)
         else:
             return repr(value)
@@ -138,12 +138,16 @@ class Info(object):
         if headers:
             table.append(("", ) + headers)
         for key, label in cls.KEYS.iteritems():
-            row = []
-            row.append(label)
+            row = [label, '=']
+            empty = True
             for instance in instances:
-                row.append(instance.get_key_repr(key))
-            table.append(row)
-        ln = [max(len(row[i]) for row in table) for i in range(len(instances) + 1)]
+                key_repr = instance.get_key_repr(key)
+                if len(key_repr) > 0:
+                    empty = False
+                row.append(key_repr)
+            if not empty:
+                table.append(row)
+        ln = [max(len(row[i]) for row in table) for i in range(len(instances) + 2)]
         f_list = []
         for lni in ln[:-1]:
             f_list.append("{{:{}s}}".format(lni))
@@ -157,6 +161,7 @@ class Info(object):
 class StatsInfo(Info):
     """StatsInfo(...)
        collect statistics about a cube:
+        o cube_name
         o cube_shape
         o cube_count
         o cube_sum
@@ -170,10 +175,12 @@ class StatsInfo(Info):
         o cube_count_nan
         o cube_count_inf
     """
+    PERCENTAGE_FORMAT = '{:.2%}'
     KEYS = collections.OrderedDict((
+        ('cube_name',			'name'),
         ('cube_shape',			'shape'),
-        #('cube_offset',			'offset'),
         ('cube_count',			'#elements'),
+        ('cube_percentage',		'%elements'),
         ('cube_min',			'min'),
         ('cube_min_index',		'min_index'),
         ('cube_max',			'max'),
@@ -181,15 +188,16 @@ class StatsInfo(Info):
         ('cube_sum',			'sum'),
         ('cube_ave',			'ave'),
         ('cube_count_zero',		'#zero'),
-        ('cube_fraction_zero',		'%zero'),
+        ('cube_percentage_zero',	'%zero'),
         ('cube_count_nonzero',		'#nonzero'),
-        ('cube_fraction_nonzero',	'%nonzero'),
+        ('cube_percentage_nonzero',	'%nonzero'),
         ('cube_count_nan',		'#nan'),
-        ('cube_fraction_nan',		'%nan'),
+        ('cube_percentage_nan',		'%nan'),
         ('cube_count_inf',		'#inf'),
-        ('cube_fraction_inf',		'%inf'),
+        ('cube_percentage_inf',		'%inf'),
     ))
     def __init__(self,
+            cube_name="",
             cube_shape=Shape("0"),
             cube_offset=0,
             cube_count=0,
@@ -203,6 +211,7 @@ class StatsInfo(Info):
             cube_count_nonzero=0,
             cube_count_nan=0,
             cube_count_inf=0):
+        self.cube_name = cube_name
         self.cube_shape = cube_shape
         self.cube_offset = cube_offset
         self.cube_sum = cube_sum
@@ -219,12 +228,34 @@ class StatsInfo(Info):
     def get_cube_shape(self):
         return str(self.cube_shape)
 
-    def progress(self):
+    def get_cube_percentage_zero(self):
+        return self.PERCENTAGE_FORMAT.format(self.cube_fraction_zero)
+
+    def get_cube_percentage_nonzero(self):
+        return self.PERCENTAGE_FORMAT.format(self.cube_fraction_nonzero)
+
+    def get_cube_percentage_inf(self):
+        return self.PERCENTAGE_FORMAT.format(self.cube_fraction_inf)
+
+    def get_cube_percentage_nan(self):
+        return self.PERCENTAGE_FORMAT.format(self.cube_fraction_nan)
+
+    def get_cube_percentage(self):
+        return self.PERCENTAGE_FORMAT.format(self.cube_fraction)
+
+    def get_cube_name(self):
+        return self.cube_name
+
+    @property
+    def cube_fraction(self):
         total_count = self.cube_shape.count()
         if total_count == 0:
             return 0.0
         else:
             return self.cube_count / float(total_count)
+
+    def progress(self):
+        return self.cube_fraction
 
     @classmethod
     def stats_info(cls, cube, shape=None, offset=0):
@@ -329,7 +360,7 @@ class StatsInfo(Info):
         result += stats_info
         return result
 
-    def report(self):
+    def old_report(self):
         """report(self) -> StatsInfo report
         """
 
@@ -379,16 +410,18 @@ class DiffInfo(Info):
         rel_diff=None,
         abs_diff=None,
         cube_shape=None,
+        left_name="LEFT",
+        rigth_name="RIGTH",
     ):
-        def default_stats_info(obj, cube_shape):
+        def default_stats_info(obj, cube_name, cube_shape):
             if obj is None:
-                return StatsInfo(cube_shape=cube_shape)
+                return StatsInfo(cube_name=cube_name, cube_shape=cube_shape)
             else:
                 return obj
-        self.left = default_stats_info(left, cube_shape)
-        self.right = default_stats_info(right, cube_shape)
-        self.rel_diff = default_stats_info(rel_diff, cube_shape)
-        self.abs_diff = default_stats_info(abs_diff, cube_shape)
+        self.left = default_stats_info(left, cube_name=left_name, cube_shape=cube_shape)
+        self.right = default_stats_info(right, cube_name=rigth_name, cube_shape=cube_shape)
+        self.rel_diff = default_stats_info(rel_diff, cube_name="REL_DIFF", cube_shape=cube_shape)
+        self.abs_diff = default_stats_info(abs_diff, cube_name="ABS_DIFF", cube_shape=cube_shape)
 
     def progress(self):
         return self.left.progress()
@@ -420,7 +453,7 @@ class DiffInfo(Info):
     def report(self):
         return StatsInfo.reports(
             instances=(self.left, self.right, self.rel_diff, self.abs_diff),
-            headers=("LEFT", "RIGHT", "REL_DIFF", "ABS_DIFF"))
+            )
 
 diff_info = DiffInfo.diff_info
 
