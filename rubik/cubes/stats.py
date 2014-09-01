@@ -41,12 +41,45 @@ from .comparison import reldiff_cube, absdiff_cube
 from .input_output import fromfile_raw
 from .out_of_core import BlockReader
 
+def default_print_function(message):
+    sys.stdout.write(message + '\n')
+
+class InfoProgress(object):
+    def __init__(self, info_obj, frequency=0.1, print_function=None):
+        self.info_obj = info_obj
+        if frequency is None:
+            frequency = 0.1
+        self.frequency = frequency
+        if print_function is None:
+            print_function = default_print_function
+        self.print_function = print_function
+        self._ns = set()
+
+    def dump(self):
+        fraction = self.info_obj.progress()
+        if self.frequency > 0.0:
+            n = int(fraction / self.frequency)
+        else:
+            n = sys.maxint
+        if fraction == 1.0:
+            dump = False
+        elif 0.0 < fraction < 1.0:
+            dump = n > 0 and not n in self._ns
+        else:
+            dump = False
+        if dump:
+            report = self.info_obj.report()
+            self.print_function("=== {:%} {}".format(fraction, n))
+            self.print_function(report)
+            self.print_function('')
+            self._ns.add(n)
+
 class Info(object):
     KEYS = collections.OrderedDict()
     @classmethod
     def get_print_function(cls, print_function=None):
         if print_function is None:
-            print_function = lambda x: sys.stdout.write(x + '\n')
+            print_function = default_print_function
         return print_function
 
     @classmethod
@@ -84,6 +117,16 @@ class Info(object):
         print_function = self.get_print_function(print_function)
         print_function(self.report())
         
+    def get_key_repr(self, key):
+        value = getattr(self, key)
+        get_key_method = getattr(self, 'get_{}'.format(key), None)
+        if get_key_method is not None:
+            return get_key_method()
+        elif isinstance(value, float):
+            return '{:g}'.format(value)
+        else:
+            return repr(value)
+
     def report(self):
         return self.reports((self, ))
 
@@ -98,7 +141,7 @@ class Info(object):
             row = []
             row.append(label)
             for instance in instances:
-                row.append(repr(getattr(instance, key)))
+                row.append(instance.get_key_repr(key))
             table.append(row)
         ln = [max(len(row[i]) for row in table) for i in range(len(instances) + 1)]
         f_list = []
@@ -107,6 +150,9 @@ class Info(object):
         f_list.append("{}")
         fmt = ' '.join(f_list)
         return '\n'.join(fmt.format(*row) for row in table)
+
+    def info_progress(self, frequency=None, print_function=None):
+        return InfoProgress(self, frequency=frequency, print_function=print_function)
 
 class StatsInfo(Info):
     """StatsInfo(...)
@@ -144,7 +190,7 @@ class StatsInfo(Info):
         ('cube_fraction_inf',		'%inf'),
     ))
     def __init__(self,
-            cube_shape=0,
+            cube_shape=Shape("0"),
             cube_offset=0,
             cube_count=0,
             cube_sum=0,
@@ -169,6 +215,16 @@ class StatsInfo(Info):
         self.cube_min_index = cube_min_index
         self.cube_max = cube_max
         self.cube_max_index = cube_max_index
+
+    def get_cube_shape(self):
+        return str(self.cube_shape)
+
+    def progress(self):
+        total_count = self.cube_shape.count()
+        if total_count == 0:
+            return 0.0
+        else:
+            return self.cube_count / float(total_count)
 
     @classmethod
     def stats_info(cls, cube, shape=None, offset=0):
@@ -322,16 +378,20 @@ class DiffInfo(Info):
         right=None,
         rel_diff=None,
         abs_diff=None,
+        cube_shape=None,
     ):
-        def default_stats_info(obj):
+        def default_stats_info(obj, cube_shape):
             if obj is None:
-                return StatsInfo()
+                return StatsInfo(cube_shape=cube_shape)
             else:
                 return obj
-        self.left = default_stats_info(left)
-        self.right = default_stats_info(right)
-        self.rel_diff = default_stats_info(rel_diff)
-        self.abs_diff = default_stats_info(abs_diff)
+        self.left = default_stats_info(left, cube_shape)
+        self.right = default_stats_info(right, cube_shape)
+        self.rel_diff = default_stats_info(rel_diff, cube_shape)
+        self.abs_diff = default_stats_info(abs_diff, cube_shape)
+
+    def progress(self):
+        return self.left.progress()
 
     def __iadd__(self, diff_info):
         self.left += diff_info.left
@@ -440,12 +500,14 @@ def print_diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_
                            in_threshold=None, out_threshold=None)
     diff_info.print_report(print_function=print_function)
 
-def stats_info_ooc(filename, shape, dtype=None, block_size=None, max_memory=None):
-    def cumulate_stats_info(cubes, stats_info, shape):
+def stats_info_ooc(filename, shape, dtype=None, block_size=None, max_memory=None, update_frequency=None):
+    def reduce_stats_info(cubes, stats_info, info_progress, shape):
         stats_info += StatsInfo.stats_info(cubes[0],
                                            shape, offset=stats_info.cube_count)
+        info_progress.dump()
 
-    stats_info = StatsInfo()
+    stats_info = StatsInfo(cube_shape=shape)
+    info_progress = stats_info.info_progress(frequency=update_frequency)
     block_reader = BlockReader(
         count=shape,
         dtype=dtype,
@@ -453,18 +515,24 @@ def stats_info_ooc(filename, shape, dtype=None, block_size=None, max_memory=None
         max_memory=max_memory)
     block_reader.reduce(
         filenames=[filename],
-        function=cumulate_stats_info,
+        function=reduce_stats_info,
         shape=shape,
+        info_progress=info_progress,
         stats_info=stats_info)
     return stats_info
 
-def diff_info_ooc(filename_l, filename_r, shape, dtype=None, block_size=None, max_memory=None, in_threshold=None, out_threshold=None):
-    def cumulate_diff_info(cubes, diff_info, shape, in_threshold=None, out_threshold=None):
+def diff_info_ooc(filename_l, filename_r,
+                  shape, dtype=None, block_size=None, max_memory=None,
+                  update_frequency=None,
+                  in_threshold=None, out_threshold=None):
+    def reduce_diff_info(cubes, diff_info, shape, info_progress, in_threshold=None, out_threshold=None):
         diff_info += DiffInfo.diff_info(cubes[0], cubes[1],
                                         shape=shape, offset=diff_info.left.cube_count,
                                         in_threshold=in_threshold, out_threshold=out_threshold)
+        info_progress.dump()
 
-    diff_info = DiffInfo()
+    diff_info = DiffInfo(cube_shape=shape)
+    info_progress = diff_info.info_progress(frequency=update_frequency)
     block_reader = BlockReader(
         count=shape,
         dtype=dtype,
@@ -472,10 +540,11 @@ def diff_info_ooc(filename_l, filename_r, shape, dtype=None, block_size=None, ma
         max_memory=max_memory)
     block_reader.reduce(
         filenames=[filename_l, filename_r],
-        function=cumulate_diff_info,
+        function=reduce_diff_info,
         shape=shape,
         diff_info=diff_info,
         in_threshold=in_threshold,
         out_threshold=out_threshold,
+        info_progress=info_progress,
     )
     return diff_info

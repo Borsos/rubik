@@ -35,6 +35,7 @@ from rubik.application import help_functions
 from rubik.application.rubik import Rubik
 from rubik.application.config import get_config
 from rubik.application.argument_parser import CommandLineArgumentParser
+from rubik.cubes.api import set_random_seed
 
 _EXPRNUM = 0
 def expression_type(value):
@@ -643,8 +644,7 @@ Options to show help on specific topics """)
         
     
     if args.random_seed is not None:
-        np.random.seed(args.random_seed)
-        random.seed(args.random_seed)
+        set_random_seed(args.random_seed)
 
     if args.visualizer_list:
         from rubik.visualizer import list_controllers, list_visualizers

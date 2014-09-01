@@ -24,8 +24,10 @@ __all__ = [
            'set_default_dtype',
            'as_default_dtype',
            'DEFAULT_DTYPE',
+           'set_random_seed',
           ]
 
+import random
 import numpy as np
 
 OUTPUT_MODE_CALLBACK = None
@@ -53,4 +55,8 @@ def as_default_dtype(cube):
         return cube.astype(DEFAULT_DTYPE)
     else:
         return cube
+
+def set_random_seed(random_seed):
+    np.random.seed(random_seed)
+    random.seed(random_seed)
 

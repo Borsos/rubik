@@ -38,6 +38,7 @@ __all__ = [
            'print_stats_file',
            'diff_files',
            'print_diff_files',
+           'set_random_seed',
           ]
 
 from .creation import linear_cube, random_cube, const_cube, const_blocks_cube, \
@@ -65,3 +66,5 @@ from .stats import \
            diff_files, \
            print_diff_files
 
+from .internals import \
+           set_random_seed
