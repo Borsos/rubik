@@ -350,7 +350,142 @@ ave       = 0.487515      0.497717      3.1966        0.340851
 $
 
 <<<BREAK>>>
-### 15. Check if two cubes are equal content within a given tolerance '1e-5':
+### 15. Out-of-core file statistics
+Sometimes huge cubes are stored in files; they are too big to be processed
+in memory, nevertheless it is possible to get statistics about them out-of-core.
+
+* create two big cubes:
+
+$ rubik -r 0 -e 'cb.write_random_cube("big0.raw", "100x100x100")'
+$ rubik -r 1 -e 'cb.write_random_cube("big1.raw", "100x100x100")'
+$
+
+* show statistics out-of-core for the first cube:
+
+$ rubik -e 'cb.print_stats_file("big0.raw", shape="100x100x100", block_size="1m")'
+=== 26.214400%
+shape     = 100x100x100
+#elements = 262144
+%elements = 26.21%
+min       = 3.3105543e-06
+min_index = (8, 43, 41)
+max       = 0.99999899
+max_index = (19, 82, 53)
+sum       = 131122
+ave       = 0.500189
+#zero     = 0
+%zero     = 0.00%
+#nonzero  = 262144
+%nonzero  = 100.00%
+#nan      = 0
+%nan      = 0.00%
+#inf      = 0
+%inf      = 0.00%
+
+=== 52.428800%
+shape     = 100x100x100
+#elements = 524288
+%elements = 52.43%
+min       = 2.9504163e-06
+min_index = (26, 39, 72)
+max       = 0.99999899
+max_index = (19, 82, 53)
+sum       = 262123
+ave       = 0.499959
+#zero     = 0
+%zero     = 0.00%
+#nonzero  = 524288
+%nonzero  = 100.00%
+#nan      = 0
+%nan      = 0.00%
+#inf      = 0
+%inf      = 0.00%
+
+=== 78.643200%
+shape     = 100x100x100
+#elements = 786432
+%elements = 78.64%
+min       = 7.0712031e-07
+min_index = (66, 15, 53)
+max       = 0.99999899
+max_index = (19, 82, 53)
+sum       = 393464
+ave       = 0.500315
+#zero     = 0
+%zero     = 0.00%
+#nonzero  = 786432
+%nonzero  = 100.00%
+#nan      = 0
+%nan      = 0.00%
+#inf      = 0
+%inf      = 0.00%
+
+shape     = 100x100x100
+#elements = 1000000
+%elements = 100.00%
+min       = 7.0712031e-07
+min_index = (66, 15, 53)
+max       = 0.9999997
+max_index = (80, 18, 7)
+sum       = 500391
+ave       = 0.500391
+#zero     = 0
+%zero     = 0.00%
+#nonzero  = 1000000
+%nonzero  = 100.00%
+#nan      = 0
+%nan      = 0.00%
+#inf      = 0
+%inf      = 0.00%
+$
+
+By default, the block_size is '1g'.
+
+* show differences about the two cubes:
+
+$ rubik -e 'cb.print_diff_files("big0.raw", "big1.raw", shape="100x100x100", block_size="2m")'
+=== 52.428800%
+name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
+shape     = 100x100x100   100x100x100   100x100x100   100x100x100
+#elements = 524288        524288        524288        524288
+%elements = 52.43%        52.43%        52.43%        52.43%
+min       = 2.9504163e-06 5.1598727e-06 3.5003384e-06 1.2069941e-06
+min_index = (26, 39, 72)  (38, 14, 65)  (28, 67, 21)  (0, 12, 99)
+max       = 0.99999899    0.99999821    283745.31     0.99896097
+max_index = (19, 82, 53)  (48, 17, 89)  (8, 43, 41)   (10, 79, 78)
+sum       = 262121        261956        3.30941e+06   174501
+ave       = 0.499956      0.499641      6.3122        0.332834
+#zero     = 0             0             0             0
+%zero     = 0.00%         0.00%         0.00%         0.00%
+#nonzero  = 524288        524288        524288        524288
+%nonzero  = 100.00%       100.00%       100.00%       100.00%
+#nan      = 0             0             0             0
+%nan      = 0.00%         0.00%         0.00%         0.00%
+#inf      = 0             0             0             0
+%inf      = 0.00%         0.00%         0.00%         0.00%
+
+name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
+shape     = 100x100x100   100x100x100   100x100x100   100x100x100
+#elements = 1000000       1000000       1000000       1000000
+%elements = 100.00%       100.00%       100.00%       100.00%
+min       = 7.0712031e-07 3.0077686e-07 1.5380414e-06 5.0663948e-07
+min_index = (66, 15, 53)  (73, 4, 25)   (98, 7, 97)   (55, 51, 68)
+max       = 0.9999997     0.99999958    879006.44     0.99896097
+max_index = (80, 18, 7)   (70, 21, 31)  (66, 15, 53)  (10, 79, 78)
+sum       = 500386        499944        7.38957e+06   332885
+ave       = 0.500386      0.499944      7.38957       0.332885
+#zero     = 0             0             0             0
+%zero     = 0.00%         0.00%         0.00%         0.00%
+#nonzero  = 1000000       1000000       1000000       1000000
+%nonzero  = 100.00%       100.00%       100.00%       100.00%
+#nan      = 0             0             0             0
+%nan      = 0.00%         0.00%         0.00%         0.00%
+#inf      = 0             0             0             0
+%inf      = 0.00%         0.00%         0.00%         0.00%
+$
+
+<<<BREAK>>>
+### 16. Check if two cubes are equal content within a given tolerance '1e-5':
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
         -i rsub_y2_{shape}.{format} -s 8x20 \\
@@ -360,7 +495,7 @@ True
 $
 
 <<<BREAK>>>
-## 16. Print a random cube with integer values between -5 and +5:
+## 17. Print a random cube with integer values between -5 and +5:
 
 $ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
         --dtype int32 \\
@@ -375,7 +510,7 @@ The '--random-seed 100' option sets the random seed; it has been added to make
 the result reproducible.
 
 <<<BREAK>>>
-## 17. Setting a single value on a cube:
+## 18. Setting a single value on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, 0, 0] = 4' \\
         -o o_{shape}.{format}
@@ -407,14 +542,14 @@ $ rubik -t int32 \\
 $
 
 <<<BREAK>>>
-## 18. Setting multiple values on a cube:
+## 19. Setting multiple values on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, :, 3] = 4' \\
         -o o_{shape}.{format}
 $
 
 <<<BREAK>>>
-## 19. Findinig indices where a given condition is True:
+## 20. Findinig indices where a given condition is True:
 $ rubik -e 'cb.linear_cube("3x5")' \\
         -o l_{shape}.{format}
 $ rubik -i l_{shape}.{format} \\
@@ -432,7 +567,7 @@ $ rubik -i l_{shape}.{format} \\
 $
 
 <<<BREAK>>>
-## 20. Create a big cube out of core:
+## 21. Create a big cube out of core:
 
 Two functions are available to create big cubes out of core:
 * write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None)
@@ -462,7 +597,7 @@ rubik: evaluating expression 'print_cube()'...
 $ 
 
 <<<BREAK>>>
-## 21. Reading a portion of a file
+## 22. Reading a portion of a file
 
 $ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
@@ -484,7 +619,7 @@ rubik: evaluating expression 'print_cube()'...
 $
 
 <<<BREAK>>>
-## 22. Overriding part of a file
+## 23. Overriding part of a file
 
 $ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
@@ -566,7 +701,7 @@ $ rubik -i l2.3x4x5.raw \\
 $
 
 <<<BREAK>>>
-## 23. Printing the histogram of a cube
+## 24. Printing the histogram of a cube
 
 $ rubik 'cb.random_cube("6x4x5")' --random-seed 100 -H
 [0.00, 0.10)|****************************************                        |10

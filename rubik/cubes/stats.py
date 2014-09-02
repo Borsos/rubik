@@ -485,6 +485,7 @@ def stats_file(filename, shape, dtype=None, ooc=True, block_size=None):
     returns a StatsInfo about the content of 'filename', which is a cube with 'shape'.
     If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
     """
+    shape = Shape(shape)
     if ooc:
         stats_info = stats_info_ooc(filename, shape=shape, dtype=dtype, block_size=block_size)
     else:
@@ -509,6 +510,7 @@ def diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_size=N
     and the memory size per block will be less than 'block_size'.
     By default, 'block_size' is '1gb', while 'max_memory' is not set.
     """
+    shape = Shape(shape)
     output_mode_callback()
     if ooc:
         diff_info = diff_info_ooc(filename_l, filename_r, shape=shape, dtype=dtype,
