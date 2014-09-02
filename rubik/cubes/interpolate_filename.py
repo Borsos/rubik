@@ -17,12 +17,18 @@
 
 __author__ = "Simone Campagna"
 
-__all__ = ['format_filename',
+__all__ = ['interpolate_filename',
           ]
 
-from .shape import Shape
+from ..shape import Shape
+from ..conf import DEFAULT_DTYPE
+from .internals import DEFAULT_DTYPE
 
-def format_filename(filename, shape, file_format, file_dtype, keywords=None):
+def interpolate_filename(filename, shape, dtype, file_format, keywords=None):
+    if file_format is None:
+        file_format = DEFAULT_FILE_FORMAT
+    if dtype is None:
+        dtype = DEFAULT_DTYPE
     if keywords is None:
         keywords = {}
     count = 0
@@ -39,6 +45,6 @@ def format_filename(filename, shape, file_format, file_dtype, keywords=None):
         rank=len(shape),
         count=count,
         format=file_format,
-        dtype=file_dtype.__name__,
+        dtype=dtype.__name__,
         **keywords
     )

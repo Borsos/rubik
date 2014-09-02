@@ -34,12 +34,14 @@ import sys
 import numpy as np
 import collections
 
-from ..errors import RubikError
-from ..shape import Shape
 from .internals import output_mode_callback
-from .comparison import rel_diff_cube, abs_diff_cube
+from .interpolate_filename import interpolate_filename
 from .input_output import fromfile_raw
 from .out_of_core import BlockReader
+
+from ..errors import RubikError
+from ..shape import Shape
+from .comparison import rel_diff_cube, abs_diff_cube
 
 def default_print_function(message):
     sys.stdout.write(message + '\n')
@@ -480,40 +482,54 @@ def print_diff(left, right, print_function=None):
     diff_info = DiffInfo.diff_info(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
     diff_info.print_report(print_function=print_function)
 
-def stats_file(filename, shape, dtype=None, ooc=True, block_size=None):
-    """stats_file(filename, shape, dtype=None, ooc=True, block_size=None) -> StatsInfo object
+def stats_file(filename, shape, dtype=None, file_format='raw',
+               out_of_core=True, block_size=None, max_memory=None):
+    """stats_file(filename, shape, dtype=None, file_format='raw',
+                  out_of_core=True, block_size=None, max_memory=None) -> StatsInfo object
     returns a StatsInfo about the content of 'filename', which is a cube with 'shape'.
-    If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
+    If 'out_of_core' (out-of-core) is True, process 'block_size' elements at a time.
     """
     shape = Shape(shape)
-    if ooc:
-        stats_info = stats_info_ooc(filename, shape=shape, dtype=dtype, block_size=block_size)
+    filename = interpolate_filename(filename, shape=shape, file_format=file_format, dtype=dtype)
+    if out_of_core:
+        stats_info = stats_info_out_of_core(filename, shape=shape, dtype=dtype,
+                                            block_size=block_size, max_memory=max_memory)
     else:
-        cube = fromfile_raw(filename, shape=shape, dtype=dtype)
+        cube = fromfile_generic(filename, shape=shape, dtype=dtype)
         stats_info = StatsInfo.stats_info(cube)
     return stats_info
 
-def print_stats_file(filename, shape, dtype=None, ooc=True, block_size=None, print_function=None):
-    """print_stats_file(filename, shape, dtype=None, ooc=True, block_size=None, print_function=None)
+def print_stats_file(filename, shape, dtype=None, file_format='raw',
+                     out_of_core=True, block_size=None, max_memory=None,
+                     print_function=None):
+    """print_stats_file(filename, shape, dtype=None, file_format='raw',
+                        out_of_core=True, block_size=None, max_memory=None,
+                        print_function=None)
     prints the StatsInfo about the content of 'filename', which is a cube with 'shape'.
-    If 'ooc' (out-of-core) is True, process 'block_size' elements at a time.
+    If 'out_of_core' (out-of-core) is True, process 'block_size' elements at a time.
     """
     output_mode_callback()
-    stats_info = stats_file(filename, shape=shape, dtype=dtype, ooc=ooc, block_size=block_size)
+    stats_info = stats_file(filename, shape=shape, dtype=dtype,
+                            out_of_core=out_of_core, block_size=block_size, max_memory=max_memory)
     stats_info.print_report(print_function=print_function)
     
-def diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_size=None, max_memory=None, in_threshold=None, out_threshold=None):
-    """diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_size=None) -> DiffInfo object
+def diff_files(filename_l, filename_r, shape, dtype=None, file_format='raw', 
+               out_of_core=True, block_size=None, max_memory=None, in_threshold=None, out_threshold=None):
+    """diff_files(filename_l, filename_r, shape, dtype=None, file_format='raw',
+                  out_of_core=True, block_size=None, max_memory=None,
+                  in_threshold=None, out_threshold=None) -> DiffInfo object
     returns a DiffInfo about the content of 'filename_l' and 'filename_r', which are
     two cubes with 'shape'.
-    If 'ooc' (out-of-core) is True, the overall memory size will be less than 'memory_size',
+    If 'out_of_core' (out-of-core) is True, the overall memory size will be less than 'memory_size',
     and the memory size per block will be less than 'block_size'.
     By default, 'block_size' is '1gb', while 'max_memory' is not set.
     """
     shape = Shape(shape)
+    filename_l = interpolate_filename(filename_l, shape=shape, file_format=file_format, dtype=dtype)
+    filename_r = interpolate_filename(filename_r, shape=shape, file_format=file_format, dtype=dtype)
     output_mode_callback()
-    if ooc:
-        diff_info = diff_info_ooc(filename_l, filename_r, shape=shape, dtype=dtype,
+    if out_of_core:
+        diff_info = diff_info_out_of_core(filename_l, filename_r, shape=shape, dtype=dtype,
                                   block_size=block_size, max_memory=max_memory,
                                   in_threshold=in_threshold, out_threshold=out_threshold)
     else:
@@ -523,21 +539,21 @@ def diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_size=N
                                        in_threshold=in_threshold, out_threshold=out_threshold)
     return diff_info
 
-def print_diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_size=None, max_memory=None, in_threshold=None, out_threshold=None, print_function=None):
-    """print_diff_files(filename_l, filename_r, shape, dtype=None, ooc=True, block_size=None, max_memory=None, print_function=None)
+def print_diff_files(filename_l, filename_r, shape, dtype=None, out_of_core=True, block_size=None, max_memory=None, in_threshold=None, out_threshold=None, print_function=None):
+    """print_diff_files(filename_l, filename_r, shape, dtype=None, out_of_core=True, block_size=None, max_memory=None, print_function=None)
     prints the DiffInfo about the content of 'filename_l' and 'filename_r', which are
     two cubes with 'shape'.
-    If 'ooc' (out-of-core) is True, the overall memory size will be less than 'memory_size',
+    If 'out_of_core' (out-of-core) is True, the overall memory size will be less than 'memory_size',
     and the memory size per block will be less than 'block_size'.
     By default, 'block_size' is '1gb', while 'max_memory' is not set.
     """
     output_mode_callback()
-    diff_info = diff_files(filename_l, filename_r, shape=shape, dtype=dtype, ooc=ooc,
+    diff_info = diff_files(filename_l, filename_r, shape=shape, dtype=dtype, out_of_core=out_of_core,
                            block_size=block_size, max_memory=max_memory,
                            in_threshold=None, out_threshold=None)
     diff_info.print_report(print_function=print_function)
 
-def stats_info_ooc(filename, shape, dtype=None, block_size=None, max_memory=None, update_frequency=None):
+def stats_info_out_of_core(filename, shape, dtype=None, block_size=None, max_memory=None, update_frequency=None):
     def reduce_stats_info(cubes, stats_info, info_progress, shape):
         stats_info += StatsInfo.stats_info(cubes[0],
                                            shape, offset=stats_info.cube_count)
@@ -558,7 +574,7 @@ def stats_info_ooc(filename, shape, dtype=None, block_size=None, max_memory=None
         stats_info=stats_info)
     return stats_info
 
-def diff_info_ooc(filename_l, filename_r,
+def diff_info_out_of_core(filename_l, filename_r,
                   shape, dtype=None, block_size=None, max_memory=None,
                   update_frequency=None,
                   in_threshold=None, out_threshold=None):

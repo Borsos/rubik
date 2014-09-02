@@ -23,52 +23,59 @@ __all__ = ['linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
 
 import numpy as np
 
-from .internals import *
+from .internals import as_dtype, get_default_dtype
 
 from ..py23 import irange
 from ..errors import RubikError
 from ..shape import Shape
 
-def linear_cube(shape, start=0.0, increment=1.0):
-    """linear_cube(shape, start=0.0, increment=1.0) -> create a cube with the
-       given shape, with elements in linear sequence, starting from 'start',
-       with increment 'increment'.
+def linear_cube(shape, start=0.0, increment=1.0, dtype=None):
+    """linear_cube(shape, start=0.0, increment=1.0, dtype=None) -> create a cube
+       with the given shape, with elements in linear sequence, starting from
+       'start', with increment 'increment'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     shape = Shape(shape)
     count = shape.count()
-    return np.array(np.linspace(start, start + increment * (count - 1), count), dtype=DEFAULT_DTYPE).reshape(shape.shape())
+    if dtype is None:
+        dtype = get_default_dtype()
+    return np.array(np.linspace(start, start + increment * (count - 1), count), dtype=dtype).reshape(shape.shape())
 
-def random_cube(shape, min=0.0, max=1.0):
-    """random_cube(shape, min=0.0, max=1.0) -> create a cube with random elements
-       between 'min' and 'max'.
+def random_cube(shape, min=0.0, max=1.0, dtype=None):
+    """random_cube(shape, min=0.0, max=1.0, dtype=None) -> create a cube with
+       random elements between 'min' and 'max'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     shape = Shape(shape)
     count = shape.count()
+    if dtype is None:
+        dtype = get_default_dtype()
     cube = np.random.rand(count).reshape(shape.shape())
     if min != 0.0 or max != 1.0:
         cube = min + cube * (max - min)
-    return as_default_dtype(cube)
+    return as_dtype(cube, dtype)
 
-def const_cube(shape, value=0.0):
-    """const_cube(shape, value=0.0) -> create a cube with all elements == 'value'
+def const_cube(shape, value=0.0, dtype=None):
+    """const_cube(shape, value=0.0, dtype=None) -> create a cube with all
+       elements == 'value'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     shape = Shape(shape)
     count = shape.count()
+    if dtype is None:
+        dtype = get_default_dtype()
     if value == 0.0:
-        cube = np.zeros(count, dtype=DEFAULT_DTYPE)
+        cube = np.zeros(count, dtype=dtype)
     elif value == 1.0:
-        cube = np.ones(count, dtype=DEFAULT_DTYPE)
+        cube = np.ones(count, dtype=dtype)
     else:
-        cube = np.empty(count, dtype=DEFAULT_DTYPE)
+        cube = np.empty(count, dtype=dtype)
         cube.fill(value)
     cube = cube.reshape(shape.shape())
-    return as_default_dtype(cube)
+    return as_dtype(cube, dtype)
 
 def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     """const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None) ->
@@ -84,7 +91,7 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     count = shape.count()
     rank = shape.rank()
     if rank <= 0:
-        return np.array([], dtype=DEFAULT_DTYPE)
+        return np.array([], dtype=get_default_dtype())
     cdims = []
     for cdim in const_dims:
         while cdim < 0:
@@ -117,7 +124,7 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
                     r_start = x_start
                 n_start = x_start
                 l.append(cube)
-            return n_start, np.array(l, dtype=DEFAULT_DTYPE)
+            return n_start, np.array(l, dtype=get_default_dtype())
           
     next_start, cube = _make_cube(0, shape, start, increment, const_dims)
     return cube

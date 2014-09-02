@@ -18,13 +18,27 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'linear_cube', 'random_cube', 'const_cube', 'const_blocks_cube',
-           'write_linear_cube', 'write_random_cube', 'write_const_cube',
-           'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
-           'not_equals_cube', 'not_equals_num', 'not_equals',
-           'equals_cube', 'equals_num', 'equals',
-           'rel_diff_cube', 'threshold_cube',
-           'abs_diff_cube', 'abs_threshold_cube',
+           'linear_cube',
+           'random_cube',
+           'const_cube',
+           'const_blocks_cube',
+           'write_linear_cube',
+           'write_random_cube',
+           'write_const_cube',
+           'fromfile_generic',
+           'fromfile_raw',
+           'fromfile_text',
+           'fromfile_csv',
+           'not_equals_cube',
+           'not_equals_num',
+           'not_equals',
+           'equals_cube',
+           'equals_num',
+           'equals',
+           'rel_diff_cube',
+           'threshold_cube',
+           'abs_diff_cube',
+           'abs_threshold_cube',
            'where_indices',
            'nonzero_cube',
            'join',
@@ -41,30 +55,47 @@ __all__ = [
            'set_random_seed',
           ]
 
-from .creation import linear_cube, random_cube, const_cube, const_blocks_cube, \
-                      join
+from .creation import \
+    linear_cube, \
+    random_cube, \
+    const_cube, \
+    const_blocks_cube, \
+    join
 
-from .input_output import fromfile_generic, fromfile_raw, fromfile_text, fromfile_csv, \
-                          write_linear_cube, write_random_cube, write_const_cube
+from .input_output import \
+    fromfile_generic, \
+    fromfile_raw, \
+    fromfile_text, \
+    fromfile_csv, \
+    write_linear_cube, \
+    write_random_cube, \
+    write_const_cube
 
-from .comparison import not_equals_cube, not_equals_num, not_equals, \
-                        equals_cube, equals_num, equals, \
-                        rel_diff_cube, threshold_cube, \
-                        abs_diff_cube, abs_threshold_cube, \
-                        where_indices, \
-                        nonzero_cube
+from .comparison import \
+    not_equals_cube, \
+    not_equals_num, \
+    not_equals, \
+    equals_cube, \
+    equals_num, \
+    equals, \
+    rel_diff_cube, \
+    threshold_cube, \
+    abs_diff_cube, \
+    abs_threshold_cube, \
+    where_indices, \
+    nonzero_cube
 
 from .stats import \
-           StatsInfo, \
-           stats_info, \
-           DiffInfo, \
-           diff_info, \
-           print_stats, \
-           print_diff, \
-           stats_file, \
-           print_stats_file, \
-           diff_files, \
-           print_diff_files
+    StatsInfo, \
+    stats_info, \
+    DiffInfo, \
+    diff_info, \
+    print_stats, \
+    print_diff, \
+    stats_file, \
+    print_stats_file, \
+    diff_files, \
+    print_diff_files
 
 from .internals import \
-           set_random_seed
+    set_random_seed

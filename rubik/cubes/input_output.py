@@ -23,7 +23,8 @@ __all__ = ['fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
 
 import numpy as np
 
-from .internals import *
+from .internals import get_default_dtype, output_mode_callback
+from .interpolate_filename import interpolate_filename
 from .creation import linear_cube, random_cube, const_cube
 
 from .. import conf
@@ -33,12 +34,11 @@ from ..errors import RubikError
 from ..shape import Shape
 from ..extractor import Extractor
 from ..asfile import asfile
-from ..format_filename import format_filename
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_size):
         if dtype is None:
-            dtype = DEFAULT_DTYPE
+            dtype = get_default_dtype()
         self.dtype = dtype
         self.dtype_bytes = dtype().itemsize
         if not isinstance(shape, Shape):
@@ -192,14 +192,17 @@ def fromfile_csv(f, dtype, shape, extractor=None,
     return fromfile_generic(conf.FILE_FORMAT_CSV, f, dtype, shape, extractor=extractor, min_size=min_size, sep=sep)
 
 class CubeWriter(object):
-    def __init__(self, file, shape, buffer_size):
+    def __init__(self, file, shape, buffer_size, dtype=None):
+        if dtype is None:
+            dtype = get_default_dtype()
         if buffer_size is None:
             buffer_size = 1024 ** 3
-        buffer_count = buffer_size // DEFAULT_DTYPE().itemsize
+        buffer_count = buffer_size // dtype().itemsize
         shape = Shape(shape)
         count = shape.count()
+        self.dtype = dtype
         if isinstance(file, str):
-            file = format_filename(file, shape=shape, file_format='raw', file_dtype=DEFAULT_DTYPE)
+            file = interpolate_filename(file, shape=shape, dtype=self.dtype, file_format='raw')
         self.buffer_size = buffer_size
         self.buffer_count = buffer_count
         self.count = count
@@ -219,62 +222,62 @@ class CubeWriter(object):
        raise NotImplementedError()
 
 class LinearCubeWriter(CubeWriter):
-    def __init__(self, file, shape, buffer_size, start, increment):
-       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size)
+    def __init__(self, file, shape, buffer_size, start, increment, dtype=None):
+       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size, dtype=dtype)
        self.start = start
        self.increment = increment
 
     def create_subcube(self, par_count):
-       np_array = linear_cube((par_count, ), start=self.start, increment=self.increment)
+       np_array = linear_cube((par_count, ), start=self.start, increment=self.increment, dtype=self.dtype)
        self.start += self.increment * par_count
        return np_array
     
-def write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None):
-    """write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None) -> write
+def write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None, dtype=None):
+    """write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None, dtype=None) -> write
        a cube with the given shape to the file 'file', with elements in linear sequence,
        starting from 'start', with increment 'increment'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     output_mode_callback()
-    lcw = LinearCubeWriter(file=file, shape=shape, buffer_size=buffer_size, start=start, increment=increment)
+    lcw = LinearCubeWriter(file=file, shape=shape, buffer_size=buffer_size, start=start, increment=increment, dtype=dtype)
     lcw.write()
         
 class RandomCubeWriter(CubeWriter):
-    def __init__(self, file, shape, buffer_size, min, max):
-       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size)
+    def __init__(self, file, shape, buffer_size, min, max, dtype=None):
+       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size, dtype=dtype)
        self.min = min
        self.max = max
 
     def create_subcube(self, par_count):
-        return random_cube(shape=(par_count, ), min=self.min, max=self.max)
+        return random_cube(shape=(par_count, ), min=self.min, max=self.max, dtype=self.dtype)
     
-def write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None):
-    """write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None) -> write
+def write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None, dtype=None):
+    """write_random_cube(file, shape, min=0.0, max=1.0, buffer_size=None, dtype=None) -> write
        a cube with the given shape to the file 'file', with random elements
        between 'min' and 'max'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     output_mode_callback()
-    rcw = RandomCubeWriter(file=file, shape=shape, buffer_size=buffer_size, min=min, max=max)
+    rcw = RandomCubeWriter(file=file, shape=shape, buffer_size=buffer_size, min=min, max=max, dtype=dtype)
     rcw.write()
         
 class ConstCubeWriter(CubeWriter):
-    def __init__(self, file, shape, buffer_size, value):
-       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size)
+    def __init__(self, file, shape, buffer_size, value, dtype=None):
+       CubeWriter.__init__(self, file=file, shape=shape, buffer_size=buffer_size, dtype=dtype)
        self.value = value
 
     def create_subcube(self, par_count):
-        return const_cube(shape=(par_count, ), value=self.value)
+        return const_cube(shape=(par_count, ), value=self.value, dtype=self.dtype)
     
-def write_const_cube(file, shape, value=0.0, buffer_size=None):
-    """write_const_cube(file, shape, min=0.0, max=1.0, buffer_size=None) -> write
+def write_const_cube(file, shape, value=0.0, buffer_size=None, dtype=None):
+    """write_const_cube(file, shape, min=0.0, max=1.0, buffer_size=None, dtype=None) -> write
        a cube with the given shape to the file 'file', with all elements
        equals to 'value'.
        The 'shape' can be a tuple (for instance, '(8, 10)') or a string
        (for instance, "8x10")
     """
     output_mode_callback()
-    rcw = ConstCubeWriter(file=file, shape=shape, buffer_size=buffer_size, value=value)
+    rcw = ConstCubeWriter(file=file, shape=shape, buffer_size=buffer_size, value=value, dtype=dtype)
     rcw.write()

@@ -23,15 +23,17 @@ __all__ = [
            'set_output_mode_callback',
            'set_default_dtype',
            'as_default_dtype',
-           'DEFAULT_DTYPE',
+           'as_dtype',
+           'get_default_dtype',
            'set_random_seed',
           ]
 
 import random
 import numpy as np
+from .. import conf
 
 OUTPUT_MODE_CALLBACK = None
-DEFAULT_DTYPE = np.float32
+DEFAULT_DTYPE = conf.DEFAULT_DTYPE
 
 def set_output_mode_callback(callback):
     global OUTPUT_MODE_CALLBACK
@@ -50,11 +52,20 @@ def set_default_dtype(dtype):
     global DEFAULT_DTYPE
     DEFAULT_DTYPE = dtype
 
-def as_default_dtype(cube):
-    if cube.dtype != DEFAULT_DTYPE:
-        return cube.astype(DEFAULT_DTYPE)
+def get_default_dtype():
+    global DEFAULT_DTYPE
+    return DEFAULT_DTYPE
+
+def as_dtype(cube, dtype=None):
+    if dtype is None:
+        dtype = DEFAULT_DTYPE
+    if cube.dtype != dtype:
+        return cube.astype(dtype)
     else:
         return cube
+
+def as_default_dtype(cube):
+    return as_dtype(cube, DEFAULT_DTYPE)
 
 def set_random_seed(random_seed):
     np.random.seed(random_seed)

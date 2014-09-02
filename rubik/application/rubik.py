@@ -36,7 +36,7 @@ from ..application.argdict import ResultArgDict, InputArgDict, OutputArgDict
 from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
-from ..format_filename import format_filename
+from ..cubes.interpolate_filename import interpolate_filename
 from ..visualizer.controller_builder import controller_builder
 from ..visualizer.visualizer_builder import visualizer_builder
 from .. import conf
@@ -373,7 +373,7 @@ class Rubik(object):
                 numpy_function_nargs['delimiter'] = input_text_delimiter
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
-        input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
+        input_filename = interpolate_filename(input_filename, shape=shape.shape(), dtype=input_dtype, file_format=input_format)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype, input_offset)
         self.log_info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
             c=expected_input_count,
@@ -472,7 +472,7 @@ class Rubik(object):
                 numpy_function_nargs['delimiter'] = input_text_delimiter
         else:
             raise RubikError("invalid file format {0!r}".format(input_format))
-        input_filename = format_filename(input_filename, shape.shape(), input_format, input_dtype)
+        input_filename = interpolate_filename(input_filename, shape=shape.shape(), dtype=input_dtype, file_format=input_format)
         input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype, input_offset)
         if extractor is None:
             extractor_msg = ''
@@ -574,7 +574,7 @@ class Rubik(object):
         numpy_function = None
         numpy_function_pargs = []
         numpy_function_nargs = {}
-        output_filename = format_filename(output_filename, cube.shape, output_format, output_dtype, keywords=dlabels)
+        output_filename = interpolate_filename(output_filename, shape=cube.shape, dtype=output_dtype, file_format=output_format, keywords=dlabels)
         output_offset = self.get_attribute('output_offset', attributes, output_label, output_ordinal)
         output_mode = self.get_attribute('output_mode', attributes, output_label, output_ordinal)
         if output_mode is None:

@@ -17,6 +17,39 @@
 
 __author__ = "Simone Campagna"
 
+__all__ = [
+           'VERSION_MAJOR',
+           'VERSION_MINOR',
+           'VERSION_PATCH',
+           'VERSION',
+           'FILE_FORMAT_RAW',
+           'FILE_FORMAT_CSV',
+           'FILE_FORMAT_CSV_SEPARATOR',
+           'FILE_FORMAT_RAW',
+           'FILE_FORMAT_TEXT',
+           'FILE_FORMAT_TEXT_DELIMITER',
+           'FILE_FORMAT_TEXT_NEWLINE',
+           'FILE_FORMAT_TEXT_CONVERTER',
+           'FILE_FORMATS',
+           'READ_MODE_SAFE',
+           'READ_MODE_OPTIMIZED',
+           'READ_MODES',
+           'DEFAULT_READ_MODE',
+           'DEFAULT_MEMORY_LIMIT',
+           'DEFAULT_OPTIMIZED_MIN_SIZE',
+           'DEFAULT_CLOBBER'
+           'RUBIK_OPTIONS',
+           'DATA_TYPES',
+           'DEFAULT_FILE_FORMAT',
+           'DEFAULT_DATA_TYPE',
+           'DEFAULT_DTYPE',
+           'get_dtype',
+           'WARNING_RuntimeWarning',
+           'WARNING_all',
+           'WARNINGS',
+           'enable_warnings',
+          ]
+
 import os
 import shlex
 import warnings
@@ -92,6 +125,8 @@ def get_dtype(data_type):
             raise RubikDataTypeError("invalid dtype {0!r}: {1}: {2}".format(data_type, err.__class__.__name__, err))
     else:
         return data_type
+
+DEFAULT_DTYPE = get_dtype(DEFAULT_DATA_TYPE)
 
 WARNING_RuntimeWarning = "RuntimeWarning"
 WARNING_all = "all"

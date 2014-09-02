@@ -356,13 +356,13 @@ in memory, nevertheless it is possible to get statistics about them out-of-core.
 
 * create two big cubes:
 
-$ rubik -r 0 -e 'cb.write_random_cube("big0.raw", "100x100x100")'
-$ rubik -r 1 -e 'cb.write_random_cube("big1.raw", "100x100x100")'
+$ rubik -r 0 -e 'cb.write_random_cube("big0_{shape}.{format}", "100x100x100")'
+$ rubik -r 1 -e 'cb.write_random_cube("big1_{shape}.{format}", "100x100x100")'
 $
 
 * show statistics out-of-core for the first cube:
 
-$ rubik -e 'cb.print_stats_file("big0.raw", shape="100x100x100", block_size="1m")'
+$ rubik -e 'cb.print_stats_file("big0_{shape}.{format}", shape="100x100x100", block_size="1m")'
 === 26.214400%
 shape     = 100x100x100
 #elements = 262144
@@ -443,7 +443,7 @@ By default, the block_size is '1g'.
 
 * show differences about the two cubes:
 
-$ rubik -e 'cb.print_diff_files("big0.raw", "big1.raw", shape="100x100x100", block_size="2m")'
+$ rubik -e 'cb.print_diff_files("big0_{shape}.{format}", "big1_{shape}.{format}", shape="100x100x100", block_size="2m")'
 === 52.428800%
 name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
 shape     = 100x100x100   100x100x100   100x100x100   100x100x100

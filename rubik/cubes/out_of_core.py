@@ -31,7 +31,7 @@ from ..errors import RubikError
 from ..units import Memory
 from ..shape import Shape
 from ..conf import get_dtype
-from .internals import DEFAULT_DTYPE
+from .internals import get_default_dtype
 
 def filelist(filenames):
     if isinstance(filenames, str):
@@ -62,7 +62,7 @@ class BlockReader(object):
             count = Shape(count).count()
         self.count = count
         if dtype is None:
-            dtype = DEFAULT_DTYPE
+            dtype = get_default_dtype()
         else:
             dtype = get_dtype(dtype)
         self.dtype = dtype
