@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+#
+# Copyright 2014 Simone Campagna
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+__author__ = "Simone Campagna"
+
+__all__ = [
+           'RubikTestCubes',
+          ]
+
+
+from .base import RubikTestCase
+from ..shape import Shape
+
+class RubikTestCubes(RubikTestCase):
+    SHAPE = Shape("85x70x40")
+    def testCreateRandomCube(self):
+        cb.write_random_cube("a_{shape}.{format}", shape=self.SHAPE)
+        filename = "a_{shape}.{format}".format(
+            shape=self.SHAPE,
+            format='raw',
+        )
+        self.assertFileExistsAndHasShape(filename, shape=self.SHAPE)
