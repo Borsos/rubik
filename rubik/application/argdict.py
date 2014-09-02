@@ -17,6 +17,13 @@
 
 __author__ = "Simone Campagna"
 
+__all__ = [
+           'ArgDict',
+           'InputArgDict',
+           'OutputArgDict',
+           'ResultArgDict',
+          ]
+
 import re
 
 from collections import OrderedDict
@@ -74,3 +81,6 @@ class InputArgDict(ArgDict):
 
 class OutputArgDict(ArgDict):
     __formatter__ = 'o{ordinal}'
+
+class ResultArgDict(ArgDict):
+    __formatter__ = 'r{ordinal}'

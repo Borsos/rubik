@@ -61,6 +61,9 @@ class ConstExpressionAction(RubikAction):
 class PrintStatsAction(ConstExpressionAction):
     CONST = 'print_stats()'
 
+class CompareStatsInfoAction(ConstExpressionAction):
+    CONST = 'compare_stats_info()'
+
 class PrintCubeAction(ConstExpressionAction):
     CONST = 'print_cube()'
 
@@ -341,6 +344,11 @@ Arguments for graphical visualization""")
         action=PrintStatsAction,
         nargs=0,
         help="print statistics about the result cube")
+
+    global_group.add_argument("--compare-stats", "-C",
+        action=CompareStatsInfoAction,
+        nargs=0,
+        help="collect statistics about the result cube")
 
     output_group.add_argument('--histogram', '-H',
         action=PrintHistogramAction,

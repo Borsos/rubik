@@ -233,6 +233,32 @@ ave       = 0.496089
 %inf      = 0.00%
 $
 
+In order to compare statistics about many cubes, the '--compare-stats/-C'
+option can be used; in this case, a single report is shown for all the
+compared cubes:
+
+$ rubik -r 100 -e 'cb.random_cube("6x9x32")' -C \\
+               -e 'cb.random_cube("6x9x32")' -C \\
+               -e 'cb.random_cube("6x18x33")' -C
+shape     = 6x9x32        6x9x32        6x18x33
+#elements = 1728          1728          3564
+%elements = 100.00%       100.00%       100.00%
+min       = 0.00048675947 1.4618569e-05 1.7200797e-05
+min_index = (1, 3, 13)    (1, 1, 13)    (1, 17, 0)
+max       = 0.99947917    0.99867839    0.99991566
+max_index = (2, 0, 11)    (0, 5, 20)    (5, 6, 8)
+sum       = 842.42566     860.05499     1801.826
+ave       = 0.487515      0.497717      0.505563
+#zero     = 0             0             0
+%zero     = 0.00%         0.00%         0.00%
+#nonzero  = 1728          1728          3564
+%nonzero  = 100.00%       100.00%       100.00%
+#nan      = 0             0             0
+%nan      = 0.00%         0.00%         0.00%
+#inf      = 0             0             0
+%inf      = 0.00%         0.00%         0.00%
+$
+
 <<<BREAK>>>
 ### 13. Check if two cubes are equal content within a given tolerance '1e-5':
 

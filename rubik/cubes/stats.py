@@ -258,14 +258,15 @@ class StatsInfo(Info):
         return self.cube_fraction
 
     @classmethod
-    def stats_info(cls, cube, shape=None, offset=0):
-        """stats_cube(cube, shape=None, offset=0) -> StatsInfo
+    def stats_info(cls, cube, shape=None, offset=0, name=""):
+        """stats_cube(cube, shape=None, offset=0, name="") -> StatsInfo
            creates a StatsInfo object from a cube
         """
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot stat object of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         if shape is None:
             shape = cube.shape
+        cube_name = name
         cube_shape = Shape(shape)
         cube_sum = cube.sum()
         cube_ave = None
@@ -286,6 +287,7 @@ class StatsInfo(Info):
         cube_min_index = np.unravel_index(cube_min_index + offset, cube_shape)
         cube_max_index = np.unravel_index(cube_max_index + offset, cube_shape)
         stats_info = StatsInfo(
+            cube_name=cube_name,
             cube_shape=cube_shape,
             cube_sum=cube_sum,
             cube_offset=offset,

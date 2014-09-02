@@ -32,7 +32,7 @@ from ..units import Memory
 from ..errors import RubikError, RubikMemoryError
 from ..shape import Shape
 from ..filename import InputFilename, OutputFilename, InputMode, OutputMode
-from ..application.argdict import InputArgDict, OutputArgDict
+from ..application.argdict import ResultArgDict, InputArgDict, OutputArgDict
 from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
@@ -98,6 +98,7 @@ class Rubik(object):
         cubes_internals.set_output_mode_callback(self.notify_output_mode)
 
         self._controller = None
+        self._stats_infos = []
 
     def log(self, level, message):
         if level > logging.INFO:
@@ -524,6 +525,7 @@ class Rubik(object):
             self.log_warning("pointless expression {!r}".format(expression))
         cube = self._result
         self.run_controller()
+        self.print_stats_infos()
     
     def notify_output_mode(self):
         del self._pointless_expressions[:]
@@ -655,6 +657,12 @@ class Rubik(object):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cubes_api.print_stats(cube, print_function=log.PRINT)
 
+    def compare_stats_info(self, cube=None, title=""):
+        if cube is None:
+            cube = self._result
+        self.notify_output_mode()
+        self._stats_infos.append(cubes_api.stats_info(cube, name=title))
+        
     def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
         self.notify_output_mode()
         self.iterate_on_split(self.print_histogram_impl, cube, bins=bins, hrange=hrange, decimals=decimals, fmt=fmt)
@@ -826,6 +834,7 @@ class Rubik(object):
             'print_stats': self.print_stats,
             'print_cube': self.print_cube,
             'print_histogram': self.print_histogram,
+            'compare_stats_info': self.compare_stats_info,
             'view': self.view,
         }
         locals_d = {
@@ -994,3 +1003,7 @@ class Rubik(object):
     def run_controller(self):
         if self._controller is not None:
             self.controller.run()
+
+    def print_stats_infos(self):
+        if self._stats_infos:
+            log.PRINT(cubes_api.StatsInfo.reports(instances=self._stats_infos))
