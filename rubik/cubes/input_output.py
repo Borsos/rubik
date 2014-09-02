@@ -143,53 +143,82 @@ class ExtractTextReader(ExtractReader):
             cube = cube[extractor.index_pickers()]
         return cube
 
-def fromfile_generic(ftype, f, dtype, shape, extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE, **n_args):
-    """fromfile_generic(ftype, f, dtype, shape,
+def fromfile_generic(file_format, f, shape, dtype=None, extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE, **n_args):
+    """fromfile_generic(file_format, f, shape, dtype=None,
            extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE) ->
        read a cube from raw file f with given shape and extractor
-    ftype can be 'raw', 'text', 'csv'
-    f can be a  str or a file object
-    when reading less than min_size bytes, switch to the safe algorithm
+       file_format can be 'raw', 'text', 'csv'
+       f can be a  str or a file object
+       when reading less than min_size bytes, switch to the safe algorithm
     """
+    if not isinstance(shape, Shape):
+        shape = Shape(shape)
     if isinstance(f, str):
-        with open(f, 'rb') as f_in:
-            return fromfile_generic(ftype, f_in, dtype, shape, extractor=extractor, min_size=min_size, **n_args)
+        filename = interpolate_filename(f, shape=shape, dtype=dtype, file_format=file_format)
+        with open(filename, 'rb') as f_in:
+            return fromfile_generic(file_format=file_format, f=f_in, shape=shape, dtype=dtype, extractor=extractor, min_size=min_size, **n_args)
     else:
-        if ftype == conf.FILE_FORMAT_RAW:
+        if file_format == conf.FILE_FORMAT_RAW:
             ereader_class = ExtractRawReader
-        elif ftype == conf.FILE_FORMAT_TEXT:
+        elif file_format == conf.FILE_FORMAT_TEXT:
             ereader_class = ExtractTextReader
-        elif ftype == conf.FILE_FORMAT_CSV:
+        elif file_format == conf.FILE_FORMAT_CSV:
             ereader_class = ExtractCsvReader
         else:
-            raise RubikError("invalid file type {0}".format(ftype))
+            raise RubikError("invalid file type {0}".format(file_format))
         ereader = ereader_class(dtype=dtype, shape=shape, extractor=extractor, min_size=min_size, **n_args)
         return ereader.read(f)
 
-def fromfile_raw(f, dtype, shape, extractor=None,
+def fromfile_raw(f, shape, dtype=None, extractor=None,
         min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE):
-    """fromfile_raw(f, dtype, shape,
+    """fromfile_raw(f, shape, dtype=None,
            extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE) ->
                read a cube from raw file f with given shape and extractor
-    f can be a  str or a file object
+       f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_RAW, f, dtype, shape, extractor=extractor, min_size=min_size)
+    return fromfile_generic(
+        file_format=conf.FILE_FORMAT_RAW,
+        f=f,
+        dtype=dtype,
+        shape=shape,
+        extractor=extractor,
+        min_size=min_size)
 
-def fromfile_text(f, dtype, shape, extractor=None, 
+def fromfile_text(f, shape, dtype=None, extractor=None, 
         min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
         delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
-    """fromfile_text(f, dtype, shape, extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE, delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER) -> read a cube from text file f with given shape and extractor
-    f can be a  str or a file object
+    """fromfile_text(f, shape, dtype=None,
+                     extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
+                     delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER) ->
+       read a cube from text file f with given shape and extractor
+       f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_TEXT, f, dtype, shape, extractor=extractor, min_size=min_size, delimiter=delimiter)
+    return fromfile_generic(
+        file_format=conf.FILE_FORMAT_TEXT,
+        f=f,
+        dtype=dtype,
+        shape=shape,
+        extractor=extractor,
+        min_size=min_size,
+        delimiter=delimiter)
 
-def fromfile_csv(f, dtype, shape, extractor=None,
+def fromfile_csv(f, shape, dtype=None, extractor=None,
         min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
         sep=conf.FILE_FORMAT_CSV_SEPARATOR):
-    """fromfile_raw(f, dtype, shape, extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE, sep=conf.FILE_FORMAT_CSV_SEPARATOR) -> read a cube from raw file f with given shape and extractor
-    f can be a  str or a file object
+    """fromfile_raw(f, shape, dtype=None,
+                    extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
+                    sep=conf.FILE_FORMAT_CSV_SEPARATOR) -> read a cube from
+       CSV file f with given shape and extractor
+       f can be a  str or a file object
     """
-    return fromfile_generic(conf.FILE_FORMAT_CSV, f, dtype, shape, extractor=extractor, min_size=min_size, sep=sep)
+    return fromfile_generic(
+        file_format=conf.FILE_FORMAT_CSV,
+        f=f,
+        dtype=dtype,
+        shape=shape,
+        extractor=extractor,
+        min_size=min_size,
+        sep=sep)
 
 class CubeWriter(object):
     def __init__(self, file, shape, buffer_size, dtype=None):

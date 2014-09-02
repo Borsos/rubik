@@ -23,12 +23,21 @@ __all__ = [
 
 
 import unittest
+import os
 
+from ..units import Memory
 from ..shape import Shape
 from ..cubes import internals
 from ..cubes import api as cb
 
 class RubikTestCase(unittest.TestCase):
+    TEST_METHODS = ()
+    
+    @classmethod
+    def register(cls, suite):
+        for test_method in cls.TEST_METHODS:
+            suite.addTest(cls(methodName=test_method))
+
     def assertFileExists(self, filename):
         self.assertTrue(os.path.exists(filename))
 
@@ -43,3 +52,13 @@ class RubikTestCase(unittest.TestCase):
             shape = Shape(shape)
         size = shape.count() * dtype().itemsize
         self.assertFileExistsAndHasSize(filename, size)
+
+    def assertFilesAreEqual(self, filename_a, filename_b):
+        self.assertFileExists(filename_a)
+        size = os.stat(filename_a).st_size
+        self.assertFileExistsAndHasSize(filename_b, size)
+        block_bytes = Memory('1gb').get_bytes()
+        with open(filename_a, 'rb') as f_a, open(filename_b, 'rb') as f_b:
+            block_a = f_a.read(block_bytes)
+            block_b = f_b.read(block_bytes)
+            self.assertEqual(block_a, block_b)

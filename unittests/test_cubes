@@ -17,15 +17,26 @@
 
 __author__ = "Simone Campagna"
 
+from rubik.cubes.api import set_random_seed
+
 from rubik.testing.rubik_test_suite import RubikTestSuite
 from rubik.testing.rubik_test_runner import RubikTestRunner
-from rubik.testing.rubik_test_cubes import RubikTestCubes
+from rubik.testing.tests.rubik_test_cubes import RubikTestCubes
 
 
 if __name__ == "__main__":
+    # global setup
+    set_random_seed(100)
+    
+    # create runner
     rubik_test_runner = RubikTestRunner()
-    rubik_test_suite = RubikTestSuite()
-    rubik_test_cubes = RubikTestCubes()
 
-    rubik_test_suite.addTest(rubik_test_cubes)
+    # create suite
+    rubik_test_suite = RubikTestSuite()
+
+    # add test class
+    rubik_test_suite.add_test_class(RubikTestCubes)
+
+    # run tests
+    rubik_test_runner.run(rubik_test_suite)
 

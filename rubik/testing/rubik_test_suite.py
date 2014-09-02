@@ -28,11 +28,13 @@ import shutil
 import os
 
 class RubikTestSuite(unittest.TestSuite):
-    def run(self):
+    def run(self, result):
         tmpdir = tempfile.mkdtemp()
         try:
             os.chdir(tmpdir)
-            super(RubikTestSuite, self).run()
+            super(RubikTestSuite, self).run(result)
         finally:
             shutil.rmtree(tmpdir)
         
+    def add_test_class(self, test_class):
+        test_class.register(self)

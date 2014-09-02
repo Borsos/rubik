@@ -16,21 +16,3 @@
 #
 
 __author__ = "Simone Campagna"
-
-__all__ = [
-           'RubikTestCubes',
-          ]
-
-
-from .base import RubikTestCase
-from ..shape import Shape
-
-class RubikTestCubes(RubikTestCase):
-    SHAPE = Shape("85x70x40")
-    def testCreateRandomCube(self):
-        cb.write_random_cube("a_{shape}.{format}", shape=self.SHAPE)
-        filename = "a_{shape}.{format}".format(
-            shape=self.SHAPE,
-            format='raw',
-        )
-        self.assertFileExistsAndHasShape(filename, shape=self.SHAPE)
