@@ -413,7 +413,7 @@ class DiffInfo(Info):
         abs_diff=None,
         cube_shape=None,
         left_name="LEFT",
-        rigth_name="RIGTH",
+        rigth_name="RIGHT",
     ):
         def default_stats_info(obj, cube_name, cube_shape):
             if obj is None:
@@ -446,10 +446,10 @@ class DiffInfo(Info):
         rel_diff_cube = reldiff_cube(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
         abs_diff_cube = absdiff_cube(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
         return cls(
-            left=StatsInfo.stats_info(left, shape=shape, offset=offset),
-            right=StatsInfo.stats_info(right, shape=shape, offset=offset),
-            rel_diff=StatsInfo.stats_info(rel_diff_cube, shape=shape, offset=offset),
-            abs_diff=StatsInfo.stats_info(abs_diff_cube, shape=shape, offset=offset),
+            left=StatsInfo.stats_info(left, shape=shape, offset=offset, name="LEFT"),
+            right=StatsInfo.stats_info(right, shape=shape, offset=offset, name="RIGHT"),
+            rel_diff=StatsInfo.stats_info(rel_diff_cube, shape=shape, offset=offset, name="REL_DIFF"),
+            abs_diff=StatsInfo.stats_info(abs_diff_cube, shape=shape, offset=offset, name="ABS_DIFF"),
         )
 
     def report(self):

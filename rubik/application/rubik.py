@@ -99,6 +99,7 @@ class Rubik(object):
 
         self._controller = None
         self._stats_infos = []
+        self._diff_cubes = []
 
     def log(self, level, message):
         if level > logging.INFO:
@@ -526,6 +527,7 @@ class Rubik(object):
         cube = self._result
         self.run_controller()
         self.print_stats_infos()
+        self.print_diff()
     
     def notify_output_mode(self):
         del self._pointless_expressions[:]
@@ -657,11 +659,20 @@ class Rubik(object):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
         cubes_api.print_stats(cube, print_function=log.PRINT)
 
-    def compare_stats_info(self, cube=None, title=""):
+    def compare_stats(self, cube=None, title=""):
         if cube is None:
             cube = self._result
         self.notify_output_mode()
         self._stats_infos.append(cubes_api.stats_info(cube, name=title))
+        
+    def diff(self, cube=None, title=""):
+        if cube is None:
+            cube = self._result
+        self.notify_output_mode()
+        # keeps the last two cubes
+        self._diff_cubes.append(cube)
+        if len(self._diff_cubes) > 2:
+            raise RubikError("cannot diff more than 2 cubes")
         
     def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
         self.notify_output_mode()
@@ -834,7 +845,8 @@ class Rubik(object):
             'print_stats': self.print_stats,
             'print_cube': self.print_cube,
             'print_histogram': self.print_histogram,
-            'compare_stats_info': self.compare_stats_info,
+            'compare_stats': self.compare_stats,
+            'diff': self.diff,
             'view': self.view,
         }
         locals_d = {
@@ -1007,3 +1019,11 @@ class Rubik(object):
     def print_stats_infos(self):
         if self._stats_infos:
             log.PRINT(cubes_api.StatsInfo.reports(instances=self._stats_infos))
+
+    def print_diff(self):
+        if self._diff_cubes:
+            if len(self._diff_cubes) == 1:
+                raise RubikError("cannot compare 1 cube")
+            else:
+                info = cubes_api.diff_info(*self._diff_cubes)
+                log.PRINT(info.report())

@@ -233,6 +233,9 @@ ave       = 0.496089
 %inf      = 0.00%
 $
 
+<<<BREAK>>>
+### 13. Show statistics about many cubes:
+
 In order to compare statistics about many cubes, the '--compare-stats/-C'
 option can be used; in this case, a single report is shown for all the
 compared cubes:
@@ -260,7 +263,94 @@ ave       = 0.487515      0.497717      0.505563
 $
 
 <<<BREAK>>>
-### 13. Check if two cubes are equal content within a given tolerance '1e-5':
+### 14. Show statistics about differences between two cubes:
+
+The '--diff/-D' option allows to show statistics about the difference of
+exactly two cubes. Statistics info is shown for
+* left-hand cube
+* right-hand cube
+* relative difference
+* absolute difference
+
+$ rubik -r 100 -e 'cb.random_cube("6x9x32")' -D \\
+               -e 'cb.random_cube("6x9x32")' -D
+name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
+shape     = 6x9x32        6x9x32        6x9x32        6x9x32
+#elements = 1728          1728          1728          1728
+%elements = 100.00%       100.00%       100.00%       100.00%
+min       = 0.00048675947 1.4618569e-05 0.00038759335 0.00025051832
+min_index = (1, 3, 13)    (1, 1, 13)    (4, 5, 19)    (4, 5, 19)
+max       = 0.99947917    0.99867839    402.01849     0.98762667
+max_index = (2, 0, 11)    (0, 5, 20)    (0, 3, 27)    (3, 3, 4)
+sum       = 842.42566     860.05499     5523.7295     588.99091
+ave       = 0.487515      0.497717      3.1966        0.340851
+#zero     = 0             0             0             0
+%zero     = 0.00%         0.00%         0.00%         0.00%
+#nonzero  = 1728          1728          1728          1728
+%nonzero  = 100.00%       100.00%       100.00%       100.00%
+#nan      = 0             0             0             0
+%nan      = 0.00%         0.00%         0.00%         0.00%
+#inf      = 0             0             0             0
+%inf      = 0.00%         0.00%         0.00%         0.00%
+$
+
+This is quite equivalent to the command
+
+$ rubik -r 100 -e 'c0=cb.random_cube("6x9x32")' -e 'c0' -C \\
+               -e 'c1=cb.random_cube("6x9x32")' -e 'c1' -C \\
+               -e 'cb.reldiff_cube(c0, c1)' -C \\
+               -e 'cb.absdiff_cube(c0, c1)' -C
+shape     = 6x9x32        6x9x32        6x9x32        6x9x32
+#elements = 1728          1728          1728          1728
+%elements = 100.00%       100.00%       100.00%       100.00%
+min       = 0.00048675947 1.4618569e-05 0.00038759335 0.00025051832
+min_index = (1, 3, 13)    (1, 1, 13)    (4, 5, 19)    (4, 5, 19)
+max       = 0.99947917    0.99867839    402.01849     0.98762667
+max_index = (2, 0, 11)    (0, 5, 20)    (0, 3, 27)    (3, 3, 4)
+sum       = 842.42566     860.05499     5523.7295     588.99091
+ave       = 0.487515      0.497717      3.1966        0.340851
+#zero     = 0             0             0             0
+%zero     = 0.00%         0.00%         0.00%         0.00%
+#nonzero  = 1728          1728          1728          1728
+%nonzero  = 100.00%       100.00%       100.00%       100.00%
+#nan      = 0             0             0             0
+%nan      = 0.00%         0.00%         0.00%         0.00%
+#inf      = 0             0             0             0
+%inf      = 0.00%         0.00%         0.00%         0.00%
+$
+
+or, better, to the command
+
+$ rubik -r 100 -e 'c0=cb.random_cube("6x9x32")' \\
+               -e 'compare_stats(c0, title="LEFT")' \\
+               -e 'c1=cb.random_cube("6x9x32")' \\
+               -e 'compare_stats(c1, title="RIGHT")' \\
+               -e 'cb.reldiff_cube(c0, c1)' \\
+               -e 'compare_stats(title="REL_DIFF")' \\
+               -e 'cb.absdiff_cube(c0, c1)' \\
+               -e 'compare_stats(title="ABS_DIFF")'
+name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
+shape     = 6x9x32        6x9x32        6x9x32        6x9x32
+#elements = 1728          1728          1728          1728
+%elements = 100.00%       100.00%       100.00%       100.00%
+min       = 0.00048675947 1.4618569e-05 0.00038759335 0.00025051832
+min_index = (1, 3, 13)    (1, 1, 13)    (4, 5, 19)    (4, 5, 19)
+max       = 0.99947917    0.99867839    402.01849     0.98762667
+max_index = (2, 0, 11)    (0, 5, 20)    (0, 3, 27)    (3, 3, 4)
+sum       = 842.42566     860.05499     5523.7295     588.99091
+ave       = 0.487515      0.497717      3.1966        0.340851
+#zero     = 0             0             0             0
+%zero     = 0.00%         0.00%         0.00%         0.00%
+#nonzero  = 1728          1728          1728          1728
+%nonzero  = 100.00%       100.00%       100.00%       100.00%
+#nan      = 0             0             0             0
+%nan      = 0.00%         0.00%         0.00%         0.00%
+#inf      = 0             0             0             0
+%inf      = 0.00%         0.00%         0.00%         0.00%
+$
+
+<<<BREAK>>>
+### 15. Check if two cubes are equal content within a given tolerance '1e-5':
 
 $ rubik -i r_{shape}.{format} -s 8x10x20 -x i0=:,4,: \\
         -i rsub_y2_{shape}.{format} -s 8x20 \\
@@ -270,7 +360,7 @@ True
 $
 
 <<<BREAK>>>
-## 14. Print a random cube with integer values between -5 and +5:
+## 16. Print a random cube with integer values between -5 and +5:
 
 $ rubik -e 'cb.random_cube("3x5", min=-5, max=5)' \\
         --dtype int32 \\
@@ -285,7 +375,7 @@ The '--random-seed 100' option sets the random seed; it has been added to make
 the result reproducible.
 
 <<<BREAK>>>
-## 15. Setting a single value on a cube:
+## 17. Setting a single value on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, 0, 0] = 4' \\
         -o o_{shape}.{format}
@@ -317,14 +407,14 @@ $ rubik -t int32 \\
 $
 
 <<<BREAK>>>
-## 16. Setting multiple values on a cube:
+## 18. Setting multiple values on a cube:
 $ rubik -i r_{shape}.{format} -s 8x10x20 \\
         -e '_r[0, :, 3] = 4' \\
         -o o_{shape}.{format}
 $
 
 <<<BREAK>>>
-## 17. Findinig indices where a given condition is True:
+## 19. Findinig indices where a given condition is True:
 $ rubik -e 'cb.linear_cube("3x5")' \\
         -o l_{shape}.{format}
 $ rubik -i l_{shape}.{format} \\
@@ -342,7 +432,7 @@ $ rubik -i l_{shape}.{format} \\
 $
 
 <<<BREAK>>>
-## 18. Create a big cube out of core:
+## 20. Create a big cube out of core:
 
 Two functions are available to create big cubes out of core:
 * write_linear_cube(file, shape, start=0.0, increment=1.0, buffer_size=None)
@@ -372,7 +462,7 @@ rubik: evaluating expression 'print_cube()'...
 $ 
 
 <<<BREAK>>>
-## 19. Reading a portion of a file
+## 21. Reading a portion of a file
 
 $ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
@@ -394,7 +484,7 @@ rubik: evaluating expression 'print_cube()'...
 $
 
 <<<BREAK>>>
-## 20. Overriding part of a file
+## 22. Overriding part of a file
 
 $ rubik 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
@@ -476,7 +566,7 @@ $ rubik -i l2.3x4x5.raw \\
 $
 
 <<<BREAK>>>
-## 21. Printing the histogram of a cube
+## 23. Printing the histogram of a cube
 
 $ rubik 'cb.random_cube("6x4x5")' --random-seed 100 -H
 [0.00, 0.10)|****************************************                        |10
@@ -604,6 +694,10 @@ It is possible to print/view the results using the following functions:
   This is automatically set by '--print/-P' option
 * print_stats()
   This is automatically set by '--stats/-S' option
+* compare_stats()
+  This is automatically set by '--compare-stats/-C' option
+* diff()
+  This is automatically set by '--diff/-D' option
 * print_histogram(
         cube=None, 
         bins=None, 
@@ -965,8 +1059,12 @@ Output modes
 ============
 These are the available output modes:
 * print the result to a file (--print/-P, or function 'print_cube()')
-* print statistics about the resulting cube to a file (--stats/-S, or function
+* print statistics about the resulting cube (--stats/-S, or function
   'print_stats()')
+* compare statistics about many resulting cubes (--compare-stats/-C, or
+  function 'compare_stats()')
+* show statistics about differences between two cubes (--diff/-D, or
+  function 'diff()')
 * print an histogram of the resulting cube to a file (--histogram/-H, or
   function 'print_histogram(...)')
 * write the output cube to file (--output-filename/-o, or function 

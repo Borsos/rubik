@@ -62,7 +62,10 @@ class PrintStatsAction(ConstExpressionAction):
     CONST = 'print_stats()'
 
 class CompareStatsInfoAction(ConstExpressionAction):
-    CONST = 'compare_stats_info()'
+    CONST = 'compare_stats()'
+
+class DiffAction(ConstExpressionAction):
+    CONST = 'diff()'
 
 class PrintCubeAction(ConstExpressionAction):
     CONST = 'print_cube()'
@@ -350,6 +353,11 @@ Arguments for graphical visualization""")
         nargs=0,
         help="collect statistics about the result cube")
 
+    global_group.add_argument("--diff", "-D",
+        action=DiffAction,
+        nargs=0,
+        help="show differences")
+
     output_group.add_argument('--histogram', '-H',
         action=PrintHistogramAction,
         nargs=0,
@@ -599,7 +607,7 @@ Options to show help on specific topics """)
         default=False,
         help="help about usage: shows some examples and common recipes")
 
-    help_group.add_argument("--demo", "-D",
+    help_group.add_argument("--demo",
         dest="help_demo",
         action="store_true",
         default=False,
@@ -623,8 +631,6 @@ Options to show help on specific topics """)
     rubik.set_memory_limit(args.memory_limit)
     rubik.set_split_dimensions(args.split_dimensions)
     rubik.set_clobber(args.clobber)
-    #rubik.set_print_cube(args.print_cube)
-    #rubik.set_print_stats(args.print_stats)
     rubik.set_visualizer_options(visualizer_type=args.visualizer_type, visualizer_attributes=utils.flatten_list(args.visualizer_attributes, depth=1), visualizer_attribute_files=args.visualizer_attribute_files)
     rubik.set_print_report(args.report_level > 0)
     rubik.set_histogram_options(
