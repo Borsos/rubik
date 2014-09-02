@@ -18,6 +18,7 @@
 __author__ = "Simone Campagna"
 
 import os
+import sys
 import numpy as np
 import logging
 import warnings
@@ -29,7 +30,7 @@ from . import utils
 from . import config
 from ..py23 import irange
 from ..units import Memory
-from ..errors import RubikError, RubikMemoryError
+from ..errors import RubikError, RubikMemoryError, RubikExpressionError
 from ..shape import Shape
 from ..filename import InputFilename, OutputFilename, InputMode, OutputMode
 from ..application.argdict import ResultArgDict, InputArgDict, OutputArgDict
@@ -894,11 +895,8 @@ class Rubik(object):
                     result = locals_d.get('_r', None)
                     if result is not None:
                         self._result = result
-                #print "expression: {!r} -> {!r}".format(expression, locals_d['_r'])
             except Exception as err:
-                raise RubikError("cannot evaluate expression {0!r}: {1}: {2}".format(expression, type(err).__name__, err))
-            #if result.dtype != self.dtype:
-            #    result = result.astype(self.dtype)
+                raise RubikExpressionError("cannot evaluate expression {0!r}".format(expression))
         
     def _print_report(self):
         def _log(condition):

@@ -24,7 +24,9 @@ import traceback
 __all__ = ['create_logger', 'set_logger', 'get_logger',
            'set_report_logger', 'get_report_logger',
            'LOGGER', 'REPORT_LOGGER',
-           'trace_errors',
+           'trace_error',
+           'set_trace_errors',
+           'get_trace_errors',
           ]
 
 def create_logger(logger_name, verbose_level, stream=None):
@@ -70,8 +72,22 @@ def set_report_logger(report_level):
 def get_report_logger():
     return REPORT_LOGGER
 
-def trace_error(trace):
-    err_type, err, tb = sys.exc_info()
+DEFAULT_TRACE_ERRORS = False
+
+def set_trace_errors(trace):
+    global DEFAULT_TRACE_ERRORS
+    DEFAULT_TRACE_ERRORS = trace
+
+def get_trace_errors():
+    global DEFAULT_TRACE_ERRORS
+    return DEFAULT_TRACE_ERRORS
+
+def trace_error(trace=None, exc_info=None):
+    if trace is None:
+        trace = DEFAULT_TRACE_ERRORS
+    if exc_info is None:
+        exc_info = sys.exc_info()
+    err_type, err, tb = exc_info
     if trace:
         traceback.print_exception(err_type, err, tb)
     else:

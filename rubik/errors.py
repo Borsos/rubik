@@ -25,6 +25,8 @@ __all__ = [
         'RubikTestError',
 ]
 
+import sys
+
 class RubikError(Exception):
     pass
 
@@ -39,3 +41,10 @@ class RubikDataTypeError(RubikError):
 
 class RubikTestError(RubikError):
     pass
+
+class RubikExpressionError(RubikError):
+    def __init__(self, message, expression_exception_info=None):
+        super(RubikExpressionError, self).__init__(message)
+        if expression_exception_info is None:
+            expression_exception_info = sys.exc_info()
+        self.expression_exception_info = expression_exception_info
