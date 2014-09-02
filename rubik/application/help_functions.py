@@ -298,8 +298,8 @@ This is quite equivalent to the command
 
 $ rubik -r 100 -e 'c0=cb.random_cube("6x9x32")' -e 'c0' -C \\
                -e 'c1=cb.random_cube("6x9x32")' -e 'c1' -C \\
-               -e 'cb.reldiff_cube(c0, c1)' -C \\
-               -e 'cb.absdiff_cube(c0, c1)' -C
+               -e 'cb.rel_diff_cube(c0, c1)' -C \\
+               -e 'cb.abs_diff_cube(c0, c1)' -C
 shape     = 6x9x32        6x9x32        6x9x32        6x9x32
 #elements = 1728          1728          1728          1728
 %elements = 100.00%       100.00%       100.00%       100.00%
@@ -325,9 +325,9 @@ $ rubik -r 100 -e 'c0=cb.random_cube("6x9x32")' \\
                -e 'compare_stats(c0, title="LEFT")' \\
                -e 'c1=cb.random_cube("6x9x32")' \\
                -e 'compare_stats(c1, title="RIGHT")' \\
-               -e 'cb.reldiff_cube(c0, c1)' \\
+               -e 'cb.rel_diff_cube(c0, c1)' \\
                -e 'compare_stats(title="REL_DIFF")' \\
-               -e 'cb.absdiff_cube(c0, c1)' \\
+               -e 'cb.abs_diff_cube(c0, c1)' \\
                -e 'compare_stats(title="ABS_DIFF")'
 name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
 shape     = 6x9x32        6x9x32        6x9x32        6x9x32

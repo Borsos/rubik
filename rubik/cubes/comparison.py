@@ -19,8 +19,8 @@ __author__ = "Simone Campagna"
 
 __all__ = ['not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals',
-           'reldiff_cube', 'threshold_cube',
-           'absdiff_cube', 'abs_threshold_cube',
+           'rel_diff_cube', 'threshold_cube',
+           'abs_diff_cube', 'abs_threshold_cube',
            'where_indices',
            'nonzero_cube']
 
@@ -80,12 +80,12 @@ def abs_threshold_cube(cube, threshold=0.0, value=0.0):
     """
     return np.where(np.abs(cube) > threshold, cube, value)
 
-def absdiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
-    """absdiff(cube_0, cube_1, in_threshold=None, out_threshold=None) ->
+def abs_diff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
+    """abs_diff(cube_0, cube_1, in_threshold=None, out_threshold=None) ->
     cube of absolute difference
     | a - b |
     'in_threshold': if passed, this absolute threshold is applied to 'a' and 'b';
-    'out_threshold': if passed, this absolute threshold is applied to the output (the absdiff)
+    'out_threshold': if passed, this absolute threshold is applied to the output (the abs_diff)
     """
     if in_threshold is not None:
         cube_0 = abs_threshold_cube(cube_0, threshold=in_threshold)
@@ -95,14 +95,14 @@ def absdiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percenta
         cube_out = abs_threshold_cube(cube_out, threshold=out_threshold)
     return cube_out
 
-def reldiff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
-    """reldiff(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False) ->
+def rel_diff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
+    """rel_diff(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False) ->
     cube of relative difference
     | a - b |
     _________
        |a|
     'in_threshold': if passed, this absolute threshold is applied to 'a' and 'b';
-    'out_threshold': if passed, this absolute threshold is applied to the output (the reldiff)
+    'out_threshold': if passed, this absolute threshold is applied to the output (the rel_diff)
     'percentage': if True, the output is multiplied by 100.0
     """
     if in_threshold is not None:

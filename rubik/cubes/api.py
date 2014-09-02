@@ -23,8 +23,8 @@ __all__ = [
            'fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
            'not_equals_cube', 'not_equals_num', 'not_equals',
            'equals_cube', 'equals_num', 'equals',
-           'reldiff_cube', 'threshold_cube',
-           'absdiff_cube', 'abs_threshold_cube',
+           'rel_diff_cube', 'threshold_cube',
+           'abs_diff_cube', 'abs_threshold_cube',
            'where_indices',
            'nonzero_cube',
            'join',
@@ -49,8 +49,8 @@ from .input_output import fromfile_generic, fromfile_raw, fromfile_text, fromfil
 
 from .comparison import not_equals_cube, not_equals_num, not_equals, \
                         equals_cube, equals_num, equals, \
-                        reldiff_cube, threshold_cube, \
-                        absdiff_cube, abs_threshold_cube, \
+                        rel_diff_cube, threshold_cube, \
+                        abs_diff_cube, abs_threshold_cube, \
                         where_indices, \
                         nonzero_cube
 

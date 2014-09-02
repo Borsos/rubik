@@ -40,7 +40,7 @@ check_file_exists_and_has_size cubes_a_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 test_prex "@b.expr -o cubes_b_{shape}.{format}"
 check_file_exists_and_has_size cubes_b_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 
-test_prex "-i cubes_a_{shape}.{format} -i cubes_b_{shape}.{format} -s ${SHAPE} 'cb.reldiff_cube(i0, i1)' -o cubes_r0_{shape}.{format} "
+test_prex "-i cubes_a_{shape}.{format} -i cubes_b_{shape}.{format} -s ${SHAPE} 'cb.rel_diff_cube(i0, i1)' -o cubes_r0_{shape}.{format} "
 check_file_exists_and_has_size cubes_r0_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 
 test_prex "-i cubes_r0_{shape}.{format} -s ${SHAPE} 'cb.nonzero_cube(i0)' -o cubes_n0_{shape}.{format}"
@@ -49,7 +49,7 @@ check_file_exists_and_has_size cubes_n0_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 test_prex "-i cubes_n0_{shape}.{format} -s ${SHAPE} 'np.sum(i0)' --print > sum.n0"
 check_file_exists_and_has_content sum.n0 "8.0"
 
-test_prex "-i cubes_a_{shape}.{format} -i cubes_b_{shape}.{format} -s ${SHAPE} 'cb.reldiff_cube(i0, i1, in_threshold=1.0e-20)' -o cubes_r1_{shape}.{format} "
+test_prex "-i cubes_a_{shape}.{format} -i cubes_b_{shape}.{format} -s ${SHAPE} 'cb.rel_diff_cube(i0, i1, in_threshold=1.0e-20)' -o cubes_r1_{shape}.{format} "
 check_file_exists_and_has_size cubes_r1_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 
 test_prex "-i cubes_r1_{shape}.{format} -s ${SHAPE} 'cb.nonzero_cube(i0)' -o cubes_n1_{shape}.{format}"
@@ -58,7 +58,7 @@ check_file_exists_and_has_size cubes_n1_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 test_prex "-i cubes_n1_{shape}.{format} -s ${SHAPE} 'np.sum(i0)' --print > sum.n1"
 check_file_exists_and_has_content sum.n1 "6.0"
 
-test_prex "-i cubes_a_{shape}.{format} -i cubes_b_{shape}.{format} -s ${SHAPE} 'cb.reldiff_cube(i0, i1, in_threshold=1.0e-20, out_threshold=0.02)' -o cubes_r2_{shape}.{format}"
+test_prex "-i cubes_a_{shape}.{format} -i cubes_b_{shape}.{format} -s ${SHAPE} 'cb.rel_diff_cube(i0, i1, in_threshold=1.0e-20, out_threshold=0.02)' -o cubes_r2_{shape}.{format}"
 check_file_exists_and_has_size cubes_r2_${SHAPE}.raw $(( $XY * $bytes_float32 ))
 
 test_prex "-i cubes_r2_{shape}.{format} -s ${SHAPE} 'cb.nonzero_cube(i0)' -o cubes_n2_{shape}.{format}"

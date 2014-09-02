@@ -37,7 +37,7 @@ import collections
 from ..errors import RubikError
 from ..shape import Shape
 from .internals import output_mode_callback
-from .comparison import reldiff_cube, absdiff_cube
+from .comparison import rel_diff_cube, abs_diff_cube
 from .input_output import fromfile_raw
 from .out_of_core import BlockReader
 
@@ -443,13 +443,13 @@ class DiffInfo(Info):
 
     @classmethod
     def diff_info(cls, left, right, shape=None, offset=0, in_threshold=None, out_threshold=None):
-        rel_diff_cube = reldiff_cube(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
-        abs_diff_cube = absdiff_cube(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
+        rd_cube = rel_diff_cube(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
+        ad_cube = abs_diff_cube(left, right, in_threshold=in_threshold, out_threshold=out_threshold)
         return cls(
             left=StatsInfo.stats_info(left, shape=shape, offset=offset, name="LEFT"),
             right=StatsInfo.stats_info(right, shape=shape, offset=offset, name="RIGHT"),
-            rel_diff=StatsInfo.stats_info(rel_diff_cube, shape=shape, offset=offset, name="REL_DIFF"),
-            abs_diff=StatsInfo.stats_info(abs_diff_cube, shape=shape, offset=offset, name="ABS_DIFF"),
+            rel_diff=StatsInfo.stats_info(rd_cube, shape=shape, offset=offset, name="REL_DIFF"),
+            abs_diff=StatsInfo.stats_info(ad_cube, shape=shape, offset=offset, name="ABS_DIFF"),
         )
 
     def report(self):
