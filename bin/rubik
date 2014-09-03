@@ -613,6 +613,12 @@ Options to show help on specific topics """)
         default=False,
         help="show demo")
 
+    help_group.add_argument("--test", "-T",
+        dest="run_test",
+        action="store_true",
+        default=False,
+        help="run test suites")
+
     argumentss = config.default_options + conf.RUBIK_OPTIONS + sys.argv[1:]
 
     try:
@@ -625,6 +631,13 @@ Options to show help on specific topics """)
 
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
+
+    if args.run_test:
+        from rubik.testing.rubik_test_main import RubikTestMain
+        rubik_test_main = RubikTestMain(logger=logger)
+        result = rubik_test_main.run()
+        returncode = len(result.failures)
+        sys.exit(returncode)
 
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)
