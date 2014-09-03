@@ -25,12 +25,6 @@ from ...rubik_test_suite import RubikTestSuite
 
 SUITE_BASE = RubikTestSuite()
 
-from .rubik_test_values import RubikTestValues
-SUITE_BASE.add_test_class(RubikTestValues)
-
-from .rubik_test_shape import RubikTestShape
-SUITE_BASE.add_test_class(RubikTestShape)
-
 from .rubik_test_memory import RubikTestMemory
 SUITE_BASE.add_test_class(RubikTestMemory)
 
@@ -39,3 +33,13 @@ SUITE_BASE.add_test_class(RubikTestTime)
 
 from .rubik_test_index_picker import RubikTestIndexPicker
 SUITE_BASE.add_test_class(RubikTestIndexPicker)
+
+from .rubik_test_extractor import RubikTestExtractor
+SUITE_BASE.add_test_class(RubikTestExtractor)
+
+from .rubik_test_values import RubikTestValues
+SUITE_BASE.add_test_class(RubikTestValues)
+
+from .rubik_test_shape import RubikTestShape
+SUITE_BASE.add_test_class(RubikTestShape)
+
