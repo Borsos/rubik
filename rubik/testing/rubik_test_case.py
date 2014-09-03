@@ -67,10 +67,7 @@ class RubikTestCase(unittest.TestCase):
         if filesize != size:
             raise AssertionError("file {!r} has size {} != {} [shape={}, dtype={}]".format(filename, filesize, size, shape, dtype.__name__))
 
-    def assertFilesAreEqual(self, filename_a, filename_b):
-        self.assertFileExists(filename_a)
-        size = os.stat(filename_a).st_size
-        self.assertFileExistsAndHasSize(filename_b, size)
+    def compare_files(self, filename_a, filename_b):
         block_bytes = Memory('1gb').get_bytes()
         offset = 0
         with open(filename_a, 'rb') as f_a, open(filename_b, 'rb') as f_b:
@@ -79,8 +76,27 @@ class RubikTestCase(unittest.TestCase):
             if block_a != block_b:
                 for count, (ca, cb) in enumerate(zip(block_a, block_b)):
                     if ca != cb:
-                        raise AssertionError("file {!r} differs from file {!r}; first difference at {}".format(
-                            filename_a,
-                            filename_b,
-                            offset + count))
+                        return False, offset + count
             offset += len(block_a)
+        return True, -1
+
+    def assertFilesAreEqual(self, filename_a, filename_b):
+        self.assertFileExists(filename_a)
+        size = os.stat(filename_a).st_size
+        self.assertFileExistsAndHasSize(filename_b, size)
+        match, offset = self.compare_files(filename_a, filename_b)
+        if not match:
+            raise AssertionError("file {!r} differs from file {!r}; first difference at {}".format(
+                filename_a,
+                filename_b,
+                offset))
+
+    def assertFilesDiffer(self, filename_a, filename_b):
+        self.assertFileExists(filename_a)
+        size = os.stat(filename_a).st_size
+        self.assertFileExistsAndHasSize(filename_b, size)
+        match, offset = self.compare_files(filename_a, filename_b)
+        if match:
+            raise AssertionError("files {!r} and {!r} are identical".format(
+                filename_a,
+                filename_b))

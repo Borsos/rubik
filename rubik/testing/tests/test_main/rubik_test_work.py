@@ -38,8 +38,13 @@ class RubikTestWork(RubikTestProgram):
         self.XYZ = Shape((self.X, self.Y, self.Z))
         self.HXYZ = Shape((self.H, self.X, self.Y, self.Z))
         self.XYHZ = Shape((self.X, self.Y, self.H, self.Z))
-        self.CONST_VALUE = 7.0
         
+        self.A = 8
+        self.B = 10
+        self.AB = Shape((self.A, self.B))
+
+        self.CONST_VALUE = 7.0
+
     def runTest_WorkRandomXYZCube(self):
         shape = self.XYZ
         file_format = 'raw'
@@ -49,7 +54,6 @@ class RubikTestWork(RubikTestProgram):
             """-e 'cb.random_cube("{s}")' -o '{o}'""".format(
                 s=shape,
                 o=out0_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFileExistsAndHasShape(out0_filename, shape)
 
         out1_filename_format = 'rtmp_{shape}.{format}'
@@ -58,7 +62,6 @@ class RubikTestWork(RubikTestProgram):
             """-e 'cb.random_cube("{s}")' -o '{o}'""".format(
                 s=shape,
                 o=out1_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFilesAreEqual(out1_filename, out0_filename)
 
     def runTest_WorkRandomXYHZCube(self):
@@ -70,7 +73,6 @@ class RubikTestWork(RubikTestProgram):
             """-e 'cb.random_cube("{s}")' -o '{o}'""".format(
                 s=shape,
                 o=out0_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFileExistsAndHasShape(out0_filename, shape)
 
         out1_filename_format = 'og0_{shape}.{format}'
@@ -81,7 +83,6 @@ class RubikTestWork(RubikTestProgram):
                 x=":,:,{h},:".format(h=self.H//2),
                 o0=out0_filename_format,
                 o1=out1_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFileExistsAndHasShape(out1_filename, self.XYZ)
 
         out2_filename_format = 'og_h{d2}_{shape}.{format}'
@@ -98,7 +99,6 @@ class RubikTestWork(RubikTestProgram):
                 ),
                 o0=out0_filename_format,
                 o2=out2_filename_format))
-        self.assertEqual(returncode, 0)
         for d2, h in enumerate(range(hstart, hstop, hincr)):
             out2_filename = out2_filename_format.format(
                 shape=self.XYZ,
@@ -117,7 +117,6 @@ class RubikTestWork(RubikTestProgram):
                 s=shape,
                 c=self.CONST_VALUE,
                 o=out0_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFileExistsAndHasShape(out0_filename, shape)
 
         returncode, output, error = self.run_program(
@@ -126,7 +125,6 @@ class RubikTestWork(RubikTestProgram):
                 c=self.CONST_VALUE,
                 o=out0_filename_format),
             stderr=subprocess.PIPE)
-        self.assertEqual(returncode, 0)
         self.assertEqual(output, "{}\n".format(shape.count() * self.CONST_VALUE))
 
     def runTest_WorkLinearCube(self):
@@ -139,9 +137,7 @@ class RubikTestWork(RubikTestProgram):
                 s=shape,
                 c=self.CONST_VALUE,
                 o=out0_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFileExistsAndHasShape(out0_filename, shape)
-
 
     def runTest_WorkNdArray(self):
         shape = self.XYZ
@@ -154,5 +150,42 @@ class RubikTestWork(RubikTestProgram):
                 Y=self.Y,
                 Z=self.Z,
                 o=out0_filename_format))
-        self.assertEqual(returncode, 0)
         self.assertFileExistsAndHasShape(out0_filename, shape)
+
+    def runTest_WorkEquals(self):
+        shape = self.AB
+        file_format = 'raw'
+        out0_filename_format = 'l0_{shape}.{format}'
+        out0_filename = out0_filename_format.format(shape=shape, format=file_format)
+        returncode, output, error = self.run_program(
+            """-e 'cb.linear_cube("{s}")' -o '{o}'""".format(
+                s=shape,
+                c=self.CONST_VALUE,
+                o=out0_filename_format))
+        self.assertFileExistsAndHasShape(out0_filename, shape)
+
+        out1_filename_format = 'l1_{shape}.{format}'
+        out1_filename = out1_filename_format.format(shape=shape, format=file_format)
+        returncode, output, error = self.run_program(
+            """-e 'cb.linear_cube("{s}", start=1.0, increment=2.0)' -o '{o}'""".format(
+                s=shape,
+                c=self.CONST_VALUE,
+                o=out1_filename_format))
+        self.assertFileExistsAndHasShape(out1_filename, shape)
+        self.assertFilesDiffer(out1_filename, out0_filename)
+
+        for tolerance, result in (
+                                  (0.0, 0),
+                                  (1.0, min(1, shape.count())),
+                                  (10.0, min(10, shape.count())),
+                                  (1000.0, min(1000, shape.count())),
+                                 ):
+            returncode, output, error = self.run_program(
+                """-i '{o0}' -i '{o1}' -s {s} -e 'cb.equals_num(i0, i1, tolerance={t})' --print""".format(
+                    s=shape,
+                    c=self.CONST_VALUE,
+                    o0=out0_filename_format,
+                    o1=out1_filename_format,
+                    t=tolerance),
+                stderr=subprocess.PIPE)
+            self.assertEqual(output, "{}\n".format(result))
