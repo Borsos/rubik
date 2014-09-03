@@ -31,12 +31,11 @@ from ..cubes import internals
 from ..cubes import api as cb
 
 class RubikTestCase(unittest.TestCase):
-    TEST_METHODS = ()
-    
     @classmethod
     def register(cls, suite):
-        for test_method in cls.TEST_METHODS:
-            suite.addTest(cls(methodName=test_method))
+        for member in dir(cls):
+            if member.startswith("runTest_"):
+                suite.addTest(cls(methodName=member))
 
     def assertFileExists(self, filename):
         self.assertTrue(os.path.exists(filename))

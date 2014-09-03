@@ -47,6 +47,9 @@ class Values(object):
     def split_first(self):
         return self._values[0], self.__class__(self._values[1:])
 
+    def __iter__(self):
+        return iter(self._values)
+
     @classmethod
     def _item_from_string(cls, value):
         return int(value)
@@ -70,3 +73,9 @@ class Values(object):
 
     def __getitem__(self, index):
         return self._values[index]
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self._values == other._values
+        else:
+            return False

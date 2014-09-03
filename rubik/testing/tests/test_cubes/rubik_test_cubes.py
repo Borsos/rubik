@@ -23,15 +23,12 @@ __all__ = [
 
 import numpy as np
 
-from ...cubes import api as cb
-from ...shape import Shape
+from ....cubes import api as cb
+from ....shape import Shape
 
-from ..rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase
 
 class RubikTestCubes(RubikTestCase):
-    TEST_METHODS = (
-                    'runTest_WriteRawOutOfCore',
-                   )
     def runTest_WriteRawOutOfCore(self):
         filename_format_a = "a_{shape}_{dtype}.{format}"
         filename_format_b = "b_{shape}_{dtype}.{format}"

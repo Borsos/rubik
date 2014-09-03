@@ -21,7 +21,7 @@ from rubik.cubes.api import set_random_seed
 
 from rubik.testing.rubik_test_suite import RubikTestSuite
 from rubik.testing.rubik_test_runner import RubikTestRunner
-from rubik.testing.tests.rubik_test_cubes import RubikTestCubes
+from rubik.testing.tests import SUITES
 
 
 if __name__ == "__main__":
@@ -34,8 +34,10 @@ if __name__ == "__main__":
     # create suite
     rubik_test_suite = RubikTestSuite()
 
-    # add test class
-    rubik_test_suite.add_test_class(RubikTestCubes)
+    # add suites
+    for suite_name, suite in SUITES.iteritems():
+        print "=== suite {!r}:".format(suite_name)
+        rubik_test_suite.addTest(suite)
 
     # run tests
     rubik_test_runner.run(rubik_test_suite)
