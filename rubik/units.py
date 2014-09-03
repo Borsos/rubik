@@ -18,9 +18,11 @@
 __author__ = "Simone Campagna"
 
 import re
+import collections
 import itertools
 
 __all__ = [
+              'Units',
               'Memory',
               'Time',
               'Bandwidth',
@@ -122,6 +124,9 @@ class Units(object):
         else:
             return self.convert_units(self._value, self._units, to_units)
 
+    def convert(self, to_units):
+        return self.__class__(self.convert_units(self.get_value(), self._units, to_units), units=to_units)
+        
     @classmethod
     def units_from_string(cls, u_s):
         return u_s
@@ -149,9 +154,40 @@ class Units(object):
         return bool(self._value)
     __bool__ = __nonzero__
 
+    @classmethod
+    def _coerce(cls, other):
+        if isinstance(other, cls):
+            return other
+        else:
+            return cls(other)
+
+    def _compare(self, other, comparison_operator):
+        other = self._coerce(other)
+        return comparison_operator(self._value, other.get_value(self._units))
+
+    def __eq__(self, other):
+        return self._compare(other, lambda x, y: x == y)
+
+    def __ne__(self, other):
+        return self._compare(other, lambda x, y: x != y)
+
+    def __lt__(self, other):
+        return self._compare(other, lambda x, y: x <  y)
+
+    def __le__(self, other):
+        return self._compare(other, lambda x, y: x <= y)
+
+    def __gt__(self, other):
+        return self._compare(other, lambda x, y: x >  y)
+
+    def __ge__(self, other):
+        return self._compare(other, lambda x, y: x >= y)
+
 class SimpleUnits(Units):
-    __units__ = {}
+    __units__ = collections.OrderedDict()
     __default_units__ = None
+    __str_float_format__ = "{value:.2f}{units:s}"
+    __str_int_format__ = "{value:d}{units:s}"
 
     @classmethod
     def get_available_units(cls):
@@ -169,21 +205,40 @@ class SimpleUnits(Units):
     def units_from_string(cls, u_s):
         return u_s.lower()
 
+    def base_value(self):
+        return self.__units__[self._units] * self._value
+
+    def human(self):
+        base_value = self.base_value()
+        diffs = []
+        for units_s, units_v in self.__units__.iteritems():
+            diffs.append((units_s, abs(units_v - base_value)))
+        diffs.sort(key=lambda x: x[-1])
+        units = diffs[0][0]
+        return self.convert(units)
+
+    def __str__(self):
+        v = self.convert_value(self._value)
+        if isinstance(v, int):
+            fmt = self.__str_int_format__
+        else:
+            fmt = self.__str_float_format__
+        return fmt.format(value=self._value, units=self._units)
 
 class Memory(SimpleUnits):
-    __units__ = {
-        'b': 1,
-        'k': 1024,
-        'kb': 1024,
-        'm': 1024 ** 2,
-        'mb': 1024 ** 2,
-        'g': 1024 ** 3,
-        'gb': 1024 ** 3,
-        't': 1024 ** 4,
-        'tb': 1024 ** 4,
-        'p': 1024 ** 5,
-        'pb': 1024 ** 5,
-    }
+    __units__ = collections.OrderedDict((
+        ('b',	 1),
+        ('k',	 1024),
+        ('kb',	 1024),
+        ('m',	 1024 ** 2),
+        ('mb',	 1024 ** 2),
+        ('g',	 1024 ** 3),
+        ('gb',	 1024 ** 3),
+        ('t',	 1024 ** 4),
+        ('tb',	 1024 ** 4),
+        ('p',	 1024 ** 5),
+        ('pb',	 1024 ** 5),
+    ))
     __default_units__ = 'b'
 
     def get_bytes(self):
@@ -191,13 +246,13 @@ class Memory(SimpleUnits):
 
 
 class Time(SimpleUnits):
-    __units__ = {
-        's': 1,
-        'm': 60,
-        'h': 3600,
-        'd': 86400,
-        'w': 7 * 86400,
-    }
+    __units__ = collections.OrderedDict((
+        ('s',	1),
+        ('m',	60),
+        ('h',	3600),
+        ('d',	86400),
+        ('w',	7 * 86400),
+    ))
     __default_units__ = 's'
 
     def get_seconds(self):

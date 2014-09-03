@@ -18,10 +18,8 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'RubikTestShape',
+           'RubikTestValues',
           ]
-
-import numpy as np
 
 from ....values import Values
 

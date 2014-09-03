@@ -21,8 +21,6 @@ __all__ = [
            'RubikTestShape',
           ]
 
-import numpy as np
-
 from ....shape import Shape
 
 from ...rubik_test_case import RubikTestCase

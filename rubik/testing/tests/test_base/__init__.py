@@ -30,3 +30,9 @@ SUITE_BASE.add_test_class(RubikTestValues)
 
 from .rubik_test_shape import RubikTestShape
 SUITE_BASE.add_test_class(RubikTestShape)
+
+from .rubik_test_memory import RubikTestMemory
+SUITE_BASE.add_test_class(RubikTestMemory)
+
+from .rubik_test_time import RubikTestTime
+SUITE_BASE.add_test_class(RubikTestTime)
