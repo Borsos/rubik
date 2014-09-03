@@ -58,3 +58,8 @@ class RubikTestIndexPicker(RubikTestCase):
             ip = IndexPicker(ip_i)
             self.assertEqual(ip.get_indices(5), ip_indices)
 
+    def runTest_IndexPickerIsSlice(self):
+        for ip_i, (ip_v, ip_indices) in self._ips.iteritems():
+            ip = IndexPicker(ip_i)
+            self.assertEqual(ip.is_slice(), isinstance(ip_v, slice))
+
