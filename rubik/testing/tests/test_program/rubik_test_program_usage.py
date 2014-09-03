@@ -124,14 +124,46 @@ class RubikTestProgramUsage(RubikTestProgram):
             self.assertFileExistsAndHasShape(out_filename, sub_shape)
 
         
-    def runTest_ProgramUsageExpression(self):
-        out_filename_format = 'r6_{shape}.{format}'
-        out_filename = out_filename_format.format(shape=self.shape, format=self.file_format)
+    def runTest_ProgramUsageExpression0(self):
+        out1_filename_format = 'rtmp6_{shape}.{format}'
+        out1_filename = out1_filename_format.format(shape=self.shape, format=self.file_format)
         returncode, output, error = self.run_program(
             """-i '{r}' -i '{l}' -s '{s}' -e '0.5 * i0 - i1 / 0.5' -o '{o}' -Ot float64""".format(
                 s=self.shape,
                 r=self.r_filename_format,
                 l=self.l_filename_format,
-                o=out_filename_format))
-        self.assertFileExistsAndHasShape(out_filename, self.shape, dtype=np.float64)
+                o=out1_filename_format))
+        self.assertFileExistsAndHasShape(out1_filename, self.shape, dtype=np.float64)
 
+        out2_filename_format = 'rtmp7_{shape}.{format}'
+        out2_filename = out2_filename_format.format(shape=self.shape, format=self.file_format)
+        returncode, output, error = self.run_program(
+            """-i '{r}' -i '{l}' -s '{s}' -e f=0.5 -e 'f * i0 - i1 / f' -Ot float64 -o {o}""".format(
+                s=self.shape,
+                r=self.r_filename_format,
+                l=self.l_filename_format,
+                o=out2_filename_format))
+        self.assertFileExistsAndHasShape(out2_filename, self.shape, dtype=np.float64)
+        self.assertFilesAreEqual(out2_filename, out1_filename)
+
+    def runTest_ProgramUsageExpression1(self):
+        shape = Shape((self.X, self.Z))
+        out1_filename_format = 'rtmp8_{shape}.{format}'
+        out1_filename = out1_filename_format.format(shape=shape, format=self.file_format)
+        returncode, output, error = self.run_program(
+            """-e 'cb.random_cube("{s}")' -o {o}""".format(
+                s=shape,
+                o=out1_filename_format))
+        self.assertFileExistsAndHasShape(out1_filename, shape)
+
+        out2_filename_format = 'rtmp9_{shape}.{format}'
+        out2_filename = out2_filename_format.format(shape=shape, format=self.file_format)
+        returncode, output, error = self.run_program(
+            """-i '{r}' -s '{sr}' -x i0='{x}' -i {o1} -s '{s1}' -o {o2}""".format(
+                r=self.r_filename_format,
+                sr=self.shape,
+                x=':,0,:',
+                o1=out1_filename_format,
+                s1=shape,
+                o2=out2_filename_format))
+        self.assertFileExistsAndHasShape(out2_filename, shape)
