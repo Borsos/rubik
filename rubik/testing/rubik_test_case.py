@@ -28,7 +28,6 @@ import os
 from ..units import Memory
 from ..shape import Shape
 from ..cubes import internals
-from ..cubes import api as cb
 
 class RubikTestCase(unittest.TestCase):
     @classmethod
@@ -37,27 +36,51 @@ class RubikTestCase(unittest.TestCase):
             if member.startswith("runTest_"):
                 suite.addTest(cls(methodName=member))
 
+    def assertPathExists(self, filename):
+        if not os.path.exists(filename):
+            raise AssertionError("path {!r} does not exists".format(filename))
+            
     def assertFileExists(self, filename):
-        self.assertTrue(os.path.exists(filename))
+        self.assertPathExists(filename)
+        if not os.path.isfile(filename):
+            raise AssertionError("path {!r} is not a file".format(filename))
+
+    def assertDirExists(self, filename):
+        self.assertPathExists(filename)
+        if not os.path.isdir(filename):
+            raise AssertionError("path {!r} is not a directory".format(filename))
 
     def assertFileExistsAndHasSize(self, filename, size):
         self.assertFileExists(filename)
-        self.assertTrue(os.stat(filename).st_size == size)
+        filesize = os.stat(filename).st_size
+        if filesize != size:
+            raise AssertionError("file {!r} has size {} != {}".format(filename, filesize, size))
 
     def assertFileExistsAndHasShape(self, filename, shape, dtype=None):
+        self.assertFileExists(filename)
         if dtype is None:
             dtype = internals.get_default_dtype()
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         size = shape.count() * dtype().itemsize
-        self.assertFileExistsAndHasSize(filename, size)
+        filesize = os.stat(filename).st_size
+        if filesize != size:
+            raise AssertionError("file {!r} has size {} != {} [shape={}, dtype={}]".format(filename, filesize, size, shape, dtype.__name__))
 
     def assertFilesAreEqual(self, filename_a, filename_b):
         self.assertFileExists(filename_a)
         size = os.stat(filename_a).st_size
         self.assertFileExistsAndHasSize(filename_b, size)
         block_bytes = Memory('1gb').get_bytes()
+        offset = 0
         with open(filename_a, 'rb') as f_a, open(filename_b, 'rb') as f_b:
             block_a = f_a.read(block_bytes)
             block_b = f_b.read(block_bytes)
-            self.assertEqual(block_a, block_b)
+            if block_a != block_b:
+                for count, (ca, cb) in enumerate(zip(block_a, block_b)):
+                    if ca != cb:
+                        raise AssertionError("file {!r} differs from file {!r}; first difference at {}".format(
+                            filename_a,
+                            filename_b,
+                            offset + count))
+            offset += len(block_a)

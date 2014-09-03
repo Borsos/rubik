@@ -29,14 +29,18 @@ from .rubik_test_suite import RubikTestSuite
 
 from .tests import SUITES
 
-from rubik.testing.tests import SUITES
+from .rubik_test_conf import RUBIK_TEST_CONF
 
 
 class RubikTestMain(object):
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, verbose_level=0, trace_errors=False):
         if logger is None: 
             logger = conf.get_logger()
         self.logger = logger
+        RUBIK_TEST_CONF.verbose_level = verbose_level
+        RUBIK_TEST_CONF.trace_errors = trace_errors
+        RUBIK_TEST_CONF.logger = logger
+
         self.name = self.__class__.__name__
 
         # global setup

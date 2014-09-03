@@ -18,21 +18,17 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-            'SUITES',
+           'RubikTestConf',
+           'RUBIK_TEST_CONF',
           ]
 
-import collections
+from ..application.log import get_logger
 
-SUITES = collections.OrderedDict()
+class RubikTestConf(object):
+    def __init__(self, verbose_level=0, trace_errors=False, logger=None):
+        self.verbose_level = verbose_level
+        self.trace_errors = trace_errors
+        if logger is None:
+            logger = get_logger()
 
-from .test_base import SUITE_BASE
-
-SUITES['base'] = SUITE_BASE
-
-from .test_cubes import SUITE_CUBES
-
-SUITES['cubes'] = SUITE_CUBES
-
-from .test_main import SUITE_MAIN
-
-SUITES['cubes'] = SUITE_MAIN
+RUBIK_TEST_CONF = RubikTestConf()

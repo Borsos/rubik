@@ -18,21 +18,16 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-            'SUITES',
+           'SUITE_MAIN',
           ]
 
-import collections
+from ...rubik_test_suite import RubikTestSuite
 
-SUITES = collections.OrderedDict()
+SUITE_MAIN = RubikTestSuite()
 
-from .test_base import SUITE_BASE
+from .rubik_test_execution import RubikTestExecution
+SUITE_MAIN.add_test_class(RubikTestExecution)
 
-SUITES['base'] = SUITE_BASE
+from .rubik_test_work import RubikTestWork
+SUITE_MAIN.add_test_class(RubikTestWork)
 
-from .test_cubes import SUITE_CUBES
-
-SUITES['cubes'] = SUITE_CUBES
-
-from .test_main import SUITE_MAIN
-
-SUITES['cubes'] = SUITE_MAIN

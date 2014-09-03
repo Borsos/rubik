@@ -135,6 +135,13 @@ Global options""")
         default=config.default_verbose_level,
         help="increase verbose level")
 
+    global_group.add_argument("--verbose-level",
+        metavar="VL",
+        dest="verbose_level",
+        type=int,
+        default=config.default_verbose_level,
+        help="set verbose level")
+
     global_group.add_argument("--quiet", "--silent", "-q",
         dest="verbose_level",
         action="store_const",
@@ -634,7 +641,7 @@ Options to show help on specific topics """)
 
     if args.run_test:
         from rubik.testing.rubik_test_main import RubikTestMain
-        rubik_test_main = RubikTestMain(logger=logger)
+        rubik_test_main = RubikTestMain(logger=logger, verbose_level=args.verbose_level)
         result = rubik_test_main.run()
         returncode = len(result.failures)
         sys.exit(returncode)

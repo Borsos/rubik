@@ -18,21 +18,20 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-            'SUITES',
+           'RubikTestExecution',
           ]
 
-import collections
 
-SUITES = collections.OrderedDict()
+from ....conf import VERSION
 
-from .test_base import SUITE_BASE
+from ...rubik_test_program import RubikTestProgram
 
-SUITES['base'] = SUITE_BASE
+class RubikTestExecution(RubikTestProgram):
+    def runTest_ExecutionHelp(self):
+        returncode, output, error = self.run_program("--help")
+        self.assertEqual(returncode, 0)
 
-from .test_cubes import SUITE_CUBES
-
-SUITES['cubes'] = SUITE_CUBES
-
-from .test_main import SUITE_MAIN
-
-SUITES['cubes'] = SUITE_MAIN
+    def runTest_ExecutionVersion(self):
+        returncode, output, error = self.run_program("--version --jagger")
+        self.assertEqual(returncode, 0)
+        self.assertEqual(output, "rubik {}\n".format(VERSION))
