@@ -26,13 +26,10 @@ import collections
 SUITES = collections.OrderedDict()
 
 from .test_base import SUITE_BASE
-
 SUITES['base'] = SUITE_BASE
 
 from .test_cubes import SUITE_CUBES
-
 SUITES['cubes'] = SUITE_CUBES
 
-from .test_main import SUITE_MAIN
-
-SUITES['cubes'] = SUITE_MAIN
+from .test_program import SUITE_PROGRAM
+SUITES['program'] = SUITE_PROGRAM

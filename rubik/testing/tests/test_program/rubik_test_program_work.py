@@ -18,7 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'RubikTestWork',
+           'RubikTestProgramWork',
           ]
 
 import subprocess
@@ -28,9 +28,9 @@ from ....shape import Shape
 
 from ...rubik_test_program import RubikTestProgram
 
-class RubikTestWork(RubikTestProgram):
+class RubikTestProgramWork(RubikTestProgram):
     def setUp(self):
-        super(RubikTestWork, self).setUp()
+        super(RubikTestProgramWork, self).setUp()
         self.X = 10
         self.Y = 20
         self.Z = 30
@@ -45,7 +45,7 @@ class RubikTestWork(RubikTestProgram):
 
         self.CONST_VALUE = 7.0
 
-    def runTest_WorkRandomXYZCube(self):
+    def runTest_ProgramWorkRandomXYZCube(self):
         shape = self.XYZ
         file_format = 'raw'
         out0_filename_format = 'im_{shape}.{format}'
@@ -64,7 +64,7 @@ class RubikTestWork(RubikTestProgram):
                 o=out1_filename_format))
         self.assertFilesAreEqual(out1_filename, out0_filename)
 
-    def runTest_WorkRandomXYHZCube(self):
+    def runTest_ProgramWorkRandomXYHZCube(self):
         shape = self.XYHZ
         file_format = 'raw'
         out0_filename_format = 'og_{shape}.{format}'
@@ -107,7 +107,7 @@ class RubikTestWork(RubikTestProgram):
             )
             self.assertFileExistsAndHasShape(out2_filename, self.XYZ)
 
-    def runTest_WorkConstCube(self):
+    def runTest_ProgramWorkConstCube(self):
         shape = self.XYZ
         file_format = 'raw'
         out0_filename_format = 'c_{shape}.{format}'
@@ -127,7 +127,7 @@ class RubikTestWork(RubikTestProgram):
             stderr=subprocess.PIPE)
         self.assertEqual(output, "{}\n".format(shape.count() * self.CONST_VALUE))
 
-    def runTest_WorkLinearCube(self):
+    def runTest_ProgramWorkLinearCube(self):
         shape = self.XYZ
         file_format = 'raw'
         out0_filename_format = 'l_{shape}.{format}'
@@ -139,7 +139,7 @@ class RubikTestWork(RubikTestProgram):
                 o=out0_filename_format))
         self.assertFileExistsAndHasShape(out0_filename, shape)
 
-    def runTest_WorkNdArray(self):
+    def runTest_ProgramWorkNdArray(self):
         shape = self.XYZ
         file_format = 'raw'
         out0_filename_format = 'nd_{shape}.{format}'
@@ -152,7 +152,7 @@ class RubikTestWork(RubikTestProgram):
                 o=out0_filename_format))
         self.assertFileExistsAndHasShape(out0_filename, shape)
 
-    def runTest_WorkEquals(self):
+    def runTest_ProgramWorkEquals(self):
         shape = self.AB
         file_format = 'raw'
         out0_filename_format = 'l0_{shape}.{format}'

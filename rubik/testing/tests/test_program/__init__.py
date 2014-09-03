@@ -18,20 +18,16 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'RubikTestExecution',
+           'SUITE_PROGRAM',
           ]
 
+from ...rubik_test_suite import RubikTestSuite
 
-from ....conf import VERSION
+SUITE_PROGRAM = RubikTestSuite()
 
-from ...rubik_test_program import RubikTestProgram
+from .rubik_test_program_execution import RubikTestProgramExecution
+SUITE_PROGRAM.add_test_class(RubikTestProgramExecution)
 
-class RubikTestExecution(RubikTestProgram):
-    def runTest_ExecutionHelp(self):
-        returncode, output, error = self.run_program("--help")
-        self.assertEqual(returncode, 0)
+from .rubik_test_program_work import RubikTestProgramWork
+SUITE_PROGRAM.add_test_class(RubikTestProgramWork)
 
-    def runTest_ExecutionVersion(self):
-        returncode, output, error = self.run_program("--version --jagger")
-        self.assertEqual(returncode, 0)
-        self.assertEqual(output, "rubik {}\n".format(VERSION))
