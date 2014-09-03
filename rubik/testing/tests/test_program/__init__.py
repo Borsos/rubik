@@ -31,3 +31,7 @@ SUITE_PROGRAM.add_test_class(RubikTestProgramExecution)
 from .rubik_test_program_work import RubikTestProgramWork
 SUITE_PROGRAM.add_test_class(RubikTestProgramWork)
 
+from .rubik_test_program_usage import RubikTestProgramUsage
+SUITE_PROGRAM.add_test_class(RubikTestProgramUsage)
+
+
