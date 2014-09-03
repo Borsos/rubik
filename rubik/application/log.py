@@ -23,7 +23,8 @@ import traceback
 
 __all__ = ['create_logger', 'set_logger', 'get_logger',
            'set_report_logger', 'get_report_logger',
-           'LOGGER', 'REPORT_LOGGER',
+           'set_test_logger', 'get_test_logger',
+           'LOGGER', 'REPORT_LOGGER', 'TEST_LOGGER',
            'trace_error',
            'set_trace_errors',
            'get_trace_errors',
@@ -50,6 +51,7 @@ def create_logger(logger_name, verbose_level, stream=None):
 
 LOGGER = None
 REPORT_LOGGER = None
+TEST_LOGGER = None
 
 PRINT = create_logger('PRINT', 10, stream=sys.stdout).info
 
@@ -71,6 +73,14 @@ def set_report_logger(report_level):
 
 def get_report_logger():
     return REPORT_LOGGER
+
+def set_test_logger(test_level):
+    global TEST_LOGGER
+    TEST_LOGGER = create_logger("TEST", test_level)
+    return TEST_LOGGER
+
+def get_test_logger():
+    return TEST_LOGGER
 
 DEFAULT_TRACE_ERRORS = False
 

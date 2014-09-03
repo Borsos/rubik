@@ -23,6 +23,7 @@ __all__ = [
 
 
 import unittest
+import fnmatch
 import os
 
 from ..units import Memory
@@ -30,11 +31,20 @@ from ..shape import Shape
 from ..cubes import internals
 
 class RubikTestCase(unittest.TestCase):
+    METHOD_PREFIX = "runTest_"
+    def __init__(self, test_name):
+        self.test_name = test_name
+        method_name = self.METHOD_PREFIX + self.test_name
+        super(RubikTestCase, self).__init__(methodName=method_name)
+
     @classmethod
-    def register(cls, suite):
+    def filter_test_names(cls, test_patterns):
         for member in dir(cls):
-            if member.startswith("runTest_"):
-                suite.addTest(cls(methodName=member))
+            if member.startswith(cls.METHOD_PREFIX):
+                test_name = member[len(cls.METHOD_PREFIX):]
+                for test_pattern in test_patterns:
+                    if fnmatch.fnmatchcase(test_name, test_pattern):
+                        yield test_name
 
     def assertPathExists(self, filename):
         if not os.path.exists(filename):

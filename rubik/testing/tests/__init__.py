@@ -23,13 +23,17 @@ __all__ = [
 
 import collections
 
-SUITES = collections.OrderedDict()
+class RubikTestSuites(collections.OrderedDict):
+    def add_suite(self, suite):
+        self[suite.suite_name] = suite
+
+SUITES = RubikTestSuites()
 
 from .test_base import SUITE_BASE
-SUITES['base'] = SUITE_BASE
+SUITES.add_suite(SUITE_BASE)
 
 from .test_cubes import SUITE_CUBES
-SUITES['cubes'] = SUITE_CUBES
+SUITES.add_suite(SUITE_CUBES)
 
 from .test_program import SUITE_PROGRAM
-SUITES['program'] = SUITE_PROGRAM
+SUITES.add_suite(SUITE_PROGRAM)

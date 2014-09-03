@@ -23,7 +23,7 @@ __all__ = [
 
 from ...rubik_test_suite import RubikTestSuite
 
-SUITE_CUBES = RubikTestSuite()
+SUITE_CUBES = RubikTestSuite('Cubes')
 
 from .rubik_test_cubes import RubikTestCubes
-SUITE_CUBES.add_test_class(RubikTestCubes)
+SUITE_CUBES.register_test_class(RubikTestCubes)

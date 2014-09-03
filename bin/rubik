@@ -251,6 +251,12 @@ Global options""")
         nargs='+',
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
+    global_group.add_argument("--test", "-T",
+        dest="run_test",
+        action="store_true",
+        default=False,
+        help="run test suites")
+
     global_group.add_argument("expression",
         type=rubik.expressions.store,
         nargs='*',
@@ -523,7 +529,36 @@ Arguments for graphical visualization""")
         type=rubik.output_text_converters.store,
         help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
+    test_group = parser.add_argument_group(
+        "test options",
+        description="""\
+Options related to tests.""")
 
+    test_group.add_argument("--test-pattern", "-Tp",
+        metavar="SP[.TP]",
+        dest="test_patterns",
+        type=str,
+        default=[],
+        nargs='+',
+        help="add pattern to filter suites/tests")
+
+    test_group.add_argument("--test-list", "-Tl",
+        dest="test_list",
+        action="store_true",
+        default=False,
+        help="list available tests")
+
+    test_group.add_argument("--test-verbose", "-Tv",
+        dest="test_verbose_level",
+        action="count",
+        default=config.default_verbose_level,
+        help="increase test verbose level")
+
+    test_group.add_argument("--test-verbose-level", "-TV",
+        dest="test_verbose_level",
+        type=int,
+        default=config.default_verbose_level,
+        help="set test verbose level")
 
     help_group = parser.add_argument_group(
         "help options",
@@ -620,31 +655,33 @@ Options to show help on specific topics """)
         default=False,
         help="show demo")
 
-    help_group.add_argument("--test", "-T",
-        dest="run_test",
-        action="store_true",
-        default=False,
-        help="run test suites")
-
     argumentss = config.default_options + conf.RUBIK_OPTIONS + sys.argv[1:]
 
     try:
         args = parser.parse_args(argumentss)
     except Exception as err:
         sys.stderr.write("error: {0}: {1}\n".format(err.__class__.__name__, err))
-        sys.exit(1)
+        return 1
 
     log.set_trace_errors(args.trace_errors)
 
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
 
-    if args.run_test:
+    # test
+    if args.test_list or args.run_test:
+        test_logger = log.set_test_logger(args.test_verbose_level)
+        patterns = utils.flatten_list(args.test_patterns, depth=1)
         from rubik.testing.rubik_test_main import RubikTestMain
-        rubik_test_main = RubikTestMain(logger=logger, verbose_level=args.verbose_level)
-        result = rubik_test_main.run()
-        returncode = len(result.failures)
-        sys.exit(returncode)
+        rubik_test_main = RubikTestMain(logger=test_logger, verbose_level=args.test_verbose_level)
+        if args.test_list:
+            for test_name in rubik_test_main.filter_test_names(patterns):
+                log.PRINT("  {}".format(test_name))
+        if args.run_test:
+            result = rubik_test_main.run(patterns)
+            return_code = len(result.failures)
+            return return_code
+        return 0
 
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)
@@ -668,7 +705,7 @@ Options to show help on specific topics """)
 
     if args.logo:
         rubik.show_logo()
-        sys.exit(0)
+        return 0
 
     help_done = False
     for key in dir(args):
@@ -677,7 +714,7 @@ Options to show help on specific topics """)
             help_function()
             help_done = True
     if help_done:
-        sys.exit(0)
+        return 0
         
     
     if args.random_seed is not None:
@@ -703,8 +740,9 @@ Options to show help on specific topics """)
         log.trace_error()
 
     if return_code:
-        sys.exit(return_code)
+        return return_code
 
 
 if __name__ == "__main__":
-    main()
+    return_code = main()
+    sys.exit(return_code)

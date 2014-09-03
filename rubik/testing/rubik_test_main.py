@@ -21,6 +21,10 @@ __all__ = [
            'RubikTestMain',
           ]
 
+import collections
+import fnmatch
+import sys
+
 from ..application.log import get_logger
 from ..cubes.api import set_random_seed
 
@@ -33,7 +37,7 @@ from .rubik_test_conf import RUBIK_TEST_CONF
 
 
 class RubikTestMain(object):
-    def __init__(self, logger=None, verbose_level=0, trace_errors=False):
+    def __init__(self, logger=None, verbose_level=0, trace_errors=False, patterns=None):
         if logger is None: 
             logger = conf.get_logger()
         self.logger = logger
@@ -49,16 +53,63 @@ class RubikTestMain(object):
         # create runner
         self.rubik_test_runner = RubikTestRunner()
 
+    def create_main_suite(self, patterns=None):
         # create suite
-        self.rubik_test_suite = RubikTestSuite()
+        main_suite = RubikTestSuite('Main')
 
         # add suites
-        for suite_name, suite in SUITES.iteritems():
-            self.logger.info("{}: adding suite {!r}:".format(self.name, suite_name))
-            self.rubik_test_suite.addTest(suite)
+        suite_patterns = self.filter_suites(patterns)
+        for suite_name, test_patterns in suite_patterns.iteritems():
+            suite = SUITES[suite_name]
+            suite.add_tests(test_patterns, self.logger)
+            #self.logger.info("{}: adding suite {}".format(self.name, suite.suite_name))
+            main_suite.addTest(suite)
 
-    def run(self):
+        return main_suite
+        
+    def run(self, patterns):
+        # create main suite
+        main_suite = self.create_main_suite(patterns)
+
         # run tests
-        self.result = self.rubik_test_runner.run(self.rubik_test_suite)
+        self.result = self.rubik_test_runner.run(main_suite)
         return self.result
     
+    @classmethod
+    def split_pattern(cls, pattern):
+        suite_pattern = '*'
+        test_pattern = '*' 
+        l = pattern.split('.', 2)
+        if len(l) == 1:
+            suite_pattern = l[0]
+        else:
+            suite_pattern, test_pattern = l
+        return suite_pattern, test_pattern
+
+    @classmethod
+    def split_patterns(cls, patterns):
+        if not patterns:
+            return (('*', '*'), )
+        else:
+            return tuple(cls.split_pattern(pattern) for pattern in patterns)
+
+    def filter_suites(self, patterns=None):
+        # split patterns
+        patterns = self.split_patterns(patterns)
+        
+        # filter suites
+        suite_patterns = collections.OrderedDict()
+        for suite_name, suite in SUITES.iteritems():
+            for suite_pattern, test_pattern in patterns:
+                if fnmatch.fnmatchcase(suite_name, suite_pattern):
+                    suite_patterns.setdefault(suite_name, []).append(test_pattern)
+
+        return suite_patterns
+
+    def filter_test_names(self, patterns=None):
+        suite_patterns = self.filter_suites(patterns)
+
+        for suite_name, test_patterns in suite_patterns.iteritems():
+            suite = SUITES[suite_name]
+            for test_class, test_name in suite.filter_test_classes_and_names(test_patterns):
+                yield "{}.{}".format(suite.suite_name, test_name)

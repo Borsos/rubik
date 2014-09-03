@@ -23,15 +23,15 @@ __all__ = [
 
 from ...rubik_test_suite import RubikTestSuite
 
-SUITE_PROGRAM = RubikTestSuite()
+SUITE_PROGRAM = RubikTestSuite('Program')
 
 from .rubik_test_program_execution import RubikTestProgramExecution
-SUITE_PROGRAM.add_test_class(RubikTestProgramExecution)
+SUITE_PROGRAM.register_test_class(RubikTestProgramExecution)
 
 from .rubik_test_program_work import RubikTestProgramWork
-SUITE_PROGRAM.add_test_class(RubikTestProgramWork)
+SUITE_PROGRAM.register_test_class(RubikTestProgramWork)
 
 from .rubik_test_program_usage import RubikTestProgramUsage
-SUITE_PROGRAM.add_test_class(RubikTestProgramUsage)
+SUITE_PROGRAM.register_test_class(RubikTestProgramUsage)
 
 

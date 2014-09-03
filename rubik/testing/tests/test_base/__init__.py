@@ -23,23 +23,23 @@ __all__ = [
 
 from ...rubik_test_suite import RubikTestSuite
 
-SUITE_BASE = RubikTestSuite()
+SUITE_BASE = RubikTestSuite('Base')
 
 from .rubik_test_memory import RubikTestMemory
-SUITE_BASE.add_test_class(RubikTestMemory)
+SUITE_BASE.register_test_class(RubikTestMemory)
 
 from .rubik_test_time import RubikTestTime
-SUITE_BASE.add_test_class(RubikTestTime)
+SUITE_BASE.register_test_class(RubikTestTime)
 
 from .rubik_test_index_picker import RubikTestIndexPicker
-SUITE_BASE.add_test_class(RubikTestIndexPicker)
+SUITE_BASE.register_test_class(RubikTestIndexPicker)
 
 from .rubik_test_extractor import RubikTestExtractor
-SUITE_BASE.add_test_class(RubikTestExtractor)
+SUITE_BASE.register_test_class(RubikTestExtractor)
 
 from .rubik_test_values import RubikTestValues
-SUITE_BASE.add_test_class(RubikTestValues)
+SUITE_BASE.register_test_class(RubikTestValues)
 
 from .rubik_test_shape import RubikTestShape
-SUITE_BASE.add_test_class(RubikTestShape)
+SUITE_BASE.register_test_class(RubikTestShape)
 

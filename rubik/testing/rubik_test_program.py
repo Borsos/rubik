@@ -31,11 +31,11 @@ class RubikTestProgram(RubikTestCase):
     DEFAULT_PROGRAM_NAME = 'rubik'
     DEFAULT_PREFIX_OPTIONS = '--random-seed 100'
     DEFAULT_SUFFIX_OPTIONS = ''
-    def __init__(self, methodName='runTest'):
+    def __init__(self, test_name):
         self.set_program_name(self.DEFAULT_PROGRAM_NAME)
         self.set_prefix_options(self.DEFAULT_PREFIX_OPTIONS)
         self.set_suffix_options(self.DEFAULT_SUFFIX_OPTIONS)
-        super(RubikTestProgram, self).__init__(methodName=methodName)
+        super(RubikTestProgram, self).__init__(test_name=test_name)
 
     def setUp(self):
         super(RubikTestProgram, self).setUp()
@@ -101,7 +101,7 @@ class RubikTestProgram(RubikTestCase):
                 logger.error("error is: <<<\n{}>>>".format(error))
             raise AssertionError(assert_message)
         else:
-            logger.info("command {} returned {}".format(command, returncode))
+            logger.debug("command {} returned {}".format(command, returncode))
             if output is not None:
                 logger.debug("output is: <<<\n{}>>>".format(output))
             if error is not None:
