@@ -118,13 +118,18 @@ DATA_TYPES = collections.OrderedDict((
 DEFAULT_DATA_TYPE = "float32"
 
 def get_dtype(data_type):
-    if isinstance(data_type, str):
+    if isinstance(data_type, np.dtype):
+        return data_type.type
+    elif isinstance(data_type, str):
         try:
             return getattr(np, data_type)
         except Exception as err:
             raise RubikDataTypeError("invalid dtype {0!r}: {1}: {2}".format(data_type, err.__class__.__name__, err))
     else:
-        return data_type
+        if isinstance(data_type, type) and issubclass(data_type, np.generic):
+            return data_type
+        else:
+            raise ValueError("invalid data type {!r} of type {}".format(data_type, type(data_type).__name__))
 
 DEFAULT_DTYPE = get_dtype(DEFAULT_DATA_TYPE)
 

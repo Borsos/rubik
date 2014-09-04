@@ -25,5 +25,5 @@ from ...rubik_test_suite import RubikTestSuite
 
 SUITE_CUBES = RubikTestSuite('Cubes')
 
-from .rubik_test_cubes import RubikTestCubes
-SUITE_CUBES.register_test_class(RubikTestCubes)
+from .rubik_test_input_output import RubikTestInputOutput
+SUITE_CUBES.register_test_class(RubikTestInputOutput)

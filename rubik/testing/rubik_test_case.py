@@ -27,9 +27,12 @@ import fnmatch
 import inspect
 import os
 
+import numpy as np
+
 from ..units import Memory
 from ..shape import Shape
 from ..cubes import internals
+from ..cubes import api as cb
 
 def testmethod(method):
     stack = inspect.stack()
@@ -128,3 +131,15 @@ class RubikTestCase(unittest.TestCase):
             raise AssertionError("files {!r} and {!r} are identical".format(
                 filename_a,
                 filename_b))
+
+    def assertCubesAreEqual(self, cube_a, cube_b):
+        if cb.not_equals_num(cube_a, cube_b) != 0:
+            raise AssertionError("cubes {} and {} differ".format(
+                cube_a.shape,
+                cube_b.shape))
+
+    def assertCubesDiffer(self, cube_a, cube_b):
+        if cb.equals_num(cube_a, cube_b) != 0:
+            raise AssertionError("cubes {} and {} are identical".format(
+                cube_a.shape,
+                cube_b.shape))

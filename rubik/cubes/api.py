@@ -52,7 +52,11 @@ __all__ = [
            'print_stats_file',
            'diff_files',
            'print_diff_files',
+           'sum',
+           'mean',
            'set_random_seed',
+           'get_dtype',
+           'best_dtype',
           ]
 
 from .creation import \
@@ -97,5 +101,11 @@ from .stats import \
     diff_files, \
     print_diff_files
 
+from .utilities import \
+    sum, \
+    mean
+
 from .internals import \
-    set_random_seed
+    set_random_seed, \
+    best_dtype, \
+    get_dtype
