@@ -60,11 +60,11 @@ def get_default_dtype():
 def get_dtype(dtype):
     return conf.get_dtype(dtype)
 
-def best_dtype(dtype):
-    """best_dtype(dtype) -> best dtype
-       e.g.: best_dtype(np.float32) -> np.float64
-             best_dtype(np.int32) -> np.int64
-             best_dtype(np.uint32) -> np.uint64
+def best_precise_dtype(dtype):
+    """best_precise_dtype(dtype) -> best precise dtype
+       e.g.: best_precise_dtype(np.float32) -> np.float64
+             best_precise_dtype(np.int32)   -> np.int64
+             best_precise_dtype(np.uint32)  -> np.uint64
     """
     dtype = get_dtype(dtype)
     if issubclass(dtype, np.signedinteger):

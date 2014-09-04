@@ -52,11 +52,11 @@ __all__ = [
            'print_stats_file',
            'diff_files',
            'print_diff_files',
-           'cube_sum',
-           'cube_mean',
+           'precise_sum',
+           'precise_mean',
            'set_random_seed',
            'get_dtype',
-           'best_dtype',
+           'best_precise_dtype',
           ]
 
 from .creation import \
@@ -102,10 +102,8 @@ from .stats import \
     print_diff_files
 
 from .utilities import \
-    cube_sum, \
-    cube_mean
-
-from .internals import \
     set_random_seed, \
-    best_dtype, \
-    get_dtype
+    best_precise_dtype, \
+    get_dtype, \
+    precise_sum, \
+    precise_mean
