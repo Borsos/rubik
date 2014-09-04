@@ -28,7 +28,6 @@ import numpy as np
 import random
 
 from .. import conf
-from .internals import best_precise_dtype
 
 def get_dtype(dtype):
     """get_dtype(dtype) -> numpy dtype

@@ -30,7 +30,7 @@ import os
 from ..errors import RubikError
 from ..units import Memory
 from ..shape import Shape
-from ..conf import get_dtype
+from .utilities import get_dtype
 from .internals import get_default_dtype
 
 def filelist(filenames):

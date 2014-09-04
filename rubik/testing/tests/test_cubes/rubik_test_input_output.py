@@ -24,7 +24,7 @@ __all__ = [
 import numpy as np
 
 from ....cubes import api as cb
-from ....cubes import internals
+from ....cubes import utilities
 from ....shape import Shape
 from .... import py23
 
@@ -34,7 +34,7 @@ class RubikTestInputOutput(RubikTestCase):
     METHOD_NAMES = []
 
     def impl_write_cube_out_of_core(self, kind, shape, dtype, buffer_size=None):
-        dtype = internals.get_dtype(dtype)
+        dtype = utilities.get_dtype(dtype)
         shape = Shape(shape)
         filename_format_a = "a_{kind}_{{shape}}_{{dtype}}.{{format}}".format(kind=kind)
         filename_format_b = "b_{kind}_{{shape}}_{{dtype}}.{{format}}".format(kind=kind)

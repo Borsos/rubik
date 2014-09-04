@@ -25,7 +25,6 @@ __all__ = [
            'as_default_dtype',
            'as_dtype',
            'get_default_dtype',
-           'get_dtype',
            'set_random_seed',
           ]
 
@@ -56,27 +55,6 @@ def set_default_dtype(dtype):
 def get_default_dtype():
     global DEFAULT_DTYPE
     return DEFAULT_DTYPE
-
-def get_dtype(dtype):
-    return conf.get_dtype(dtype)
-
-def best_precise_dtype(dtype):
-    """best_precise_dtype(dtype) -> best precise dtype
-       e.g.: best_precise_dtype(np.float32) -> np.float64
-             best_precise_dtype(np.int32)   -> np.int64
-             best_precise_dtype(np.uint32)  -> np.uint64
-    """
-    dtype = get_dtype(dtype)
-    if issubclass(dtype, np.signedinteger):
-        return np.int64
-    elif issubclass(dtype, np.unsignedinteger):
-        return np.uint64
-    elif issubclass(dtype, np.floating):
-        return np.float64
-    elif issubclass(dtype, np.complexfloating):
-        return np.complex128
-    else:
-        return dtype
 
 def as_dtype(cube, dtype=None):
     if dtype is None:
