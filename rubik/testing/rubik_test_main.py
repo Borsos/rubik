@@ -58,12 +58,14 @@ class RubikTestMain(object):
         main_suite = RubikTestSuite('Main')
 
         # add suites
-        suite_patterns = self.filter_suites(patterns)
-        for suite_name, test_patterns in suite_patterns.iteritems():
-            suite = SUITES[suite_name]
-            suite.add_tests(test_patterns, self.logger)
-            #self.logger.info("{}: adding suite {}".format(self.name, suite.suite_name))
-            main_suite.addTest(suite)
+        for suite_name, suite in SUITES.iteritems():
+            suite_num_tests = 0
+            for test_class, test_name in suite.test_classes_and_names():
+                if self.match_patterns(test_name, patterns):
+                    suite.addTest(test_class(test_name=test_name))
+                    suite_num_tests += 1
+            if suite_num_tests > 0:
+                main_suite.addTest(suite)
 
         return main_suite
         
@@ -76,40 +78,21 @@ class RubikTestMain(object):
         return self.result
     
     @classmethod
-    def split_pattern(cls, pattern):
-        suite_pattern = '*'
-        test_pattern = '*' 
-        l = pattern.split('.', 1)
-        if len(l) == 1:
-            suite_pattern = l[0]
+    def match_patterns(cls, test_name, patterns):
+        if patterns:
+            for pattern in patterns:
+                if fnmatch.fnmatchcase(test_name, pattern):
+                    return True
+            else:
+                return False
         else:
-            suite_pattern, test_pattern = l
-        return suite_pattern, test_pattern
+            # select all
+            return True
 
     @classmethod
-    def split_patterns(cls, patterns):
-        if not patterns:
-            return (('*', '*'), )
-        else:
-            return tuple(cls.split_pattern(pattern) for pattern in patterns)
-
-    def filter_suites(self, patterns=None):
-        # split patterns
-        patterns = self.split_patterns(patterns)
-        
-        # filter suites
-        suite_patterns = collections.OrderedDict()
+    def filter_test_names(cls, patterns):
         for suite_name, suite in SUITES.iteritems():
-            for suite_pattern, test_pattern in patterns:
-                if fnmatch.fnmatchcase(suite_name, suite_pattern):
-                    suite_patterns.setdefault(suite_name, []).append(test_pattern)
+            for test_name in suite.test_names():
+                if cls.match_patterns(test_name, patterns):
+                    yield test_name
 
-        return suite_patterns
-
-    def filter_test_names(self, patterns=None):
-        suite_patterns = self.filter_suites(patterns)
-
-        for suite_name, test_patterns in suite_patterns.iteritems():
-            suite = SUITES[suite_name]
-            for test_class, test_name in suite.filter_test_classes_and_names(test_patterns):
-                yield "{}.{}".format(suite.suite_name, test_name)

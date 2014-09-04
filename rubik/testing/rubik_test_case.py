@@ -42,21 +42,27 @@ class RubikTestCase(unittest.TestCase):
     METHOD_NAMES = []
     def __init__(self, test_name):
         self.test_name = test_name
-        method_name = self.test_name.split('.', 1)[-1]
+        # test_name can be:
+        #  o 'test'
+        #  o 'test_class'.'test'
+        #  o 'suite_name'.'test_class'.'test'
+        method_name = self.test_name.split('.')[-1]
         super(RubikTestCase, self).__init__(methodName=method_name)
 
     @classmethod
-    def filter_test_names(cls, test_patterns):
+    def class_name(cls):
         class_name = cls.__name__
         class_name_prefix = "RubikTest"
         if class_name.startswith(class_name_prefix):
             class_name = class_name[len(class_name_prefix):]
+        return class_name
 
+    @classmethod
+    def test_names(cls):
+        class_name = cls.class_name()
         for test_method in cls.METHOD_NAMES:
             test_name = "{}.{}".format(class_name, test_method)
-            for test_pattern in test_patterns:
-                if fnmatch.fnmatchcase(test_name, test_pattern):
-                    yield test_name
+            yield test_name
 
     def assertPathExists(self, filename):
         if not os.path.exists(filename):
