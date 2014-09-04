@@ -38,6 +38,7 @@ from .internals import output_mode_callback
 from .interpolate_filename import interpolate_filename
 from .input_output import fromfile_raw
 from .out_of_core import BlockReader
+from . import utilities
 
 from ..errors import RubikError
 from ..shape import Shape
@@ -270,7 +271,7 @@ class StatsInfo(Info):
             shape = cube.shape
         cube_name = name
         cube_shape = Shape(shape)
-        cube_sum = cube.sum()
+        cube_sum = utilities.cube_sum(cube)
         cube_ave = None
         cube_count = cube.size
         if cube_count:

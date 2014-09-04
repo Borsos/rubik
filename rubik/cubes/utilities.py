@@ -18,8 +18,8 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'sum',
-           'mean',
+           'cube_sum',
+           'cube_mean',
           ]
 
 import numpy as np
@@ -27,8 +27,8 @@ import numpy as np
 from .internals import best_dtype
 
 
-def sum(cube, axis=None, dtype=None, out=None, keepdims=False):
-    """sum(cube, axis=None, dtype=None, out=None, keepdims=False) -> sum of cube
+def cube_sum(cube, axis=None, dtype=None, out=None, keepdims=False):
+    """cube_sum(cube, axis=None, dtype=None, out=None, keepdims=False) -> sum of cube
        This is a replacement of numpy.sum; if dtype is None, the best available
        dtype is used.
     """
@@ -36,8 +36,8 @@ def sum(cube, axis=None, dtype=None, out=None, keepdims=False):
         dtype = best_dtype(cube.dtype)
     return np.sum(a=cube, axis=axis, dtype=dtype, out=out, keepdims=keepdims)
 
-def mean(cube, axis=None, dtype=None, out=None, keepdims=False):
-    """mean(cube, axis=None, dtype=None, out=None, keepdims=False) -> mean of cube
+def cube_mean(cube, axis=None, dtype=None, out=None, keepdims=False):
+    """cube_mean(cube, axis=None, dtype=None, out=None, keepdims=False) -> mean of cube
        This is a replacement of numpy.mean; if dtype is None, the best available
        dtype is used.
     """

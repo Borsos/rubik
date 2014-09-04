@@ -52,8 +52,8 @@ __all__ = [
            'print_stats_file',
            'diff_files',
            'print_diff_files',
-           'sum',
-           'mean',
+           'cube_sum',
+           'cube_mean',
            'set_random_seed',
            'get_dtype',
            'best_dtype',
@@ -102,8 +102,8 @@ from .stats import \
     print_diff_files
 
 from .utilities import \
-    sum, \
-    mean
+    cube_sum, \
+    cube_mean
 
 from .internals import \
     set_random_seed, \

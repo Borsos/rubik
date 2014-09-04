@@ -92,9 +92,9 @@ class RubikTestInputOutput(RubikTestCase):
             count = shape.count()
             sum_count = ((count - 1) * count) // 2
             l_sum = (l_start * count) + (l_increment * sum_count)
-            self.assertEqual(cb.sum(ooc_cube), l_sum)
+            self.assertEqual(cb.cube_sum(ooc_cube), l_sum)
         elif kind == 'const':
-            self.assertEqual(cb.sum(ooc_cube), shape.count() * c_value)
+            self.assertEqual(cb.cube_sum(ooc_cube), shape.count() * c_value)
         filename_b = filename_format_b.format(
             shape=shape,
             dtype=dtype.__name__,
