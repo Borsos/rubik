@@ -26,10 +26,13 @@ import numpy as np
 from ....cubes import api as cb
 from ....shape import Shape
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestCubes(RubikTestCase):
-    def runTest_WriteRawOutOfCore(self):
+    METHOD_NAMES = []
+
+    @testmethod
+    def write_random_cube_out_of_core(self):
         filename_format_a = "a_{shape}_{dtype}.{format}"
         filename_format_b = "b_{shape}_{dtype}.{format}"
         for shape_s in "85x70x40", "4", "1x2":

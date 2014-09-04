@@ -25,9 +25,11 @@ import collections
 
 from ....units import Time
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestTime(RubikTestCase):
+    METHOD_NAMES = []
+
     def setUp(self):
         super(RubikTestTime, self).setUp()
         self._times = collections.OrderedDict((
@@ -43,13 +45,15 @@ class RubikTestTime(RubikTestCase):
             ('2w',	(2 * 60 * 60 * 24 * 7,  '2w')),
         ))
         
-    def runTest_TimeConstructor(self):
+    @testmethod
+    def constructor(self):
         for time_i, (time_s, time_hs) in self._times.iteritems():
             time = Time(time_i)
             time_h = Time(time_hs)
             self.assertEqual(time.get_seconds(), time_s)
 
-    def runTest_TimeHuman(self):
+    @testmethod
+    def human(self):
         for time_i, (time_s, time_hs) in self._times.iteritems():
             time = Time(time_i)
             time_h = Time(time_hs)

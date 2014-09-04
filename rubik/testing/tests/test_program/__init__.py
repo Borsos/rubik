@@ -25,13 +25,13 @@ from ...rubik_test_suite import RubikTestSuite
 
 SUITE_PROGRAM = RubikTestSuite('Program')
 
-from .rubik_test_program_execution import RubikTestProgramExecution
-SUITE_PROGRAM.register_test_class(RubikTestProgramExecution)
+from .rubik_test_execution import RubikTestExecution
+SUITE_PROGRAM.register_test_class(RubikTestExecution)
 
-from .rubik_test_program_work import RubikTestProgramWork
-SUITE_PROGRAM.register_test_class(RubikTestProgramWork)
+from .rubik_test_work import RubikTestWork
+SUITE_PROGRAM.register_test_class(RubikTestWork)
 
-from .rubik_test_program_usage import RubikTestProgramUsage
-SUITE_PROGRAM.register_test_class(RubikTestProgramUsage)
+from .rubik_test_usage import RubikTestUsage
+SUITE_PROGRAM.register_test_class(RubikTestUsage)
 
 

@@ -18,7 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'RubikTestProgramUsage',
+           'RubikTestUsage',
           ]
 
 import numpy as np
@@ -28,10 +28,13 @@ from ....conf import VERSION
 from ....shape import Shape
 
 from ...rubik_test_program import RubikTestProgram
+from ...rubik_test_case import testmethod
 
-class RubikTestProgramUsage(RubikTestProgram):
+class RubikTestUsage(RubikTestProgram):
+    METHOD_NAMES = []
+
     def setUp(self):
-        super(RubikTestProgramUsage, self).setUp()
+        super(RubikTestUsage, self).setUp()
         self.X = 8
         self.Y = 10
         self.Z = 20
@@ -56,13 +59,16 @@ class RubikTestProgramUsage(RubikTestProgram):
                 s=self.shape,
                 o=self.l_filename_format))
 
-    def runTest_ProgramUsageRandomCube(self):
+    @testmethod
+    def random_cube_exists(self):
         self.assertFileExistsAndHasShape(self.r_filename, self.shape)
 
-    def runTest_ProgramUsageLinearCube(self):
+    @testmethod
+    def linear_cube_exists(self):
         self.assertFileExistsAndHasShape(self.l_filename, self.shape)
 
-    def runTest_ProgramUsageWriteAndReadText(self):
+    @testmethod
+    def write_and_read_text(self):
         out1_filename_format = 'rtmp1_{shape}.{format}'
         out1_filename = out1_filename_format.format(shape=self.shape, format='text')
         returncode, output, error = self.run_program(
@@ -81,7 +87,8 @@ class RubikTestProgramUsage(RubikTestProgram):
                 o1=out1_filename_format))
         self.assertFilesAreEqual(out2_filename, self.r_filename)
 
-    def runTest_ProgramUsageWriteFloat64(self):
+    @testmethod
+    def write_float64(self):
         out_filename_format = 'rtmp3_{shape}.{format}'
         out_filename = out_filename_format.format(shape=self.shape, format=self.file_format)
         returncode, output, error = self.run_program(
@@ -91,7 +98,8 @@ class RubikTestProgramUsage(RubikTestProgram):
                 o=out_filename_format))
         self.assertFileExistsAndHasShape(out_filename, self.shape, dtype=np.float64)
 
-    def runTest_ProgramUsageExtractor(self):
+    @testmethod
+    def extractor(self):
         for extractor, sub_shape in (
             (":,2:-2,:",	Shape((self.X, max(0, self.Y - 4), self.Z))),
             (":,::2,::4",	Shape((self.X, (self.Y // 2), (self.Z // 4)))),
@@ -108,7 +116,8 @@ class RubikTestProgramUsage(RubikTestProgram):
                     o=out_filename_format))
             self.assertFileExistsAndHasShape(out_filename, sub_shape)
  
-    def runTest_ProgramUsageSplit(self):
+    @testmethod
+    def split(self):
         out_filename_format = 'rtmp5_y{d1}_{shape}.{format}'
         yincr = 2
         extractor = ":,::{},:".format(yincr)
@@ -124,7 +133,8 @@ class RubikTestProgramUsage(RubikTestProgram):
             self.assertFileExistsAndHasShape(out_filename, sub_shape)
 
         
-    def runTest_ProgramUsageExpression0(self):
+    @testmethod
+    def expression_0(self):
         out1_filename_format = 'rtmp6_{shape}.{format}'
         out1_filename = out1_filename_format.format(shape=self.shape, format=self.file_format)
         returncode, output, error = self.run_program(
@@ -146,7 +156,8 @@ class RubikTestProgramUsage(RubikTestProgram):
         self.assertFileExistsAndHasShape(out2_filename, self.shape, dtype=np.float64)
         self.assertFilesAreEqual(out2_filename, out1_filename)
 
-    def runTest_ProgramUsageExpression1(self):
+    @testmethod
+    def expression_1(self):
         shape = Shape((self.X, self.Z))
         out1_filename_format = 'rtmp8_{shape}.{format}'
         out1_filename = out1_filename_format.format(shape=shape, format=self.file_format)

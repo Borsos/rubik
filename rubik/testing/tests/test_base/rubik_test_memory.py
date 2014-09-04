@@ -25,9 +25,11 @@ import collections
 
 from ....units import Memory
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestMemory(RubikTestCase):
+    METHOD_NAMES = []
+
     def setUp(self):
         super(RubikTestMemory, self).setUp()
         self._mems = collections.OrderedDict((
@@ -46,12 +48,14 @@ class RubikTestMemory(RubikTestCase):
             ('13gb',	(13 * 1024 * 1024 * 1024,	'13g')),
         ))
         
-    def runTest_MemoryConstructor(self):
+    @testmethod
+    def constructor(self):
         for mem_i, (mem_b, mem_hs) in self._mems.iteritems():
             mem = Memory(mem_i)
             self.assertEqual(mem.get_bytes(), mem_b)
 
-    def runTest_MemoryHuman(self):
+    @testmethod
+    def human(self):
         for mem_i, (mem_b, mem_hs) in self._mems.iteritems():
             mem = Memory(mem_i)
             mem_h = Memory(mem_hs)

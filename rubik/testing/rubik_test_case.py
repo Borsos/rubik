@@ -24,27 +24,39 @@ __all__ = [
 
 import unittest
 import fnmatch
+import inspect
 import os
 
 from ..units import Memory
 from ..shape import Shape
 from ..cubes import internals
 
+def testmethod(method):
+    stack = inspect.stack()
+    frame, filename, line_number, function_name, lines, index = stack[1]
+    method_list = frame.f_locals['METHOD_NAMES']
+    method_list.append(method.__name__)
+    return method
+    
 class RubikTestCase(unittest.TestCase):
-    METHOD_PREFIX = "runTest_"
+    METHOD_NAMES = []
     def __init__(self, test_name):
         self.test_name = test_name
-        method_name = self.METHOD_PREFIX + self.test_name
+        method_name = self.test_name.split('.', 1)[-1]
         super(RubikTestCase, self).__init__(methodName=method_name)
 
     @classmethod
     def filter_test_names(cls, test_patterns):
-        for member in dir(cls):
-            if member.startswith(cls.METHOD_PREFIX):
-                test_name = member[len(cls.METHOD_PREFIX):]
-                for test_pattern in test_patterns:
-                    if fnmatch.fnmatchcase(test_name, test_pattern):
-                        yield test_name
+        class_name = cls.__name__
+        class_name_prefix = "RubikTest"
+        if class_name.startswith(class_name_prefix):
+            class_name = class_name[len(class_name_prefix):]
+
+        for test_method in cls.METHOD_NAMES:
+            test_name = "{}.{}".format(class_name, test_method)
+            for test_pattern in test_patterns:
+                if fnmatch.fnmatchcase(test_name, test_pattern):
+                    yield test_name
 
     def assertPathExists(self, filename):
         if not os.path.exists(filename):

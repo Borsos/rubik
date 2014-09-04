@@ -25,9 +25,11 @@ import collections
 
 from ....index_picker import IndexPicker
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestIndexPicker(RubikTestCase):
+    METHOD_NAMES = []
+
     def setUp(self):
         super(RubikTestIndexPicker, self).setUp()
         self._ips = collections.OrderedDict((
@@ -47,18 +49,21 @@ class RubikTestIndexPicker(RubikTestCase):
             ('2:9:3',		(slice(2, 9, 3),		(2, 5, 3))),
         ))
         
-    def runTest_IndexPickerConstructor(self):
+    @testmethod
+    def constructor(self):
         for ip_i, (ip_v, ip_indices) in self._ips.iteritems():
             ip = IndexPicker(ip_i)
             ip_value = ip.value()
             self.assertEqual(ip_value, ip_v)
 
-    def runTest_IndexPickerGetIndices(self):
+    @testmethod
+    def get_indices(self):
         for ip_i, (ip_v, ip_indices) in self._ips.iteritems():
             ip = IndexPicker(ip_i)
             self.assertEqual(ip.get_indices(5), ip_indices)
 
-    def runTest_IndexPickerIsSlice(self):
+    @testmethod
+    def is_slice(self):
         for ip_i, (ip_v, ip_indices) in self._ips.iteritems():
             ip = IndexPicker(ip_i)
             self.assertEqual(ip.is_slice(), isinstance(ip_v, slice))

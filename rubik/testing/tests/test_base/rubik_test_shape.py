@@ -23,9 +23,11 @@ __all__ = [
 
 from ....shape import Shape
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestShape(RubikTestCase):
+    METHOD_NAMES = []
+
     def setUp(self):
         super(RubikTestShape, self).setUp()
         self._shapes = []
@@ -39,20 +41,23 @@ class RubikTestShape(RubikTestCase):
                     count *= d
             self._shapes.append((shape_t, shape_s, count))
         
-    def runTest_ShapeContructor(self):
+    @testmethod
+    def contructor(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)
             self.assertEqual(shape_ft, shape_fs)
 
-    def runTest_ShapeCount(self):
+    @testmethod
+    def count(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)
             self.assertEqual(shape_ft.count(), shape_fs.count())
             self.assertEqual(shape_ft.count(), count)
 
-    def runTest_ShapeRank(self):
+    @testmethod
+    def rank(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)
@@ -61,14 +66,16 @@ class RubikTestShape(RubikTestCase):
             self.assertEqual(shape_fs.rank(), len(shape_t))
             self.assertEqual(shape_ft.rank(), len(shape_t))
 
-    def runTest_ShapeShape(self):
+    @testmethod
+    def shape(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)
             self.assertEqual(shape_fs.shape(), shape_t)
             self.assertEqual(shape_ft.shape(), shape_t)
 
-    def runTest_ShapeGetitem(self):
+    @testmethod
+    def getitem(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)
@@ -76,7 +83,8 @@ class RubikTestShape(RubikTestCase):
                 self.assertEqual(shape_ft[index], d)
                 self.assertEqual(shape_fs[index], d)
 
-    def runTest_ShapeIter(self):
+    @testmethod
+    def iter(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)
@@ -84,7 +92,8 @@ class RubikTestShape(RubikTestCase):
                 self.assertEqual(dt, d)
                 self.assertEqual(ds, d)
 
-    def runTest_ShapeStr(self):
+    @testmethod
+    def str(self):
         for shape_t, shape_s, count in self._shapes:
             shape_ft = Shape(shape_t)
             shape_fs = Shape(shape_s)

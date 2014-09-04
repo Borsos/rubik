@@ -26,9 +26,11 @@ import collections
 from ....extractor import Extractor
 from ....shape import Shape
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestExtractor(RubikTestCase):
+    METHOD_NAMES = []
+
     def setUp(self):
         super(RubikTestExtractor, self).setUp()
         shape_20x30x40 = Shape("20x30x40")
@@ -40,7 +42,8 @@ class RubikTestExtractor(RubikTestCase):
             ('5:,:10,::5',	(shape_40x20x30, 24000, 35 * 10 * 6)),
         ))
         
-    def runTest_ExtractorConstructor(self):
+    @testmethod
+    def constructor(self):
         for ex_i, (shape, count, sub_count) in self._exs.iteritems():
             ex = Extractor(ex_i)
             ex_count, ex_sub_count = ex.get_counts(shape)

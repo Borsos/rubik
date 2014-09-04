@@ -23,39 +23,46 @@ __all__ = [
 
 from ....values import Values
 
-from ...rubik_test_case import RubikTestCase
+from ...rubik_test_case import RubikTestCase, testmethod
 
 class RubikTestValues(RubikTestCase):
+    METHOD_NAMES = []
+
     def setUp(self):
         super(RubikTestValues, self).setUp()
         self._tuples = []
         for tpl in (), (1, ), (2, 4), (3, 5, 4, 6), (10, 30, 10, 40, 20, 33), ("alfa", "beta"), (0.3, 0.4, 0.5):
             self._tuples.append(tpl)
         
-    def runTest_ValuesValues(self):
+    @testmethod
+    def values(self):
         for tpl in self._tuples:
             values = Values(tpl)
             self.assertEqual(values.values(), tpl)
 
-    def runTest_ValuesRank(self):
+    @testmethod
+    def rank(self):
         for tpl in self._tuples:
             values = Values(tpl)
             self.assertEqual(len(values), len(tpl))
             self.assertEqual(values.rank(), len(tpl))
 
-    def runTest_ValuesGetitem(self):
+    @testmethod
+    def getitem(self):
         for tpl in self._tuples:
             values = Values(tpl)
             for index, d in enumerate(tpl):
                 self.assertEqual(values[index], d)
 
-    def runTest_ValuesIter(self):
+    @testmethod
+    def iter(self):
         for tpl in self._tuples:
             values = Values(tpl)
             for vv, vt in zip(values, tpl):
                 self.assertEqual(vv, vt)
 
-    def runTest_ValuesStr(self):
+    @testmethod
+    def str(self):
         for tpl in self._tuples:
             values = Values(tpl)
             self.assertEqual(str(values), Values.__default_separator__.join(str(v) for v in tpl))

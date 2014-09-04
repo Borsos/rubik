@@ -79,7 +79,7 @@ class RubikTestMain(object):
     def split_pattern(cls, pattern):
         suite_pattern = '*'
         test_pattern = '*' 
-        l = pattern.split('.', 2)
+        l = pattern.split('.', 1)
         if len(l) == 1:
             suite_pattern = l[0]
         else:
