@@ -668,6 +668,14 @@ Options to show help on specific topics """)
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
 
+    conf.enable_warnings(*args.warnings)
+
+    # logo
+    if args.logo:
+        rubik.show_logo()
+        return 0
+
+
     # test
     if args.test_list or args.run_test:
         test_logger = log.set_test_logger(args.test_verbose_level)
@@ -703,11 +711,6 @@ Options to show help on specific topics """)
         decimals=args.histogram_decimals)
     rubik.set_dtype(args.dtype)
 
-    conf.enable_warnings(*args.warnings)
-
-    if args.logo:
-        rubik.show_logo()
-        return 0
 
     help_done = False
     for key in dir(args):

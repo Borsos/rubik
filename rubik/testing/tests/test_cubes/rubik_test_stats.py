@@ -32,11 +32,37 @@ from ...rubik_test_case import RubikTestCase, testmethod
 class RubikTestStats(RubikTestCase):
     METHOD_NAMES = []
 
-    def impl_stats_file(self, shape, dtype, buffer_size=None):
+    def impl_stats_random_file(self, shape, dtype, buffer_size):
         dtype = cb.get_dtype(dtype)
         shape = Shape(shape)
         file_format = 'raw'
-        filename_format = "stats_{shape}_{dtype}.{format}"
+        filename_format = "stats_random_{shape}_{dtype}.{format}"
+        filename = filename_format.format(shape=shape, dtype=dtype, format=file_format)
+        dmin = 3
+        for d in shape:
+            assert d >= dmin, "d={} < {}".format(d, dmin)
+        cube = cb.random_cube(shape=shape, dtype=dtype)
+
+        stats_info_cube = cb.stats_info(cube)
+
+        cube.tofile(filename)
+        self.assertFileExistsAndHasShape(filename, shape=shape, dtype=dtype)
+
+        stats_info_oc = cb.stats_file(filename, shape=shape, dtype=dtype, file_format=file_format,
+                                      out_of_core=False)
+       
+        self.assertAlmostEqualStatsInfo(stats_info_oc, stats_info_cube)
+
+        stats_info_ooc = cb.stats_file(filename, shape=shape, dtype=dtype, file_format=file_format,
+                                       out_of_core=True, progress_frequency=-1.0, buffer_size=buffer_size)
+       
+        self.assertAlmostEqualStatsInfo(stats_info_ooc, stats_info_cube)
+
+    def impl_stats_const_file(self, shape, dtype, buffer_size):
+        dtype = cb.get_dtype(dtype)
+        shape = Shape(shape)
+        file_format = 'raw'
+        filename_format = "stats_const_{shape}_{dtype}.{format}"
         filename = filename_format.format(shape=shape, dtype=dtype, format=file_format)
         dmin = 3
         for d in shape:
@@ -80,41 +106,81 @@ class RubikTestStats(RubikTestCase):
        
         self.assertEqual(stats_info_oc, stats_info_cube)
 
-        if buffer_size is None:
-            total_size = shape.count() * dtype().itemsize
-            buffer_size = total_size // 4
         stats_info_ooc = cb.stats_file(filename, shape=shape, dtype=dtype, file_format=file_format,
                                        out_of_core=True, progress_frequency=-1.0, buffer_size=buffer_size)
        
         self.assertEqual(stats_info_ooc, stats_info_cube)
 
-    ### buffer size
+    def get_buffer_size(self, shape, dtype, buffer_size=None, chunks=2):
+        if buffer_size is None:
+            buffer_size = int(shape.count() * dtype().itemsize / chunks)
+        return buffer_size
 
+    ### tests 
+
+    # random
     # 4x4, float32, buffer_size=(total_size // 2)
     @testmethod
-    def stats_file_4x4_2chunks(self):
+    def stats_random_file_4x4_2chunks(self):
         dtype = np.float32
         shape = Shape("4x4")
-        self.impl_stats_file(shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
+        self.impl_stats_random_file(shape=shape, dtype=dtype, 
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=2))
 
     # 4x4, float64, buffer_size=(total_size // 3)
     @testmethod
-    def stats_file_4x4_2chunks(self):
+    def stats_random_file_4x4_2chunks(self):
         dtype = np.float64
         shape = Shape("4x4")
-        self.impl_stats_file(shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 3)
+        self.impl_stats_random_file(shape=shape, dtype=dtype,
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=3))
 
     # 12x8x19x5, float32, buffer_size=(total_size // 2)
     @testmethod
-    def stats_file_12x8x19x5_2chunks(self):
+    def stats_random_file_12x8x19x5_2chunks(self):
         dtype = np.float32
         shape = Shape("12x8x19x5")
-        self.impl_stats_file(shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
+        self.impl_stats_random_file(shape=shape, dtype=dtype,
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=2))
 
     # 12x8x19x5, float64, buffer_size=(total_size // 3)
     @testmethod
-    def stats_file_12x8x19x5_2chunks(self):
+    def stats_random_file_12x8x19x5_2chunks(self):
         dtype = np.float64
         shape = Shape("12x8x19x5")
-        self.impl_stats_file(shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 3)
+        self.impl_stats_random_file(shape=shape, dtype=dtype,
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=3))
+
+    # const
+    # 4x4, float32, buffer_size=(total_size // 2)
+    @testmethod
+    def stats_const_file_4x4_2chunks(self):
+        dtype = np.float32
+        shape = Shape("4x4")
+        self.impl_stats_const_file(shape=shape, dtype=dtype, 
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=2))
+
+    # 4x4, float64, buffer_size=(total_size // 3)
+    @testmethod
+    def stats_const_file_4x4_2chunks(self):
+        dtype = np.float64
+        shape = Shape("4x4")
+        self.impl_stats_const_file(shape=shape, dtype=dtype,
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=3))
+
+    # 12x8x19x5, float32, buffer_size=(total_size // 2)
+    @testmethod
+    def stats_const_file_12x8x19x5_2chunks(self):
+        dtype = np.float32
+        shape = Shape("12x8x19x5")
+        self.impl_stats_const_file(shape=shape, dtype=dtype,
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=2))
+
+    # 12x8x19x5, float64, buffer_size=(total_size // 3)
+    @testmethod
+    def stats_const_file_12x8x19x5_2chunks(self):
+        dtype = np.float64
+        shape = Shape("12x8x19x5")
+        self.impl_stats_const_file(shape=shape, dtype=dtype,
+            buffer_size=self.get_buffer_size(shape=shape, dtype=dtype, chunks=3))
 

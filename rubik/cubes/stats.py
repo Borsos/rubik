@@ -71,7 +71,6 @@ class InfoProgress(object):
         else:
             dump = False
         if dump:
-            print dump, self.frequency, fraction, n
             report = self.info_obj.report()
             self.print_function("=== {:%}".format(fraction))
             self.print_function(report)
@@ -141,7 +140,7 @@ class Info(object):
         table = []
         if headers:
             table.append(("", ) + headers)
-        for key, label in cls.KEYS.iteritems():
+        for key, (label, compare) in cls.KEYS.iteritems():
             row = [label, '=']
             empty = True
             for instance in instances:
@@ -165,13 +164,20 @@ class Info(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             raise ValueError("cannot compare {} with {}".format(self.__class__.__name__, other.__class__.__name__))
-        for key in self.KEYS:
-            if getattr(self, key) != getattr(other, key):
+        for key, (label, compare) in self.KEYS.iteritems():
+            if compare and getattr(self, key) != getattr(other, key):
+                print "@@@", key, getattr(self, key), getattr(other, key), getattr(self, key) == getattr(other, key), getattr(self, key) != getattr(other, key), repr(getattr(self, key)), repr(getattr(other, key))
                 return False
         return True
 
     def __ne__(self, other):
         return not self == other
+
+    @classmethod
+    def get_keys(cls):
+        for key, (label, compare) in cls.KEYS.iteritems():
+            if compare:
+                yield key
 
 class StatsInfo(Info):
     """StatsInfo(...)
@@ -192,24 +198,24 @@ class StatsInfo(Info):
     """
     PERCENTAGE_FORMAT = '{:.2%}'
     KEYS = collections.OrderedDict((
-        ('cube_name',			'name'),
-        ('cube_shape',			'shape'),
-        ('cube_count',			'#elements'),
-        ('cube_percentage',		'%elements'),
-        ('cube_min',			'min'),
-        ('cube_min_index',		'min_index'),
-        ('cube_max',			'max'),
-        ('cube_max_index',		'max_index'),
-        ('cube_sum',			'sum'),
-        ('cube_ave',			'ave'),
-        ('cube_count_zero',		'#zero'),
-        ('cube_percentage_zero',	'%zero'),
-        ('cube_count_nonzero',		'#nonzero'),
-        ('cube_percentage_nonzero',	'%nonzero'),
-        ('cube_count_nan',		'#nan'),
-        ('cube_percentage_nan',		'%nan'),
-        ('cube_count_inf',		'#inf'),
-        ('cube_percentage_inf',		'%inf'),
+        ('cube_name',			('name',	False)),
+        ('cube_shape',			('shape',	True)),
+        ('cube_count',			('#elements',	True)),
+        ('cube_percentage',		('%elements',	False)),
+        ('cube_min',			('min',		True)),
+        ('cube_min_index',		('min_index',	True)),
+        ('cube_max',			('max',		True)),
+        ('cube_max_index',		('max_index',	True)),
+        ('cube_sum',			('sum',		True)),
+        ('cube_ave',			('ave',		True)),
+        ('cube_count_zero',		('#zero',	True)),
+        ('cube_percentage_zero',	('%zero',	False)),
+        ('cube_count_nonzero',		('#nonzero',	True)),
+        ('cube_percentage_nonzero',	('%nonzero',	False)),
+        ('cube_count_nan',		('#nan',	True)),
+        ('cube_percentage_nan',		('%nan',	False)),
+        ('cube_count_inf',		('#inf',	True)),
+        ('cube_percentage_inf',		('%inf',	False)),
     ))
     def __init__(self,
             cube_name="",

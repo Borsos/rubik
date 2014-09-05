@@ -143,3 +143,25 @@ class RubikTestCase(unittest.TestCase):
             raise AssertionError("cubes {} and {} are identical".format(
                 cube_a.shape,
                 cube_b.shape))
+
+    def assertAlmostEqualStatsInfo(self, stats_info_a, stats_info_b):
+        for key in cb.StatsInfo.get_keys():
+            value_a = getattr(stats_info_a, key)
+            value_b = getattr(stats_info_b, key)
+            try:
+               self.assertAlmostEqual(value_a, value_b)
+            except AssertionError:
+               raise AssertionError("stats_info key {!r} differ: {!r} != {!r}".format(key, value_a, value_b))
+
+    def assertAlmostEqualDiffInfo(self, diff_info_a, diff_info_b):
+        for stats_info_key in 'left', 'right', 'abs_diff', 'rel_diff':
+            stats_info_a = getattr(diff_info_a, stats_info_key)
+            stats_info_b = getattr(diff_info_b, stats_info_key)
+            for key in cb.StatsInfo.get_keys():
+                value_a = getattr(stats_info_a, key)
+                value_b = getattr(stats_info_b, key)
+                try:
+                   self.assertAlmostEqual(value_a, value_b)
+                except AssertionError:
+                   raise AssertionError("diff_info {!r}: stats_info key {!r} differ: {!r} != {!r}".format(stats_info_key, key, value_a, value_b))
+
