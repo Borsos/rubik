@@ -50,6 +50,8 @@ class Rubik(object):
         self._log_header = "{}: ".format(self.__class__.__name__.lower())
         self.config = config.get_config()
 
+        self.PRINT = log.get_print()
+
         self.input_filenames = InputArgDict(InputFilename)
         self.input_modes = InputArgDict(InputMode, default=InputMode("rb"))
         self.input_offsets = InputArgDict(Memory, default=None)
@@ -125,7 +127,7 @@ class Rubik(object):
         self.log(logging.CRITICAL, message)
 
     def show_logo(self):
-        log.PRINT(RUBIK)
+        self.PRINT(RUBIK)
 
     def show_logo_once(self):
         attr_name = '_logo_has_been_shown'
@@ -207,6 +209,7 @@ class Rubik(object):
             self.initialize()
             self.evaluate_expressions(*self.expressions)
             self.finalize()
+        return 0
     
     def get_dtype_bytes(self, dtype):
         if not dtype in self._cache_dtype_bytes:
@@ -642,14 +645,14 @@ class Rubik(object):
     def _log_dlabels(self, dlabels):
         if dlabels:
             dlabels_message = "## " + ', '.join("{0}={1}".format(dlabel, dvalue) for dlabel, dvalue in dlabels.items())
-            log.PRINT(dlabels_message)
+            self.PRINT(dlabels_message)
 
     def print_cube(self, cube=None):
         self.notify_output_mode()
         self.iterate_on_split(self.print_cube_impl, cube)
 
     def print_cube_impl(self, cube, dlabels):
-        log.PRINT(cube)
+        self.PRINT(cube)
 
     def print_stats(self, cube=None):
         self.notify_output_mode()
@@ -658,7 +661,7 @@ class Rubik(object):
     def print_stats_impl(self, cube, dlabels):
         if not isinstance(cube, np.ndarray):
             raise RubikError("cannot stat result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-        cubes_api.print_stats(cube, print_function=log.PRINT)
+        cubes_api.print_stats(cube, print_function=self.PRINT)
 
     def compare_stats(self, cube=None, title=""):
         if cube is None:
@@ -761,9 +764,9 @@ class Rubik(object):
                 k = ')'
             l_l = int(0.5 + (h_max * num) / float(num_max))
             l_r = h_max - l_l
-            #log.PRINT("@@@ h_max={}, num={}, num_max={}, l_l={}, l_r={}".format(h_max, num, num_max, l_l, l_r))
+            #self.PRINT("@@@ h_max={}, num={}, num_max={}, l_l={}, l_r={}".format(h_max, num, num_max, l_l, l_r))
             h = '*' * l_l + ' ' * l_r
-            log.PRINT(fmt.format(
+            self.PRINT(fmt.format(
                 s_num=s_num,
                 l_num=l_num,
                 s_percentage=s_percentage,
@@ -1016,7 +1019,7 @@ class Rubik(object):
 
     def print_stats_infos(self):
         if self._stats_infos:
-            log.PRINT(cubes_api.StatsInfo.reports(instances=self._stats_infos))
+            self.PRINT(cubes_api.StatsInfo.reports(instances=self._stats_infos))
 
     def print_diff(self):
         if self._diff_cubes:
@@ -1024,4 +1027,4 @@ class Rubik(object):
                 raise RubikError("cannot compare 1 cube")
             else:
                 info = cubes_api.diff_info(*self._diff_cubes)
-                log.PRINT(info.report())
+                self.PRINT(info.report())

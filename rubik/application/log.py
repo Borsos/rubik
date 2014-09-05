@@ -20,21 +20,20 @@ __author__ = "Simone Campagna"
 import sys
 import logging
 import traceback
+import contextlib
 
 __all__ = ['create_logger', 'set_logger', 'get_logger',
            'set_report_logger', 'get_report_logger',
            'set_test_logger', 'get_test_logger',
+           'get_print_logger', 'get_print',
            'LOGGER', 'REPORT_LOGGER', 'TEST_LOGGER',
+           'swap_logger_streams',
            'trace_error',
            'set_trace_errors',
            'get_trace_errors',
           ]
 
-def create_logger(logger_name, verbose_level, stream=None):
-    if stream is None:
-        stream = sys.stderr
-    logger = logging.getLogger(logger_name)
-    stream_handler = logging.StreamHandler(stream=stream)
+def set_verbose_level(logger, verbose_level):
     log_level = logging.WARNING
     if verbose_level >= 3:
         log_level = logging.DEBUG
@@ -44,20 +43,50 @@ def create_logger(logger_name, verbose_level, stream=None):
         log_level = logging.WARNING
     else:
         log_level = logging.ERROR
-    logger.addHandler(stream_handler)
     logger.setLevel(log_level)
-    stream_handler.setLevel(logging.DEBUG)
+    for handler in logger.handlers:
+        handler.setLevel(logging.DEBUG)
+
+def create_logger(logger_name, verbose_level, stream=None):
+    if stream is None:
+        stream = sys.stderr
+    logger_class = logging.getLoggerClass()
+    logger = logger_class(logger_name)
+    stream_handler = logging.StreamHandler(stream=stream)
+    logger.addHandler(stream_handler)
+    set_verbose_level(logger, verbose_level)
     return logger
 
+LOGGER_NAME = "RUBIK"
+REPORT_LOGGER_NAME = "REPORT"
+TEST_LOGGER_NAME = "TEST"
+PRINT_LOGGER_NAME = "PRINT"
+
 LOGGER = None
+LOGGER_VERBOSE_LEVEL = None
 REPORT_LOGGER = None
+REPORT_LOGGER_VERBOSE_LEVEL = None
 TEST_LOGGER = None
+TEST_LOGGER_VERBOSE_LEVEL = None
 
-PRINT = create_logger('PRINT', 10, stream=sys.stdout).info
+PRINT_LOGGER_VERBOSE_LEVEL = 10
+PRINT_LOGGER = create_logger(PRINT_LOGGER_NAME, PRINT_LOGGER_VERBOSE_LEVEL, stream=sys.stdout)
+PRINT = PRINT_LOGGER.info
 
-def set_logger(verbose_level):
+def get_print_logger():
+    return PRINT_LOGGER
+
+def get_print():
+    return PRINT
+
+def set_logger(verbose_level, stream=None):
     global LOGGER
-    LOGGER = create_logger("RUBIK", verbose_level)
+    global LOGGER_VERBOSE_LEVEL
+    if LOGGER is None:
+        LOGGER = create_logger(LOGGER_NAME, verbose_level=verbose_level, stream=stream)
+    else:
+        set_verbose_level(LOGGER, verbose_level)
+        LOGGER_VERBOSE_LEVEL = verbose_level
     return LOGGER
 
 def get_logger():
@@ -66,21 +95,54 @@ def get_logger():
     else:
         return LOGGER
 
-def set_report_logger(report_level):
+def set_report_logger(verbose_level, stream=None):
     global REPORT_LOGGER
-    REPORT_LOGGER = create_logger("REPORT", report_level)
+    global REPORT_LOGGER_VERBOSE_LEVEL
+    if REPORT_LOGGER is None:
+        REPORT_LOGGER = create_logger(REPORT_LOGGER_NAME, verbose_level=verbose_level, stream=stream)
+    else:
+        set_verbose_level(REPORT_LOGGER, verbose_level)
+        REPORT_LOGGER_VERBOSE_LEVEL = verbose_level
     return REPORT_LOGGER
 
 def get_report_logger():
     return REPORT_LOGGER
 
-def set_test_logger(test_level):
+def set_test_logger(verbose_level, stream=None):
     global TEST_LOGGER
-    TEST_LOGGER = create_logger("TEST", test_level)
+    global TEST_LOGGER_VERBOSE_LEVEL
+    if TEST_LOGGER is None:
+        TEST_LOGGER = create_logger(TEST_LOGGER_NAME, verbose_level=verbose_level, stream=stream)
+    else:
+        set_verbose_level(TEST_LOGGER, verbose_level)
+        TEST_LOGGER_VERBOSE_LEVEL = verbose_level
     return TEST_LOGGER
 
 def get_test_logger():
     return TEST_LOGGER
+
+@contextlib.contextmanager
+def swap_logger_streams(stdout, stderr):
+    global LOGGER
+    global REPORT_LOGGER
+    global PRINT_LOGGER
+    global PRINT
+    backup_logger = LOGGER
+    backup_report_logger = REPORT_LOGGER
+    backup_print_logger = PRINT_LOGGER
+    backup_print = PRINT
+    LOGGER = create_logger(LOGGER_NAME, LOGGER_VERBOSE_LEVEL, stream=stderr)
+    REPORT_LOGGER = create_logger(REPORT_LOGGER_NAME, REPORT_LOGGER_VERBOSE_LEVEL, stream=stderr)
+    PRINT_LOGGER = create_logger(PRINT_LOGGER_NAME, PRINT_LOGGER_VERBOSE_LEVEL, stream=stdout)
+    PRINT = PRINT_LOGGER.info
+    #print id(backup_logger), id(LOGGER)
+    #raw_input("...")
+    yield
+    LOGGER = backup_logger
+    REPORT_LOGGER = backup_report_logger
+    PRINT_LOGGER = backup_print_logger
+    PRINT = backup_print
+    
 
 DEFAULT_TRACE_ERRORS = False
 
@@ -103,3 +165,48 @@ def trace_error(trace=None, exc_info=None):
     else:
         get_logger().error("error: {0}: {1}".format(err_type.__name__, err))
        
+#class LoggerManager(object):
+#    def __init__(self, stdout=None, stderr=None,
+#                 main_verbose_level=1,
+#                 report_verbose_level=1,
+#                 print_verbose_level=10):
+#        if stdout is None:
+#            stdout = sys.stdout
+#        self.stdout = stdout
+#        if stderr is None:
+#            stderr = sys.stderr
+#        self.stderr = stderr
+#        logger_class = logging.getLoggerClass()
+#        self.report_logger = self.create_logger(
+#            logger_name='RUBIK',
+#            main_verbose_level,
+#            stream=self.stderr)
+#        self.main_logger = self.create_logger(
+#            logger_name='REPORT',
+#            report_verbose_level,
+#            stream=self.stderr)
+#        self.print_logger = self.create_logger(
+#            logger_name='PRINT',
+#            print_verbose_level,
+#            stream=self.stderr)
+#        self.PRINT = self.print_logger.info
+#
+#    def create_logger(self, logger_name, verbose_level, stream=None):
+#        if stream is None:
+#            stream = self.stderr
+#        logger_class = logging.getLoggerClass()
+#        logger = logger_class(logger_name)
+#        stream_handler = logging.StreamHandler(stream=stream)
+#        log_level = logging.WARNING
+#        if verbose_level >= 3:
+#            log_level = logging.DEBUG
+#        elif verbose_level >= 2:
+#            log_level = logging.INFO
+#        elif verbose_level >= 1:
+#            log_level = logging.WARNING
+#        else:
+#            log_level = logging.ERROR
+#        logger.addHandler(stream_handler)
+#        logger.setLevel(log_level)
+#        stream_handler.setLevel(logging.DEBUG)
+#        return logger

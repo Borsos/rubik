@@ -22,13 +22,14 @@ __all__ = [
            'RUBIK_TEST_CONF',
           ]
 
-from ..application.log import get_logger
+from ..application.log import get_test_logger
 
 class RubikTestConf(object):
-    def __init__(self, verbose_level=0, trace_errors=False, logger=None):
+    def __init__(self, logger=None, verbose_level=0, trace_errors=False):
         self.verbose_level = verbose_level
         self.trace_errors = trace_errors
         if logger is None:
-            logger = get_logger()
+            logger = get_test_logger()
+        self.logger = logger
 
 RUBIK_TEST_CONF = RubikTestConf()

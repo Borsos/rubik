@@ -25,7 +25,7 @@ import collections
 import fnmatch
 import sys
 
-from ..application.log import get_logger
+from ..application.log import get_test_logger
 from ..cubes.api import set_random_seed
 
 from .rubik_test_runner import RubikTestRunner
@@ -39,7 +39,7 @@ from .rubik_test_conf import RUBIK_TEST_CONF
 class RubikTestMain(object):
     def __init__(self, logger=None, verbose_level=0, trace_errors=False, patterns=None):
         if logger is None: 
-            logger = conf.get_logger()
+            logger = conf.get_test_logger()
         self.logger = logger
         RUBIK_TEST_CONF.verbose_level = verbose_level
         RUBIK_TEST_CONF.trace_errors = trace_errors

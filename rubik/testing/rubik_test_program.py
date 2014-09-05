@@ -27,6 +27,7 @@ import subprocess
 from .rubik_test_case import RubikTestCase
 from .rubik_test_conf import RUBIK_TEST_CONF
 from ..application.main import main
+from ..application import log
 from ..py23 import StringIO
 
 class RubikTestProgram(RubikTestCase):
@@ -36,7 +37,7 @@ class RubikTestProgram(RubikTestCase):
     PROGRAM_MODE_CALL_MAIN = 'call_main'
     PROGRAM_MODE_SUBPROCESS = 'subprocess'
     PROGRAM_MODES = (PROGRAM_MODE_CALL_MAIN, PROGRAM_MODE_SUBPROCESS)
-    DEFAULT_PROGRAM_MODE = PROGRAM_MODE_SUBPROCESS
+    DEFAULT_PROGRAM_MODE = PROGRAM_MODE_CALL_MAIN
 
     def __init__(self, test_name, program_mode=None, program_name=None):
         if program_mode is None:
@@ -111,21 +112,20 @@ class RubikTestProgram(RubikTestCase):
             assert_message = "command {} did not fail as expected".format(command)
         elif (not expect_failure) and returncode != 0:
             assert_message = "command {} failed".format(command)
-        logger = RUBIK_TEST_CONF.logger
         if assert_message:
-            logger.error(assert_message)
-            logger.error("returncode is {}".format(returncode))
+            self.logger.error(assert_message)
+            self.logger.error("returncode is {}".format(returncode))
             if output is not None:
-                logger.error("output is: <<<\n{}>>>".format(output))
+                self.logger.error("output is: <<<\n{}>>>".format(output))
             if error is not None:
-                logger.error("error is: <<<\n{}>>>".format(error))
+                self.logger.error("error is: <<<\n{}>>>".format(error))
             raise AssertionError(assert_message)
         else:
-            logger.debug("command {} returned {}".format(command, returncode))
+            self.logger.debug("command {} returned {}".format(command, returncode))
             if output is not None:
-                logger.debug("output is: <<<\n{}>>>".format(output))
+                self.logger.debug("output is: <<<\n{}>>>".format(output))
             if error is not None:
-                logger.debug("error is: <<<\n{}>>>".format(error))
+                self.logger.debug("error is: <<<\n{}>>>".format(error))
             
 
     def run_program(self, options, join_stderr_stdout=True, expect_failure=False):
@@ -134,14 +134,12 @@ class RubikTestProgram(RubikTestCase):
         if self.program_mode == self.PROGRAM_MODE_SUBPROCESS:
             returncode, output, error = self.run_program_subprocess(
                 command_line,
-                join_stderr_stdout=join_stderr_stdout,
-                expect_failure=expect_failure)
+                join_stderr_stdout=join_stderr_stdout)
             command = ' '.join([command_line[0]] + [repr(a) for a in command_line[1:]])
         elif self.program_mode == self.PROGRAM_MODE_CALL_MAIN:
             returncode, output, error = self.run_program_call_main(
                 options,
-                join_stderr_stdout=join_stderr_stdout,
-                expect_failure=expect_failure)
+                join_stderr_stdout=join_stderr_stdout)
         else:
             assert False
         self.check_returncode(
@@ -154,15 +152,18 @@ class RubikTestProgram(RubikTestCase):
         return returncode, output, error
 
     def run_program_call_main(self, options, join_stderr_stdout=True):
-        returncode = main(options)
         stdout = StringIO()
         if join_stderr_stdout:
             stderr = stdout
         else:
             stderr = StringIO()
+        with log.swap_logger_streams(stdout=stdout, stderr=stderr):
+            returncode = main(options)
+        output = stdout.getvalue()
+        error = stderr.getvalue()
         return returncode, output, error
         
-    def run_program_subprocess(self, command_line, join_stderr_stdout=True, expect_failure=False):
+    def run_program_subprocess(self, command_line, join_stderr_stdout=True):
         stdout = subprocess.PIPE
         if join_stderr_stdout:
             stderr = subprocess.STDOUT

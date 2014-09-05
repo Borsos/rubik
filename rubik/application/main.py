@@ -20,11 +20,11 @@ __author__ = "Simone Campagna"
 __all__ = [
            'main',
           ]
-
 import sys
 import argparse
 
 import random
+import itertools
 
 import numpy as np
 
@@ -662,7 +662,7 @@ Options to show help on specific topics """)
         default=False,
         help="show demo")
 
-    arguments = config.default_options + conf.RUBIK_OPTIONS + arguments
+    arguments = list(itertools.chain(config.default_options, conf.RUBIK_OPTIONS, arguments))
 
     try:
         args = parser.parse_args(arguments)
@@ -674,6 +674,8 @@ Options to show help on specific topics """)
 
     logger = log.set_logger(args.verbose_level)
     report_logger = log.set_report_logger(args.report_level)
+
+    PRINT = log.get_print()
 
     conf.enable_warnings(*args.warnings)
 
@@ -691,9 +693,9 @@ Options to show help on specific topics """)
         rubik_test_main = RubikTestMain(logger=test_logger, verbose_level=args.test_verbose_level)
         if args.test_list:
             for test_num, test_name in enumerate(rubik_test_main.filter_test_names(patterns)):
-                log.PRINT("{:5d}) {}".format(test_num, test_name))
+                PRINT("{:5d}) {}".format(test_num, test_name))
             #for test_name in rubik_test_main.filter_test_names(patterns):
-            #    log.PRINT("  {}".format(test_name))
+            #    PRINT("  {}".format(test_name))
         if args.run_test:
             result = rubik_test_main.run(patterns)
             return_code = len(result.failures)
@@ -751,10 +753,5 @@ Options to show help on specific topics """)
     except:
         log.trace_error()
 
-    if return_code:
-        return return_code
+    return return_code
 
-
-if __name__ == "__main__":
-    return_code = main()
-    sys.exit(return_code)

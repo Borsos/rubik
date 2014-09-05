@@ -33,6 +33,7 @@ from ..units import Memory
 from ..shape import Shape
 from ..cubes import internals
 from ..cubes import api as cb
+from .rubik_test_conf import RUBIK_TEST_CONF
 
 def testmethod(method):
     stack = inspect.stack()
@@ -51,6 +52,7 @@ class RubikTestCase(unittest.TestCase):
         #  o 'suite_name'.'test_class'.'test'
         method_name = self.test_name.split('.')[-1]
         super(RubikTestCase, self).__init__(methodName=method_name)
+        self.logger = RUBIK_TEST_CONF.logger
 
     @classmethod
     def class_name(cls):

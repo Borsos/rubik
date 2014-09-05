@@ -25,6 +25,7 @@ __all__ = [
            'get_input',
            'decode',
           ]
+
 import sys
 
 if sys.version_info.major == 2:

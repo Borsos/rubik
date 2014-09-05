@@ -17,6 +17,12 @@
 
 __author__ = "Simone Campagna"
 
+__all__ = [
+           'flatten_list',
+           'flatten_tuple',
+           'concatenate',
+          ]
+
 def flatten_list(sequence, depth=-1):
     out = []
     for item in sequence:
@@ -28,3 +34,4 @@ def flatten_list(sequence, depth=-1):
 
 def flatten_tuple(sequence, depth=-1):
     return tuple(flatten_list(sequence, depth=depth))
+

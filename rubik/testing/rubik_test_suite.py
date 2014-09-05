@@ -23,7 +23,7 @@ __all__ = [
 
 
 from ..application.tempdir import chtempdir
-from ..application.log import get_logger
+from .rubik_test_conf import RUBIK_TEST_CONF
 import unittest
 import tempfile
 import shutil
@@ -36,6 +36,7 @@ class RubikTestSuite(unittest.TestSuite):
         super(RubikTestSuite, self).__init__(*n_args, **p_args)
         self._registered_test_classes = []
         self.suite_name = suite_name
+        self.logger = RUBIK_TEST_CONF.logger
 
     def run(self, result):
         with chtempdir(prefix="tmp.", dir=os.getcwd()) as temp_dir_info:
@@ -44,7 +45,7 @@ class RubikTestSuite(unittest.TestSuite):
             num_curr_failures = len(result.failures)
             num_failures = num_curr_failures - num_prev_failures
             if len(result.failures) > 0:
-                get_logger().error("suite {}: {} failures, leaving dir {}".format(self.suite_name, num_failures, temp_dir_info.dirname))
+                self.logger.error("suite {}: {} failures, leaving dir {}".format(self.suite_name, num_failures, temp_dir_info.dirname))
                 temp_dir_info.clear = False
         
     def register_test_class(self, test_class):

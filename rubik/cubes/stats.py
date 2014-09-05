@@ -166,7 +166,6 @@ class Info(object):
             raise ValueError("cannot compare {} with {}".format(self.__class__.__name__, other.__class__.__name__))
         for key, (label, compare) in self.KEYS.iteritems():
             if compare and getattr(self, key) != getattr(other, key):
-                print "@@@", key, getattr(self, key), getattr(other, key), getattr(self, key) == getattr(other, key), getattr(self, key) != getattr(other, key), repr(getattr(self, key)), repr(getattr(other, key))
                 return False
         return True
 

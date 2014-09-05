@@ -24,7 +24,7 @@ import textwrap
 import subprocess
 import collections
 
-from .log import PRINT
+from .log import get_print
 from .. import py23
 from ..errors import RubikTestError, RubikError
 
@@ -39,7 +39,7 @@ class TestVisitor(Visitor):
         node.test()
 
 class OutVisitor(Visitor):
-    def __init__(self, test=False, interactive=False, writer=PRINT):
+    def __init__(self, test=False, interactive=False, writer=get_print()):
         self.test = test
         self.writer = writer
         self.interactive = interactive
@@ -133,7 +133,7 @@ class Node(object):
 
     def dump(self, test=False, interactive=False, writer=None):
         if writer is None:
-            writer = PRINT
+            writer = get_print()
         text = self.render(interactive=interactive)
         indentation = "  "
         if text is None:
@@ -146,7 +146,7 @@ class Node(object):
 
     def show(self, test=False, interactive=False, writer=None):
         if writer is None:
-            writer = PRINT
+            writer = get_print()
         text = self.render(interactive=interactive)
         if text is not None:
             writer(text)
@@ -352,6 +352,7 @@ class Command(Node):
         return '\n'.join(lines)
 
     def test(self):
+        PRINT = get_print()
         command = self.get_command()
         command_line = shlex.split(command)
         if isinstance(self._child, Result):
@@ -361,8 +362,8 @@ class Command(Node):
         process = subprocess.Popen(command_line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         actual_output = py23.decode(process.communicate()[0]).rstrip('\n')
         if actual_output != expected_output:
-            #PRINT("executed command = {0!r}".format(command))
-            #PRINT("expected_output = {{\n{0}\n}}\nactual_output = {{\n{1}\n}}".format(
+            #get_print()("executed command = {0!r}".format(command))
+            #get_print()("expected_output = {{\n{0}\n}}\nactual_output = {{\n{1}\n}}".format(
             #    expected_output,
             #    actual_output))
             for line in difflib.unified_diff(

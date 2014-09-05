@@ -20,7 +20,7 @@ __author__ = "Simone Campagna"
 import sys
 import numpy
 
-from .log import PRINT
+from .log import get_print
 from .example import Example
 from .tempdir import chtempdir
 from .. import conf
@@ -740,7 +740,7 @@ def help_numpy():
     help(numpy)
 
 def help_expression():
-    PRINT("""\
+    get_print()("""\
 Generic expressions/source code
 ===============================
 --------------------------------------------------------------------------------
@@ -944,7 +944,7 @@ $
 """)
 
 def help_extractor():
-    PRINT("""\
+    get_print()("""\
 Extractors
 ==========
 An extractor can be associated to each input file to read only a portion of that
@@ -974,7 +974,7 @@ For instance, if the shape is '8x1000x30':
 """)
 
 def help_user_defined_variables():
-    PRINT("""\
+    get_print()("""\
 User defined variables
 ======================
 It is possible to use expressions to set variables; this variables can then
@@ -990,7 +990,7 @@ $ rubik -i l_{shape}.{format} \\
 """)
 
 def help_dtypes():
-    PRINT("""\
+    get_print()("""\
 Available data types
 ====================
 All numpy dtypes are valid data types.
@@ -1002,10 +1002,10 @@ You can set:
 This is the list of the available numpy dtypes:
 """)
     for dtype_name, dtype_description in conf.DATA_TYPES.items():
-        PRINT("{n:16s} {d}".format(n=dtype_name, d=dtype_description))
+        get_print()("{n:16s} {d}".format(n=dtype_name, d=dtype_description))
 
 def help_labeled_options():
-    PRINT("""\
+    get_print()("""\
 Labeled options
 ===============
 --------------------------------------------------------------------------------
@@ -1042,7 +1042,7 @@ The same applies to output labeled options.
 """)
 
 def help_split():
-    PRINT("""\
+    get_print()("""\
 Splitting dimensions
 ====================
 Suppose you have a _8x4x10_ cube, and you want to write _4_ _8x10_ cubes, one
@@ -1068,7 +1068,7 @@ interpolation.
 """)
 
 def help_filenames():
-    PRINT("""\
+    get_print()("""\
 Input filenames
 ===============
 For each input filename, a label 'i<N>' is generated referring to the cube
@@ -1140,7 +1140,7 @@ Three file formats are available:
 """.format(ff='|'.join(conf.FILE_FORMATS)))
 
 def help_environment_variables():
-    PRINT("""\
+    get_print()("""\
     Environment variables
 =====================
 Currently the only accepted environment variable is '$RUBIK_OPTIONS', that can
@@ -1153,7 +1153,7 @@ can be overwritten by command line arguments.
 """)
 
 def help_creating_cubes():
-    PRINT("""\
+    get_print()("""\
 Creating cubes from scratch
 ===========================
 It is possible to create cubes from scratch, using an expression.  For instance:
@@ -1191,7 +1191,7 @@ See --help-cubes to see the content of the cubes module.
 """)
 
 def help_output():
-    PRINT("""\
+    get_print()("""\
 Output modes
 ============
 These are the available output modes:
@@ -1278,7 +1278,7 @@ shape.
 """)
 
 def help_memory_usage():
-    PRINT("""\
+    get_print()("""\
 Memory usage
 ============
 A complete control of the memory usage is not possible, due to the possibility
