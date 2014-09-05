@@ -21,8 +21,6 @@ __all__ = [
            'RubikTestWork',
           ]
 
-import subprocess
-
 from ....conf import VERSION
 from ....shape import Shape
 
@@ -154,7 +152,7 @@ class RubikTestWork(RubikTestProgram):
                 s=self.c_shape,
                 c=self.CONST_VALUE,
                 o=self.c_filename_format),
-            stderr=subprocess.PIPE)
+            join_stderr_stdout=False)
         self.assertEqual(output, "{}\n".format(self.c_shape.count() * self.CONST_VALUE))
 
     @testmethod
@@ -213,5 +211,5 @@ class RubikTestWork(RubikTestProgram):
                     l1=self.lin_filename_format,
                     l2=out_filename_format,
                     t=tolerance),
-                stderr=subprocess.PIPE)
+                join_stderr_stdout=False)
             self.assertEqual(output, "{}\n".format(result))

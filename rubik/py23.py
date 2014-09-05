@@ -17,6 +17,14 @@
 
 __author__ = "Simone Campagna"
 
+__all__ = [
+           'PY3',
+           'lrange',
+           'irange',
+           'StringIO',
+           'get_input',
+           'decode',
+          ]
 import sys
 
 if sys.version_info.major == 2:
@@ -28,9 +36,11 @@ if PY3:
     def lrange(*n_args, **p_args):
         return list(range(*n_args, **p_args))
     irange = range
+    from io import StringIO
 else:
     lrange = range
     irange = xrange
+    from StringIO import StringIO
 
 if PY3:
     get_input = input
