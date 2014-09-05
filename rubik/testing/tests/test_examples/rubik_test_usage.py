@@ -18,25 +18,16 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-            'SUITES',
+           'RubikTestUsage',
           ]
 
-import collections
+from ....application import help_functions
 
-class RubikTestSuites(collections.OrderedDict):
-    def add_suite(self, suite):
-        self[suite.suite_name] = suite
+from ...rubik_test_case import RubikTestCase, testmethod
 
-SUITES = RubikTestSuites()
+class RubikTestUsage(RubikTestCase):
+    METHOD_NAMES = []
 
-from .test_base import SUITE_BASE
-SUITES.add_suite(SUITE_BASE)
-
-from .test_cubes import SUITE_CUBES
-SUITES.add_suite(SUITE_CUBES)
-
-from .test_examples import SUITE_EXAMPLES
-SUITES.add_suite(SUITE_EXAMPLES)
-
-from .test_program import SUITE_PROGRAM
-SUITES.add_suite(SUITE_PROGRAM)
+    @testmethod
+    def help_usage(self):
+        help_functions.show_example_usage(test=True, interactive=False, writer=lambda x: None)

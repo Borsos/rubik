@@ -41,6 +41,8 @@ __all__ = [
               'help_output',
               'help_memory_usage',
               'help_usage',
+              'help_demo',
+              'show_example_usage',
           ]
 
 _DEMO_TEXT = """\
@@ -362,7 +364,7 @@ $
 
 * show statistics out-of-core for the first cube:
 
-$ rubik -e 'cb.print_stats_file("big0_{shape}.{format}", shape="100x100x100", block_size="1m")'
+$ rubik -e 'cb.print_stats_file("big0_{shape}.{format}", shape="100x100x100", buffer_size="1m")'
 === 26.214400%
 shape     = 100x100x100
 #elements = 262144
@@ -439,11 +441,11 @@ ave       = 0.500388
 %inf      = 0.00%
 $
 
-By default, the block_size is '1g'.
+By default, the buffer_size is '1g'.
 
 * show differences about the two cubes:
 
-$ rubik -e 'cb.print_diff_files("big0_{shape}.{format}", "big1_{shape}.{format}", shape="100x100x100", block_size="2m")'
+$ rubik -e 'cb.print_diff_files("big0_{shape}.{format}", "big1_{shape}.{format}", shape="100x100x100", buffer_size="2m")'
 === 52.428800%
 name      = LEFT          RIGHT         REL_DIFF      ABS_DIFF
 shape     = 100x100x100   100x100x100   100x100x100   100x100x100
@@ -1312,14 +1314,13 @@ can be set through the '--optimized-min-size' option. For instance, if
 file is less than 1gb. By default, the optimized min size is 100mb.
 """)
 
-def help_usage():
+def show_example_usage(test, interactive, writer=None):
     with chtempdir():
         example = Example(_DEMO_TEXT)
-        #example.dump(test=True, interactive=False)
-        #raw_input("...")
-        example.show(test=True, interactive=False)
+        example.show(test=True, interactive=False, writer=writer)
+   
+def help_usage():
+    show_example_usage(test=True, interactive=False)
 
 def help_demo():
-    with chtempdir():
-        example = Example(_DEMO_TEXT)
-        example.show(test=True, interactive=True)
+    show_example_usage(test=True, interactive=True)

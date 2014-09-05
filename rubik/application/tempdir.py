@@ -22,12 +22,24 @@ import shutil
 import tempfile
 import contextlib
 
+class TempDirInfo(object):
+    def __init__(self, dirname, clear=True):
+        self.dirname = dirname
+        self.clear = clear
+
+    def __str__(self):
+        return "{}(dirname={!r}, clear={!r})".format(self.__class__.__name__, self.dirname, self.clear)
+
+    __repr__ = __str__
+ 
 @contextlib.contextmanager
-def chtempdir():
+def chtempdir(suffix='', prefix='tmp', dir=None, clear=True):
     old_pwd = os.getcwd()
-    dirname = tempfile.mkdtemp()
+    dirname = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
     os.chdir(dirname)
-    yield
+    temp_dir_info = TempDirInfo(dirname=dirname, clear=clear)
+    yield temp_dir_info
     os.chdir(old_pwd)
-    shutil.rmtree(dirname)
+    if temp_dir_info.clear:
+        shutil.rmtree(dirname)
     
