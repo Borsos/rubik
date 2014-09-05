@@ -107,31 +107,31 @@ class RubikTestInputOutput(RubikTestCase):
 
     # linear, float32, buffer_size=(total_size // 2)
     @testmethod
-    def write_random_cube_out_of_core_4x4_float32(self):
+    def write_linear_cube_out_of_core_4x4_float32(self):
         dtype = np.float32
         shape = Shape("4x4")
-        self.impl_write_cube_out_of_core(kind='random', shape='4x4', dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
+        self.impl_write_cube_out_of_core(kind='linear', shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
 
     # linear, float64, buffer_size=(total_size // 2)
     @testmethod
-    def write_random_cube_out_of_core_4x4_float32(self):
+    def write_linear_cube_out_of_core_4x4_float32(self):
         dtype = np.float32
         shape = Shape("4x4")
-        self.impl_write_cube_out_of_core(kind='random', shape='4x4', dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
+        self.impl_write_cube_out_of_core(kind='linear', shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
 
     # linear, int32, buffer_size=(total_size // 2)
     @testmethod
-    def write_random_cube_out_of_core_4x4_int32(self):
+    def write_linear_cube_out_of_core_4x4_int32(self):
         dtype = np.int32
         shape = Shape("4x4")
-        self.impl_write_cube_out_of_core(kind='random', shape='4x4', dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
+        self.impl_write_cube_out_of_core(kind='linear', shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
 
     # linear, int64, buffer_size=(total_size // 2)
     @testmethod
-    def write_random_cube_out_of_core_4x4_int32(self):
+    def write_linear_cube_out_of_core_4x4_int32(self):
         dtype = np.int32
         shape = Shape("4x4")
-        self.impl_write_cube_out_of_core(kind='random', shape='4x4', dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
+        self.impl_write_cube_out_of_core(kind='linear', shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
 
     ###
 

@@ -79,3 +79,10 @@ class Values(object):
             return self._values == other._values
         else:
             return False
+
+    def __ne__(self, other):
+        if isinstance(other, self.__class__):
+            return self._values != other._values
+        else:
+            return False
+       

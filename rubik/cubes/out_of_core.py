@@ -55,7 +55,7 @@ class BlockReader(object):
     A BlockReader object allows to read blocks from a list of files
     """
     DEFAULT_BLOCK_SIZE = Memory('1gb')
-    def __init__(self, count, dtype=None, block_size=None, max_memory=None):
+    def __init__(self, count, dtype=None, buffer_size=None, max_memory=None):
         if isinstance(count, Shape):
             count = count.count()
         if isinstance(count, (str, tuple)):
@@ -67,9 +67,9 @@ class BlockReader(object):
             dtype = get_dtype(dtype)
         self.dtype = dtype
         self.itemsize_b = dtype().itemsize
-        if block_size is not None:
-            block_size = Memory(block_size)
-        self.block_size = block_size
+        if buffer_size is not None:
+            buffer_size = Memory(buffer_size)
+        self.buffer_size = buffer_size
         if max_memory is not None:
             max_memory = Memory(max_memory)
         self.max_memory = max_memory
@@ -106,12 +106,12 @@ class BlockReader(object):
             max_memory_b = self.count * self.itemsize_b * len(filenames)
         else:
             max_memory_b = self.max_memory.get_bytes()
-        if self.block_size is None:
-            block_size_b = self.DEFAULT_BLOCK_SIZE.get_bytes()
+        if self.buffer_size is None:
+            buffer_size = self.DEFAULT_BLOCK_SIZE.get_bytes()
         else:
-            block_size_b = self.block_size.get_bytes()
-        max_block_size_b = min(max_memory_b // len(filenames), block_size_b)
-        block_count = max(1, max_block_size_b // self.itemsize_b)
+            buffer_size = self.buffer_size.get_bytes()
+        max_buffer_size = min(max_memory_b // len(filenames), buffer_size)
+        block_count = max(1, max_buffer_size // self.itemsize_b)
         expected_count = self.count
         read_count = 0
         with multiopen(filenames, 'rb') as filehandles:

@@ -67,3 +67,24 @@ class RubikTestValues(RubikTestCase):
             values = Values(tpl)
             self.assertEqual(str(values), Values.__default_separator__.join(str(v) for v in tpl))
 
+    @testmethod
+    def eq(self):
+        for tpl in self._tuples:
+            v0 = Values(tpl)
+            v1 = Values(tpl)
+            self.assertEqual(v0, v1)
+
+    @testmethod
+    def ne(self):
+        for tpl0 in self._tuples:
+            for tpl1 in self._tuples:
+                v0 = Values(tpl0)
+                v1 = Values(tpl1)
+                if tpl0 == tpl1:
+                    self.assertEqual(v0, v1)
+                    self.assertFalse(v0 != v1)
+                    self.assertTrue(v0 == v1)
+                else:
+                    self.assertNotEqual(v0, v1)
+                    self.assertTrue(v0 != v1)
+                    self.assertFalse(v0 == v1)

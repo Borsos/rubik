@@ -100,3 +100,25 @@ class RubikTestShape(RubikTestCase):
             self.assertEqual(str(shape_fs), shape_s)
             self.assertEqual(str(shape_ft), shape_s)
 
+    @testmethod
+    def eq(self):
+        for shape_t, shape_s, count in self._shapes:
+            s0 = Shape(shape_t)
+            s1 = Shape(shape_s)
+            self.assertEqual(s0, s1)
+
+    @testmethod
+    def ne(self):
+        for shape_t0, shape_s0, count0 in self._shapes:
+            for shape_t1, shape_s1, count1 in self._shapes:
+                s0 = Shape(shape_t0)
+                s1 = Shape(shape_t1)
+                if shape_t0 == shape_t1:
+                    self.assertEqual(s0, s1)
+                    self.assertFalse(s0 != s1)
+                    self.assertTrue(s0 == s1)
+                else:
+                    self.assertNotEqual(s0, s1)
+                    self.assertTrue(s0 != s1)
+                    self.assertFalse(s0 == s1)
+

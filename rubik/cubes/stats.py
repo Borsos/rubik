@@ -36,7 +36,7 @@ import collections
 
 from .internals import output_mode_callback
 from .interpolate_filename import interpolate_filename
-from .input_output import fromfile_raw
+from .input_output import fromfile_generic
 from .out_of_core import BlockReader
 from .utilities import precise_sum
 
@@ -48,7 +48,7 @@ def default_print_function(message):
     sys.stdout.write(message + '\n')
 
 class InfoProgress(object):
-    def __init__(self, info_obj, frequency=0.1, print_function=None):
+    def __init__(self, info_obj, frequency=None, print_function=None):
         self.info_obj = info_obj
         if frequency is None:
             frequency = 0.1
@@ -63,7 +63,7 @@ class InfoProgress(object):
         if self.frequency > 0.0:
             n = int(fraction / self.frequency)
         else:
-            n = sys.maxint
+            n = -1
         if fraction == 1.0:
             dump = False
         elif 0.0 < fraction < 1.0:
@@ -71,6 +71,7 @@ class InfoProgress(object):
         else:
             dump = False
         if dump:
+            print dump, self.frequency, fraction, n
             report = self.info_obj.report()
             self.print_function("=== {:%}".format(fraction))
             self.print_function(report)
@@ -160,6 +161,17 @@ class Info(object):
 
     def info_progress(self, frequency=None, print_function=None):
         return InfoProgress(self, frequency=frequency, print_function=print_function)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            raise ValueError("cannot compare {} with {}".format(self.__class__.__name__, other.__class__.__name__))
+        for key in self.KEYS:
+            if getattr(self, key) != getattr(other, key):
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self == other
 
 class StatsInfo(Info):
     """StatsInfo(...)
@@ -259,6 +271,26 @@ class StatsInfo(Info):
 
     def progress(self):
         return self.cube_fraction
+
+    @property
+    def cube_percentage(self):
+        return self.cube_fraction * 100.0
+
+    @property
+    def cube_percentage_zero(self):
+        return self.cube_fraction_zero * 100.0
+
+    @property
+    def cube_percentage_nonzero(self):
+        return self.cube_fraction_nonzero * 100.0
+
+    @property
+    def cube_percentage_nan(self):
+        return self.cube_fraction_nan * 100.0
+
+    @property
+    def cube_percentage_inf(self):
+        return self.cube_fraction_inf * 100.0
 
     @classmethod
     def stats_info(cls, cube, shape=None, offset=0, name=""):
@@ -484,88 +516,100 @@ def print_diff(left, right, print_function=None):
     diff_info.print_report(print_function=print_function)
 
 def stats_file(filename, shape, dtype=None, file_format='raw',
-               out_of_core=True, block_size=None, max_memory=None):
+               out_of_core=True, buffer_size=None, max_memory=None,
+               progress_frequency=None):
     """stats_file(filename, shape, dtype=None, file_format='raw',
-                  out_of_core=True, block_size=None, max_memory=None) -> StatsInfo object
+                  out_of_core=True, buffer_size=None, max_memory=None,
+                  progress_frequency=None) -> StatsInfo object
     returns a StatsInfo about the content of 'filename', which is a cube with 'shape'.
-    If 'out_of_core' (out-of-core) is True, process 'block_size' elements at a time.
+    If 'out_of_core' (out-of-core) is True, process 'buffer_size' elements at a time.
     """
     shape = Shape(shape)
     filename = interpolate_filename(filename, shape=shape, file_format=file_format, dtype=dtype)
-    if out_of_core:
+    if out_of_core and file_format == 'raw':
         stats_info = stats_info_out_of_core(filename, shape=shape, dtype=dtype,
-                                            block_size=block_size, max_memory=max_memory)
+                                            buffer_size=buffer_size, max_memory=max_memory,
+                                            progress_frequency=progress_frequency)
     else:
-        cube = fromfile_generic(filename, shape=shape, dtype=dtype)
+        cube = fromfile_generic(f=filename, shape=shape, dtype=dtype, file_format=file_format)
         stats_info = StatsInfo.stats_info(cube)
     return stats_info
 
 def print_stats_file(filename, shape, dtype=None, file_format='raw',
-                     out_of_core=True, block_size=None, max_memory=None,
-                     print_function=None):
+                     out_of_core=True, buffer_size=None, max_memory=None,
+                     print_function=None, progress_frequency=None):
     """print_stats_file(filename, shape, dtype=None, file_format='raw',
-                        out_of_core=True, block_size=None, max_memory=None,
-                        print_function=None)
+                        out_of_core=True, buffer_size=None, max_memory=None,
+                        print_function=None, progress_frequency=None)
     prints the StatsInfo about the content of 'filename', which is a cube with 'shape'.
-    If 'out_of_core' (out-of-core) is True, process 'block_size' elements at a time.
+    If 'out_of_core' (out-of-core) is True, process 'buffer_size' elements at a time.
     """
     output_mode_callback()
     stats_info = stats_file(filename, shape=shape, dtype=dtype,
-                            out_of_core=out_of_core, block_size=block_size, max_memory=max_memory)
+                            out_of_core=out_of_core, buffer_size=buffer_size, max_memory=max_memory)
     stats_info.print_report(print_function=print_function)
     
 def diff_files(filename_l, filename_r, shape, dtype=None, file_format='raw', 
-               out_of_core=True, block_size=None, max_memory=None, in_threshold=None, out_threshold=None):
+               out_of_core=True, buffer_size=None, max_memory=None, in_threshold=None, out_threshold=None,
+               progress_frequency=None):
     """diff_files(filename_l, filename_r, shape, dtype=None, file_format='raw',
-                  out_of_core=True, block_size=None, max_memory=None,
-                  in_threshold=None, out_threshold=None) -> DiffInfo object
+                  out_of_core=True, buffer_size=None, max_memory=None,
+                  in_threshold=None, out_threshold=None,
+                  progress_frequency=None) -> DiffInfo object
     returns a DiffInfo about the content of 'filename_l' and 'filename_r', which are
     two cubes with 'shape'.
     If 'out_of_core' (out-of-core) is True, the overall memory size will be less than 'memory_size',
-    and the memory size per block will be less than 'block_size'.
-    By default, 'block_size' is '1gb', while 'max_memory' is not set.
+    and the memory size per block will be less than 'buffer_size'.
+    By default, 'buffer_size' is '1gb', while 'max_memory' is not set.
     """
     shape = Shape(shape)
     filename_l = interpolate_filename(filename_l, shape=shape, file_format=file_format, dtype=dtype)
     filename_r = interpolate_filename(filename_r, shape=shape, file_format=file_format, dtype=dtype)
     output_mode_callback()
-    if out_of_core:
+    if out_of_core and file_format == 'raw':
         diff_info = diff_info_out_of_core(filename_l, filename_r, shape=shape, dtype=dtype,
-                                  block_size=block_size, max_memory=max_memory,
-                                  in_threshold=in_threshold, out_threshold=out_threshold)
+                                  buffer_size=buffer_size, max_memory=max_memory,
+                                  in_threshold=in_threshold, out_threshold=out_threshold,
+                                  progress_frequency=progress_frequency)
     else:
-        left = fromfile_raw(filename_l, shape=shape, dtype=dtype)
-        right = fromfile_raw(filename_r, shape=shape, dtype=dtype)
+        left = fromfile_generic(f=filename_l, shape=shape, dtype=dtype, file_format=file_format)
+        right = fromfile_generic(f=filename_r, shape=shape, dtype=dtype, file_format=file_format)
         diff_info = DiffInfo.diff_info(left, right,
                                        in_threshold=in_threshold, out_threshold=out_threshold)
     return diff_info
 
-def print_diff_files(filename_l, filename_r, shape, dtype=None, out_of_core=True, block_size=None, max_memory=None, in_threshold=None, out_threshold=None, print_function=None):
-    """print_diff_files(filename_l, filename_r, shape, dtype=None, out_of_core=True, block_size=None, max_memory=None, print_function=None)
+def print_diff_files(filename_l, filename_r, shape, dtype=None,
+                     out_of_core=True, buffer_size=None, max_memory=None,
+                     in_threshold=None, out_threshold=None, print_function=None,
+                     progress_frequency=None):
+    """print_diff_files(filename_l, filename_r, shape, dtype=None,
+                        out_of_core=True, buffer_size=None, max_memory=None,
+                        print_function=None, progress_frequency=None)
     prints the DiffInfo about the content of 'filename_l' and 'filename_r', which are
     two cubes with 'shape'.
     If 'out_of_core' (out-of-core) is True, the overall memory size will be less than 'memory_size',
-    and the memory size per block will be less than 'block_size'.
-    By default, 'block_size' is '1gb', while 'max_memory' is not set.
+    and the memory size per block will be less than 'buffer_size'.
+    By default, 'buffer_size' is '1gb', while 'max_memory' is not set.
     """
     output_mode_callback()
     diff_info = diff_files(filename_l, filename_r, shape=shape, dtype=dtype, out_of_core=out_of_core,
-                           block_size=block_size, max_memory=max_memory,
-                           in_threshold=None, out_threshold=None)
+                           buffer_size=buffer_size, max_memory=max_memory,
+                           in_threshold=None, out_threshold=None,
+                           progress_frequency=progress_frequency)
     diff_info.print_report(print_function=print_function)
 
-def stats_info_out_of_core(filename, shape, dtype=None, block_size=None, max_memory=None, update_frequency=None):
+def stats_info_out_of_core(filename, shape, dtype=None, buffer_size=None, max_memory=None, progress_frequency=None):
     def reduce_stats_info(cubes, stats_info, info_progress, shape):
         stats_info += StatsInfo.stats_info(cubes[0],
                                            shape, offset=stats_info.cube_count)
         info_progress.dump()
 
     stats_info = StatsInfo(cube_shape=shape)
-    info_progress = stats_info.info_progress(frequency=update_frequency)
+    info_progress = stats_info.info_progress(frequency=progress_frequency)
     block_reader = BlockReader(
         count=shape,
         dtype=dtype,
-        block_size=block_size,
+        buffer_size=buffer_size,
         max_memory=max_memory)
     block_reader.reduce(
         filenames=[filename],
@@ -576,8 +620,8 @@ def stats_info_out_of_core(filename, shape, dtype=None, block_size=None, max_mem
     return stats_info
 
 def diff_info_out_of_core(filename_l, filename_r,
-                  shape, dtype=None, block_size=None, max_memory=None,
-                  update_frequency=None,
+                  shape, dtype=None, buffer_size=None, max_memory=None,
+                  progress_frequency=None,
                   in_threshold=None, out_threshold=None):
     def reduce_diff_info(cubes, diff_info, shape, info_progress, in_threshold=None, out_threshold=None):
         diff_info += DiffInfo.diff_info(cubes[0], cubes[1],
@@ -586,11 +630,11 @@ def diff_info_out_of_core(filename_l, filename_r,
         info_progress.dump()
 
     diff_info = DiffInfo(cube_shape=shape)
-    info_progress = diff_info.info_progress(frequency=update_frequency)
+    info_progress = diff_info.info_progress(frequency=progress_frequency)
     block_reader = BlockReader(
         count=shape,
         dtype=dtype,
-        block_size=block_size,
+        buffer_size=buffer_size,
         max_memory=max_memory)
     block_reader.reduce(
         filenames=[filename_l, filename_r],

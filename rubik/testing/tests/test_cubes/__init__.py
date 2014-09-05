@@ -27,3 +27,6 @@ SUITE_CUBES = RubikTestSuite('Cubes')
 
 from .rubik_test_input_output import RubikTestInputOutput
 SUITE_CUBES.register_test_class(RubikTestInputOutput)
+
+from .rubik_test_stats import RubikTestStats
+SUITE_CUBES.register_test_class(RubikTestStats)
