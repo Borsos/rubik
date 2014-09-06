@@ -18,7 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'RubikTestCase',
+           'RubikTestProgram',
           ]
 
 import shlex
@@ -30,39 +30,25 @@ from ..application.main import main
 from ..application import log
 from ..py23 import StringIO
 
-class RubikTestProgram(RubikTestCase):
+class RubikTestProgramBase(RubikTestCase):
     DEFAULT_PROGRAM_NAME = 'rubik'
     DEFAULT_PREFIX_OPTIONS = '--random-seed 100'
     DEFAULT_SUFFIX_OPTIONS = ''
-    PROGRAM_MODE_CALL_MAIN = 'call_main'
-    PROGRAM_MODE_SUBPROCESS = 'subprocess'
-    PROGRAM_MODES = (PROGRAM_MODE_CALL_MAIN, PROGRAM_MODE_SUBPROCESS)
-    DEFAULT_PROGRAM_MODE = PROGRAM_MODE_CALL_MAIN
 
-    def __init__(self, test_name, program_mode=None, program_name=None):
-        if program_mode is None:
-            program_mode = self.DEFAULT_PROGRAM_MODE
+    def __init__(self, test_name, program_name=None):
         if program_name is None:
             program_name = self.DEFAULT_PROGRAM_NAME
-        self.set_program_mode(program_mode)
         self.set_program_name(self.DEFAULT_PROGRAM_NAME)
         self.set_prefix_options(self.DEFAULT_PREFIX_OPTIONS)
         self.set_suffix_options(self.DEFAULT_SUFFIX_OPTIONS)
-        super(RubikTestProgram, self).__init__(test_name=test_name)
+        super(RubikTestProgramBase, self).__init__(test_name=test_name)
 
     def setUp(self):
-        super(RubikTestProgram, self).setUp()
+        super(RubikTestProgramBase, self).setUp()
         self.prepend_prefix_options('--verbose-level={}'.format(RUBIK_TEST_CONF.verbose_level))
         if RUBIK_TEST_CONF.trace_errors:
             self.prepend_prefix_options('--trace-errors')
     
-    def set_program_mode(self, program_mode):
-        if not program_mode in self.PROGRAM_MODES:
-            raise ValueError("invalid program mode {!r}; allowed values: {}".format(
-                program_mode,
-                ', '.join(repr(m) for m in self.PROGRAM_MODES)))
-        self.program_mode = program_mode
-
     def set_program_name(self, program_name):
         self.program_name = program_name
 
@@ -131,17 +117,10 @@ class RubikTestProgram(RubikTestCase):
     def run_program(self, options, join_stderr_stdout=True, expect_failure=False):
         options = self.get_options(options)
         command_line = (self.program_name, ) + options
-        if self.program_mode == self.PROGRAM_MODE_SUBPROCESS:
-            returncode, output, error = self.run_program_subprocess(
-                command_line,
-                join_stderr_stdout=join_stderr_stdout)
-            command = ' '.join([command_line[0]] + [repr(a) for a in command_line[1:]])
-        elif self.program_mode == self.PROGRAM_MODE_CALL_MAIN:
-            returncode, output, error = self.run_program_call_main(
-                options,
-                join_stderr_stdout=join_stderr_stdout)
-        else:
-            assert False
+        returncode, output, error = self.impl_run_program(
+            command_line,
+            join_stderr_stdout=join_stderr_stdout)
+        command = ' '.join([command_line[0]] + [repr(a) for a in command_line[1:]])
         self.check_returncode(
             command_line=command_line,
             returncode=returncode,
@@ -151,19 +130,26 @@ class RubikTestProgram(RubikTestCase):
         )
         return returncode, output, error
 
-    def run_program_call_main(self, options, join_stderr_stdout=True):
+class RubikTestProgramCallMain(RubikTestProgramBase):
+    def impl_run_program(self, command_line, join_stderr_stdout=True):
+        options = command_line[1:]
         stdout = StringIO()
         if join_stderr_stdout:
             stderr = stdout
         else:
             stderr = StringIO()
         with log.swap_logger_streams(stdout=stdout, stderr=stderr):
-            returncode = main(options)
+            try:
+                returncode = main(options)
+            except SystemExit as err:
+                print err, dir(err), err.code
+                returncode = 0
         output = stdout.getvalue()
         error = stderr.getvalue()
         return returncode, output, error
         
-    def run_program_subprocess(self, command_line, join_stderr_stdout=True):
+class RubikTestProgramSubprocess(RubikTestProgramBase):
+    def impl_run_program(self, command_line, join_stderr_stdout=True):
         stdout = subprocess.PIPE
         if join_stderr_stdout:
             stderr = subprocess.STDOUT
@@ -174,3 +160,31 @@ class RubikTestProgram(RubikTestCase):
         returncode = p.returncode
         return returncode, output, error
 
+RubikTestProgram = RubikTestProgramCallMain
+#RubikTestProgram = RubikTestProgramSubprocess
+
+#PROGRAM_MODE_CALL_MAIN = 'call_main'
+#PROGRAM_MODE_SUBPROCESS = 'subprocess'
+#PROGRAM_MODES = (PROGRAM_MODE_CALL_MAIN, PROGRAM_MODE_SUBPROCESS)
+#DEFAULT_PROGRAM_MODE = PROGRAM_MODE_CALL_MAIN
+#PROGRAM_MODE = DEFAULT_PROGRAM_MODE
+#
+#RubikTestProgram = RubikTestProgramCallMain
+##RubikTestProgram = RubikTestProgramSubprocess
+#
+#def set_program_mode(program_mode=DEFAULT_PROGRAM_MODE):
+#    global PROGRAM_MODE
+#    if not program_mode in PROGRAM_MODES:
+#        raise ValueError("invalid program mode {!r}; valid values are {}".format(
+#            program_mode,
+#            ', '.join(repr(m) for m in PROGRAM_MODES))
+#    PROGRAM_MODE = program_mode
+#
+#def get_program_mode():
+#    return PROGRAM_MODE
+#
+#def get_program_class():
+#    if PROGRAM_MODE == PROGRAM_MODE_SUBPROCESS:
+#        return RubikTestProgramSubprocess
+#    else:
+#        return RubikTestProgramSubprocess
