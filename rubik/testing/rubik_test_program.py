@@ -160,30 +160,3 @@ class RubikTestProgramSubprocess(RubikTestProgramBase):
         return returncode, output, error
 
 RubikTestProgram = RubikTestProgramCallMain
-#RubikTestProgram = RubikTestProgramSubprocess
-
-#PROGRAM_MODE_CALL_MAIN = 'call_main'
-#PROGRAM_MODE_SUBPROCESS = 'subprocess'
-#PROGRAM_MODES = (PROGRAM_MODE_CALL_MAIN, PROGRAM_MODE_SUBPROCESS)
-#DEFAULT_PROGRAM_MODE = PROGRAM_MODE_CALL_MAIN
-#PROGRAM_MODE = DEFAULT_PROGRAM_MODE
-#
-#RubikTestProgram = RubikTestProgramCallMain
-##RubikTestProgram = RubikTestProgramSubprocess
-#
-#def set_program_mode(program_mode=DEFAULT_PROGRAM_MODE):
-#    global PROGRAM_MODE
-#    if not program_mode in PROGRAM_MODES:
-#        raise ValueError("invalid program mode {!r}; valid values are {}".format(
-#            program_mode,
-#            ', '.join(repr(m) for m in PROGRAM_MODES))
-#    PROGRAM_MODE = program_mode
-#
-#def get_program_mode():
-#    return PROGRAM_MODE
-#
-#def get_program_class():
-#    if PROGRAM_MODE == PROGRAM_MODE_SUBPROCESS:
-#        return RubikTestProgramSubprocess
-#    else:
-#        return RubikTestProgramSubprocess

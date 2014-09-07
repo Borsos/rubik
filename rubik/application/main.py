@@ -739,12 +739,6 @@ Options to show help on specific topics """)
 
     conf.enable_warnings(*args.warnings)
 
-#    # logo
-#    if args.logo:
-#        rubik.show_logo()
-#        return 0
-
-
     # test
     if args.test_list or args.run_test:
         test_logger = log.set_test_logger(args.test_verbose_level)
