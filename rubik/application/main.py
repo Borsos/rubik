@@ -57,6 +57,56 @@ def key_value_type(value):
 class RubikAction(argparse.Action):
     RUBIK = None
 
+class RubikPrintAction(RubikAction):
+    pass
+
+class RubikPrintVersionAction(RubikPrintAction):
+    def __init__(self,
+             option_strings,
+             version,
+             nargs=0,
+             dest=argparse.SUPPRESS,
+             default=argparse.SUPPRESS,
+             ):
+        super(RubikPrintVersionAction, self).__init__(
+             option_strings=option_strings,
+             dest=dest,
+             nargs=nargs,
+             default=default)
+        self.version = version
+
+    def __call__(self, parser, namespace, values, option_string):
+        stream = log.get_stderr()
+        stream.write(self.version + '\n')
+
+class RubikPrintLogoAction(RubikPrintAction):
+    def __init__(self,
+             option_strings,
+             help,
+             nargs=0,
+             dest=argparse.SUPPRESS,
+             default=argparse.SUPPRESS,
+             ):
+        super(RubikPrintLogoAction, self).__init__(
+             option_strings=option_strings,
+             dest=dest,
+             nargs=nargs,
+             default=default)
+        self.help = help
+
+    def __call__(self, parser, namespace, values, option_string):
+        stream = log.get_stderr()
+        stream.write(logo.RUBIK + '\n')
+        parser.exit()
+
+class RubikPrintHelpAction(RubikPrintAction):
+    def __call__(self, parser, namespace, values, option_string):
+        parser.print_help(file=log.get_stderr())
+
+class RubikPrintUsageAction(RubikPrintAction):
+    def __call__(self, parser, namespace, values, option_string):
+        parser.print_usage(file=log.get_stderr())
+
 class ConstExpressionAction(RubikAction):
     CONST = None
     def __call__(self, parser, namespace, values, option_string):
@@ -128,6 +178,7 @@ Rubik can:
         #fromfile_prefix_chars='%',
         description=description,
         epilog=epilog,
+        add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -169,12 +220,11 @@ Global options""")
         help="dry run")
 
     global_group.add_argument("--version",
-        action='version',
-        version='%(prog)s {version}'.format(version=conf.VERSION))
+        action=RubikPrintVersionAction,
+        version='{program} {version}'.format(program=conf.PROGRAM_NAME, version=conf.VERSION))
 
     global_group.add_argument("--logo", "-L",
-        action='store_true',
-        default=False,
+        action=RubikPrintLogoAction,
         help="show rubik's logo")
 
     global_group.add_argument("--trace-errors", "-E",
@@ -572,6 +622,16 @@ Options related to tests.""")
         description="""\
 Options to show help on specific topics """)
 
+    help_group.add_argument("--help", "-h",
+        action=RubikPrintHelpAction,
+        nargs=0,
+        help="show this help message and exit")
+
+    help_group.add_argument("--usage", "-u",
+        action=RubikPrintUsageAction,
+        nargs=0,
+        help="show usage and exit")
+
     help_group.add_argument("--help-dtypes", "-ht",
         dest="help_dtypes",
         action="store_true",
@@ -679,10 +739,10 @@ Options to show help on specific topics """)
 
     conf.enable_warnings(*args.warnings)
 
-    # logo
-    if args.logo:
-        rubik.show_logo()
-        return 0
+#    # logo
+#    if args.logo:
+#        rubik.show_logo()
+#        return 0
 
 
     # test

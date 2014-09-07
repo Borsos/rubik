@@ -23,6 +23,7 @@ __all__ = [
 
 
 from ....conf import VERSION
+from ....application import logo
 
 from ...rubik_test_case import testmethod
 from ...rubik_test_program import RubikTestProgram
@@ -32,15 +33,22 @@ class RubikTestExecution(RubikTestProgram):
 
     @testmethod
     def help(self):
-        return
-
         returncode, output, error = self.run_program("--help")
         self.assertEqual(returncode, 0)
 
     @testmethod
-    def version(self):
-        return
+    def usage(self):
+        returncode, output, error = self.run_program("--usage")
+        self.assertEqual(returncode, 0)
 
+    @testmethod
+    def logo(self):
+        returncode, output, error = self.run_program("--logo")
+        self.assertEqual(returncode, 0)
+        self.assertEqual(output, "{}\n".format(logo.RUBIK))
+
+    @testmethod
+    def version(self):
         try:
             returncode, output, error = self.run_program("--version")
         except SystemExit as err:

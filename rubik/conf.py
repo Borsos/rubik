@@ -18,6 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
+           'PROGRAM_NAME',
            'VERSION_MAJOR',
            'VERSION_MINOR',
            'VERSION_PATCH',
@@ -51,6 +52,7 @@ __all__ = [
           ]
 
 import os
+import sys
 import shlex
 import warnings
 import collections
@@ -60,6 +62,8 @@ import numpy as np
 
 from .errors import RubikDataTypeError
 from .units import Memory
+
+PROGRAM_NAME = os.path.basename(sys.argv[0])
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1

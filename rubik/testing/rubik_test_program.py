@@ -138,12 +138,11 @@ class RubikTestProgramCallMain(RubikTestProgramBase):
             stderr = stdout
         else:
             stderr = StringIO()
-        with log.swap_logger_streams(stdout=stdout, stderr=stderr):
+        with log.swap_streams(stdout=stdout, stderr=stderr):
             try:
                 returncode = main(options)
             except SystemExit as err:
-                print err, dir(err), err.code
-                returncode = 0
+                returncode = err.code
         output = stdout.getvalue()
         error = stderr.getvalue()
         return returncode, output, error
