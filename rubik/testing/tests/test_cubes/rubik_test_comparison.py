@@ -252,3 +252,61 @@ class RubikTestComparison(RubikTestCase):
         c1 = np.array([1.0])
         cube = cb.rel_diff_cube(c0, c1, percentage=True)
         self.assertAlmostEqual(cube[0], 50.0)
+
+    @testmethod
+    def zero_cube(self):
+        #c0: [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+        cube = cb.zero_cube(self.c0)
+        cube_cmp = np.array([True, True, False, False, False, False])
+        for v0, v1 in zip(cube, cube_cmp):
+            self.assertEqual(v0, v1)
+
+    @testmethod
+    def zero_cube_Tn6(self):
+        #c0: [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+        cube = cb.zero_cube(self.c0, tolerance=1e-6)
+        cube_cmp = np.array([True, True, True, False, False, False])
+        for v0, v1 in zip(cube, cube_cmp):
+            self.assertEqual(v0, v1)
+      
+        
+    @testmethod
+    def nonzero_cube(self):
+        #c0: [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+        cube = cb.nonzero_cube(self.c0)
+        cube_cmp = np.array([True, True, False, False, False, False])
+        for v0, v1 in zip(cube, cube_cmp):
+            self.assertEqual(v0, not v1)
+
+    @testmethod
+    def nonzero_cube_Tn6(self):
+        #c0: [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+        cube = cb.nonzero_cube(self.c0, tolerance=1e-6)
+        cube_cmp = np.array([True, True, True, False, False, False])
+        for v0, v1 in zip(cube, cube_cmp):
+            self.assertEqual(v0, not v1)
+
+    @testmethod
+    def where_indices(self):
+        a = np.eye(3)
+        a[1, 2] = -2.0
+        a[2, 1] =  2.0
+        cube = cb.where_indices(a)
+        self.assertEqual(cube.shape, (5, 3))
+        self.assertCubesAreEqual(cube[0], np.array([0.0, 0.0,  1.0]))
+        self.assertCubesAreEqual(cube[1], np.array([1.0, 1.0,  1.0]))
+        self.assertCubesAreEqual(cube[2], np.array([1.0, 2.0, -2.0]))
+        self.assertCubesAreEqual(cube[3], np.array([2.0, 1.0,  2.0]))
+        self.assertCubesAreEqual(cube[4], np.array([2.0, 2.0,  1.0]))
+
+    @testmethod
+    def where_indices_condition(self):
+        a = np.eye(3)
+        a[1, 2] = -2.0
+        a[2, 1] =  2.0
+        cube = cb.where_indices(a, np.abs(a) > 1.0)
+        self.assertEqual(cube.shape, (2, 3))
+        self.assertCubesAreEqual(cube[0], np.array([1.0, 2.0, -2.0]))
+        self.assertCubesAreEqual(cube[1], np.array([2.0, 1.0,  2.0]))
+      
+        

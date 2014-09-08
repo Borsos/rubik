@@ -40,6 +40,7 @@ __all__ = [
            'abs_diff_cube',
            'abs_threshold_cube',
            'where_indices',
+           'zero_cube',
            'nonzero_cube',
            'join',
            'StatsInfo',
@@ -87,6 +88,7 @@ from .comparison import \
     abs_diff_cube, \
     abs_threshold_cube, \
     where_indices, \
+    zero_cube, \
     nonzero_cube
 
 from .stats import \
