@@ -77,7 +77,7 @@ def const_cube(shape, value=0.0, dtype=None):
     cube = cube.reshape(shape.shape())
     return as_dtype(cube, dtype)
 
-def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
+def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1), dtype=None):
     """const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=None) ->
        create a cube with the given shape; each subblock on the given list
        'const_dims' is constant. For instance, if len(shape) is 4 and 
@@ -89,9 +89,11 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     """
     shape = Shape(shape)
     count = shape.count()
+    if dtype is None:
+        dtype = get_default_dtype()
     rank = shape.rank()
     if rank <= 0:
-        return np.array([], dtype=get_default_dtype())
+        return np.array([], dtype=dtype)
     cdims = []
     for cdim in const_dims:
         while cdim < 0:
@@ -102,15 +104,15 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
     const_dims = cdims
 
     if not const_dims:
-        return linear_cube(shape, start=start, increment=increment)
+        return linear_cube(shape, start=start, increment=increment, dtype=dtype)
 
-    def _make_cube(d_index, c_shape, c_start, c_increment, c_const_dims):
+    def _make_cube(d_index, c_shape, c_start, c_increment, c_const_dims, dtype):
         if c_shape.rank() == 1:
             if d_index in c_const_dims:
-                cube = const_cube(c_shape.shape(), value=c_start)
+                cube = const_cube(c_shape.shape(), value=c_start, dtype=dtype)
                 next_start = c_start + increment
             else:
-                cube = linear_cube(c_shape.shape(), start=c_start, increment=c_increment)
+                cube = linear_cube(c_shape.shape(), start=c_start, increment=c_increment, dtype=dtype)
                 next_start = c_start + increment * cube.size
             return next_start, cube
         else:
@@ -119,14 +121,14 @@ def const_blocks_cube(shape, start=0.0, increment=1.0, const_dims=(-2, -1)):
             r_start = c_start
             n_start = c_start
             for i in irange(d_num):
-                x_start, cube = _make_cube(d_index + 1, s_shape, r_start, increment, c_const_dims)
+                x_start, cube = _make_cube(d_index + 1, s_shape, r_start, increment, c_const_dims, dtype=dtype)
                 if d_index not in c_const_dims:
                     r_start = x_start
                 n_start = x_start
                 l.append(cube)
-            return n_start, np.array(l, dtype=get_default_dtype())
+            return n_start, np.array(l, dtype=dtype)
           
-    next_start, cube = _make_cube(0, shape, start, increment, const_dims)
+    next_start, cube = _make_cube(0, shape, start, increment, const_dims, dtype=dtype)
     return cube
 
 def join(cubes):
