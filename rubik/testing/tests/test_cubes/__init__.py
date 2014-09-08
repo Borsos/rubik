@@ -36,3 +36,6 @@ SUITE_CUBES.register_test_class(RubikTestDiff)
 
 from .rubik_test_creation import RubikTestCreation
 SUITE_CUBES.register_test_class(RubikTestCreation)
+
+from .rubik_test_comparison import RubikTestComparison
+SUITE_CUBES.register_test_class(RubikTestComparison)
