@@ -22,7 +22,7 @@ __all__ = ['not_equals_cube', 'not_equals_num', 'not_equals',
            'rel_diff_cube', 'threshold_cube',
            'abs_diff_cube', 'abs_threshold_cube',
            'where_indices',
-           'nonzero_cube']
+           'zero_cube', 'nonzero_cube']
 
 import numpy as np
 
@@ -80,7 +80,7 @@ def abs_threshold_cube(cube, threshold=0.0, value=0.0):
     """
     return np.where(np.abs(cube) > threshold, cube, value)
 
-def abs_diff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percentage=False):
+def abs_diff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None):
     """abs_diff(cube_0, cube_1, in_threshold=None, out_threshold=None) ->
     cube of absolute difference
     | a - b |
@@ -114,6 +114,14 @@ def rel_diff_cube(cube_0, cube_1, in_threshold=None, out_threshold=None, percent
     if percentage:
         cube_out *= 100.0
     return cube_out
+
+def zero_cube(cube, tolerance=0.0):
+    """zero_cube(cube_in, tolerance=0.0) -> a cube with 0.0 where cube_in != 0.0 within
+    the given tolerance, 1.0 elsewhere"""
+    if tolerance:
+        return (np.abs(cube) <= tolerance).astype(get_default_dtype())
+    else:
+        return (cube == 0).astype(get_default_dtype())
 
 def nonzero_cube(cube, tolerance=0.0):
     """nonzero_cube(cube_in, tolerance=0.0) -> a cube with 0.0 where cube_in == 0.0 within

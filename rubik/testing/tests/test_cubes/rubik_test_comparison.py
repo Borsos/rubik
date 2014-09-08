@@ -38,6 +38,14 @@ class RubikTestComparison(RubikTestCase):
         self.l1 = cb.linear_cube(self.shape, start=0.5, increment=0.5)
         self.l2 = cb.linear_cube(self.shape, start=-1.0, increment=0.5)
 
+        self.epsilon = 1.0e-8
+        e = self.epsilon
+        self.c0 = np.array(
+                           [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+                          )
+        self.c1 = np.array(
+                           [0.0,   e, 0.0, 1.0,     1.0, 1.0 + e]
+                          )
     # tolerance 0.0
     @testmethod
     def not_equals_cube_t0(self):
@@ -145,3 +153,102 @@ class RubikTestComparison(RubikTestCase):
         self.assertEqual(cube[0, 0, 3], -9.0)			#  0.5
         self.assertEqual(cube[0, 0, 4], self.l2[0, 0, 4]) 	#  1.0
 
+    # abs_diff_cube
+        # self.c0:
+        # [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+
+        # self.c1:
+        # [0.0,   e, 0.0, 1.0,     1.0, 1.0 + e]
+
+    @testmethod
+    def abs_diff_cube_t0(self):
+        e = self.epsilon
+        cube = cb.abs_diff_cube(self.c0, self.c1)
+        cube_cmp = np.array([0.0, e, e, 0.0, e, e])
+        for v0, v1 in zip(self.c0, self.c1):
+            self.assertAlmostEqual(v0, v1)
+
+    @testmethod
+    def abs_diff_cube_inTn6(self):
+        e = self.epsilon
+        cube = cb.abs_diff_cube(self.c0, self.c1, in_threshold=1e-6)
+        cube_cmp = np.array([0.0, 0.0, 0.0, 0.0, e, e])
+        for v0, v1 in zip(self.c0, self.c1):
+            self.assertAlmostEqual(v0, v1)
+
+    @testmethod
+    def abs_diff_cube_outTn6(self):
+        e = self.epsilon
+        cube = cb.abs_diff_cube(self.c0, self.c1, out_threshold=1e-6)
+        cube_cmp = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        for v0, v1 in zip(self.c0, self.c1):
+            self.assertAlmostEqual(v0, v1)
+
+    @testmethod
+    def abs_diff_cube_inTn6_outTn6(self):
+        e = self.epsilon
+        cube = cb.abs_diff_cube(self.c0, self.c1, in_threshold=1e-6, out_threshold=1e-6)
+        cube_cmp = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        for v0, v1 in zip(self.c0, self.c1):
+            self.assertAlmostEqual(v0, v1)
+
+    # rel_diff_cube
+        # self.c0:
+        # [0.0, 0.0,   e, 1.0, 1.0 + e,     1.0],
+
+        # self.c1:
+        # [0.0,   e, 0.0, 1.0,     1.0, 1.0 + e]
+
+    @testmethod
+    def rel_diff_cube_t0(self):
+        e = self.epsilon
+        cube = cb.rel_diff_cube(self.c0, self.c1)
+        self.assertEqual(cube[0], 0.0)
+        self.assertGreater(cube[1], 1.0e30)
+        self.assertGreater(cube[2], 0.0)
+        self.assertAlmostEqual(cube[3], e / (1.0 + e))
+        self.assertAlmostEqual(cube[4], e)
+
+    @testmethod
+    def rel_diff_cube_inTn6(self):
+        e = self.epsilon
+        cube = cb.rel_diff_cube(self.c0, self.c1, in_threshold=1e-6)
+        self.assertEqual(cube[0], 0.0)
+        self.assertEqual(cube[1], 0.0)
+        self.assertEqual(cube[2], 0.0)
+        self.assertAlmostEqual(cube[3], e / (1.0 + e))
+        self.assertAlmostEqual(cube[4], e)
+
+    @testmethod
+    def rel_diff_cube_outTn6(self):
+        e = self.epsilon
+        cube = cb.rel_diff_cube(self.c0, self.c1, out_threshold=1e-6)
+        self.assertEqual(cube[0], 0.0)
+        self.assertGreater(cube[1], 1.0e30)
+        self.assertGreater(cube[2], 0.0)
+        self.assertEqual(cube[3], 0.0)
+        self.assertEqual(cube[4], 0.0)
+
+    @testmethod
+    def rel_diff_cube_inTn6_outTn6(self):
+        e = self.epsilon
+        cube = cb.rel_diff_cube(self.c0, self.c1, in_threshold=1e-6, out_threshold=1e-6)
+        self.assertEqual(cube[0], 0.0)
+        self.assertEqual(cube[1], 0.0)
+        self.assertEqual(cube[2], 0.0)
+        self.assertEqual(cube[3], 0.0)
+        self.assertEqual(cube[4], 0.0)
+
+    @testmethod
+    def rel_diff_cube_fraction(self):
+        c0 = np.array([2.0])
+        c1 = np.array([1.0])
+        cube = cb.rel_diff_cube(c0, c1)
+        self.assertAlmostEqual(cube[0], 0.5)
+
+    @testmethod
+    def rel_diff_cube_percentage(self):
+        c0 = np.array([2.0])
+        c1 = np.array([1.0])
+        cube = cb.rel_diff_cube(c0, c1, percentage=True)
+        self.assertAlmostEqual(cube[0], 50.0)
