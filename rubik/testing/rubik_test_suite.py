@@ -41,11 +41,14 @@ class RubikTestSuite(unittest.TestSuite):
     def run(self, result):
         with chtempdir(prefix="tmp.", dir=os.getcwd()) as temp_dir_info:
             num_prev_failures = len(result.failures)
+            num_prev_errors = len(result.errors)
             super(RubikTestSuite, self).run(result)
             num_curr_failures = len(result.failures)
+            num_curr_errors = len(result.errors)
             num_failures = num_curr_failures - num_prev_failures
-            if len(result.failures) > 0:
-                self.logger.error("suite {}: {} failures, leaving dir {}".format(self.suite_name, num_failures, temp_dir_info.dirname))
+            num_errors = num_curr_errors - num_prev_errors
+            if num_failures > 0 or num_errors > 0:
+                self.logger.error("suite {}: {} errors, {} failures: leaving dir {}".format(self.suite_name, num_errors, num_failures, temp_dir_info.dirname))
                 temp_dir_info.clear = False
         
     def register_test_class(self, test_class):

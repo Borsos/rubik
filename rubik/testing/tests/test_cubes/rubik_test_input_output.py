@@ -302,8 +302,8 @@ class RubikTestInputOutput(RubikTestCase):
         cube_w = cube
         wfun = getattr(cb, 'write_cube_{}'.format(file_format))
         rfun = getattr(cb, 'read_cube_{}'.format(file_format))
-        wfun(file_format=file_format, cube=cube_w, file=filename_format)
-        cube_r = rfun(file_format=file_format, shape=cube_w.shape, file=filename_format)
+        wfun(cube=cube_w, file=filename_format)
+        cube_r = rfun(shape=cube_w.shape, file=filename_format)
         self.assertCubesAreEqual(cube_w, cube_r)
 
     @testmethod

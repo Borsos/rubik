@@ -313,8 +313,6 @@ def write_const_cube(file, shape, value=0.0, buffer_size=None, dtype=None):
 def write_cube(file_format, cube, file):
     """write_cube(cube, file) -> write cube to file with file format 'file_format'
     """
-    if isinstance(file, BASE_STRING):
-        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format=file_format)
     if file_format == 'raw':
         return write_cube_raw(cube, file)
     elif file_format == 'csv':
@@ -327,11 +325,15 @@ def write_cube(file_format, cube, file):
 def write_cube_raw(cube, file):
     """write_cube_raw(cube, file) -> write cube to raw file
     """
+    if isinstance(file, BASE_STRING):
+        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='raw')
     cube.tofile(file)
 
 def write_cube_csv(cube, file, separator=None):
     """write_cube_csv(cube, file, separator=None) -> write cube to csv file
     """
+    if isinstance(file, BASE_STRING):
+        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='csv')
     if separator is None:
         separator = conf.FILE_FORMAT_CSV_SEPARATOR
     cube.tofile(file, sep=separator)
@@ -339,6 +341,8 @@ def write_cube_csv(cube, file, separator=None):
 def write_cube_text(cube, file, delimiter=None, newline=None, converter=None):
     """write_cube_text(cube, file, delimiter=" ", newline="\n", converter=None) -> write cube to text file
     """
+    if isinstance(file, BASE_STRING):
+        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='text')
     n_args = {}
     if delimiter is not None:
         n_args['delimiter'] = conf.FILE_FORMAT_TEXT_DELIMITER
