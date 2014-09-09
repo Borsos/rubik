@@ -291,3 +291,25 @@ class RubikTestInputOutput(RubikTestCase):
     def write_const_cube_out_of_core_1x2_int64(self):
         self.impl_write_cube_out_of_core(kind='const', shape='1x2', dtype='int64')
 
+    # write & read
+    def impl_write_read_cube(self, file_format, cube, filename_format):
+        cube_w = cube
+        cb.write_cube(file_format=file_format, cube=cube_w, file=filename_format)
+        cube_r = cb.read_cube(file_format=file_format, shape=cube_w.shape, file=filename_format)
+        self.assertCubesAreEqual(cube_w, cube_r)
+
+    @testmethod
+    def write_read_cube_raw(self):
+        cube = cb.random_cube(shape="4x5x6", dtype='float32')
+        self.impl_write_read_cube(file_format='raw', cube=cube, filename_format="wr_{shape}_{dtype}.{format}")
+
+    @testmethod
+    def write_read_cube_csv(self):
+        cube = cb.random_cube(shape="4x5x6", dtype='float32')
+        self.impl_write_read_cube(file_format='csv', cube=cube, filename_format="wr_{shape}_{dtype}.{format}")
+
+    @testmethod
+    def write_read_cube_text(self):
+        cube = cb.random_cube(shape="5x6", dtype='float32')
+        self.impl_write_read_cube(file_format='text', cube=cube, filename_format="wr_{shape}_{dtype}.{format}")
+        

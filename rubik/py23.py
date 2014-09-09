@@ -44,10 +44,12 @@ else:
     from StringIO import StringIO
 
 if PY3:
+    BASE_STRING = str
     get_input = input
     def decode(b):
         return b.decode('utf8')
 else:
+    BASE_STRING = basestring
     get_input = raw_input
     def decode(t):
         return t

@@ -21,10 +21,11 @@ __all__ = ['asfile'
           ]
 
 from contextlib import contextmanager
+from .py23 import BASE_STRING
 
 @contextmanager
 def asfile(f, mode='r'):
-    if isinstance(f, str):
+    if isinstance(f, BASE_STRING):
         with open(f, mode) as fh:
             yield fh
     else:

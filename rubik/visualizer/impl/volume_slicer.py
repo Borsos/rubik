@@ -62,6 +62,8 @@ from .attributes import \
     LOCATE_MODE_VALUE, \
     LOCATE_MODES
 
+from ...py23 import BASE_STRING
+
 class VolumeSlicerHandler(ModelView, BaseHandlerMixIn):
     def init(self, info):
         ModelView.init(self, info)
@@ -134,7 +136,7 @@ Volume slicer visualizer
 
     @classmethod
     def get_geometry(cls, geometry):
-        if isinstance(geometry, str):
+        if isinstance(geometry, BASE_STRING):
             try:
                 ws, hs = geometry.split('x', 2)
                 return int(ws), int(hs)

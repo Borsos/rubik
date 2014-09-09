@@ -45,6 +45,7 @@ __all__ = [
            'DEFAULT_DATA_TYPE',
            'DEFAULT_DTYPE',
            'get_dtype',
+           'get_dtype_name',
            'WARNING_RuntimeWarning',
            'WARNING_all',
            'WARNINGS',
@@ -62,6 +63,7 @@ import numpy as np
 
 from .errors import RubikDataTypeError
 from .units import Memory
+from .py23 import BASE_STRING
 
 PROGRAM_NAME = os.path.basename(sys.argv[0])
 
@@ -122,9 +124,11 @@ DATA_TYPES = collections.OrderedDict((
 DEFAULT_DATA_TYPE = "float32"
 
 def get_dtype(data_type):
+    if data_type is None:
+        data_type = DEFAULT_DATA_TYPE
     if isinstance(data_type, np.dtype):
         return data_type.type
-    elif isinstance(data_type, str):
+    elif isinstance(data_type, BASE_STRING):
         try:
             return getattr(np, data_type)
         except Exception as err:
@@ -134,6 +138,10 @@ def get_dtype(data_type):
             return data_type
         else:
             raise ValueError("invalid data type {!r} of type {}".format(data_type, type(data_type).__name__))
+
+def get_dtype_name(data_type):
+    dtype = get_dtype(data_type)
+    return dtype.__name__
 
 DEFAULT_DTYPE = get_dtype(DEFAULT_DATA_TYPE)
 

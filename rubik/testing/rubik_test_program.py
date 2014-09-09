@@ -28,7 +28,7 @@ from .rubik_test_case import RubikTestCase
 from .rubik_test_conf import RUBIK_TEST_CONF
 from ..application.main import main
 from ..application import log
-from ..py23 import StringIO
+from ..py23 import StringIO, BASE_STRING
 
 class RubikTestProgramBase(RubikTestCase):
     DEFAULT_PROGRAM_NAME = 'rubik'
@@ -74,7 +74,7 @@ class RubikTestProgramBase(RubikTestCase):
     def make_options(cls, options):
         if options is None:
             options = ()
-        if isinstance(options, str):
+        if isinstance(options, BASE_STRING):
             options = shlex.split(options)
         elif isinstance(options, (list, tuple, set, frozenset)):
             pass
@@ -85,7 +85,7 @@ class RubikTestProgramBase(RubikTestCase):
         return options
 
     def get_options(self, options):
-        if isinstance(options, str):
+        if isinstance(options, BASE_STRING):
             options = tuple(shlex.split(options))
         return self.prefix_options + \
                options + \

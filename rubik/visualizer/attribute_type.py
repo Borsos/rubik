@@ -21,6 +21,8 @@ __all__ = [
     'AttributeType',
 ]
 
+from ..py23 import BASE_STRING
+
 class AttributeType(object):
     PY_TYPE = None
     def __init__(self):
@@ -39,7 +41,7 @@ class AttributeType(object):
 
     def convert(self, name, value):
         if not isinstance(value, self.py_types):
-            if isinstance(value, basestring):
+            if isinstance(value, BASE_STRING):
                 value = self.convert_string(name, value)
             else:
                 raise ValueError("invalid value {v!r} of type {vt} for attribute {n}: cannot convert to {pt}".format(

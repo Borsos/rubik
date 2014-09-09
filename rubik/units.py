@@ -21,6 +21,8 @@ import re
 import collections
 import itertools
 
+from .py23 import BASE_STRING
+
 __all__ = [
               'Units',
               'Memory',
@@ -38,7 +40,7 @@ class Units(object):
         elif isinstance(init, (int, float)):
             current_value = init
             current_units = None
-        elif isinstance(init, str):
+        elif isinstance(init, BASE_STRING):
             try:
                 current_value, current_units = self.from_string(init)
             except Exception as err:

@@ -21,14 +21,12 @@ __all__ = ['interpolate_filename',
           ]
 
 from ..shape import Shape
-from ..conf import DEFAULT_DTYPE
-from .internals import DEFAULT_DTYPE
+from ..conf import get_dtype
 
 def interpolate_filename(filename, shape, dtype, file_format, keywords=None):
     if file_format is None:
         file_format = DEFAULT_FILE_FORMAT
-    if dtype is None:
-        dtype = DEFAULT_DTYPE
+    dtype = get_dtype(dtype)
     if keywords is None:
         keywords = {}
     count = 0

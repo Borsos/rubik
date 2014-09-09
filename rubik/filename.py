@@ -19,11 +19,13 @@ __author__ = "Simone Campagna"
 
 import re
 
+from .py23 import BASE_STRING
+
 class Filename(object):
     def __init__(self, init):
         if isinstance(init, Filename):
             filename = init._filename
-        elif isinstance(init, str):
+        elif isinstance(init, BASE_STRING):
             filename = self._from_string(init)
         else:
             raise ValueError("cannot make a {c} from {t} object {o!r}".format(

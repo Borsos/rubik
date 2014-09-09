@@ -19,6 +19,8 @@ __author__ = "Simone Campagna"
 
 import re
 
+from .py23 import BASE_STRING
+
 class Values(object):
     __re_split__ = re.compile("[,x]")
     __default_separator__ = 'x'
@@ -27,7 +29,7 @@ class Values(object):
             values = init._values
         elif isinstance(init, (list, tuple)):
             values = init
-        elif isinstance(init, str):
+        elif isinstance(init, BASE_STRING):
             values = self._from_string(init)
         elif hasattr(init, '__iter__'):
             values = init

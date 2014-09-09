@@ -17,13 +17,15 @@
 
 __author__ = "Simone Campagna"
 
+from .py23 import BASE_STRING
+
 class IndexPicker(object):
     def __init__(self, init):
         if isinstance(init, IndexPicker):
             self._value = init._value
         elif isinstance(init, (int, slice)):
             self._value = init
-        elif isinstance(init, str):
+        elif isinstance(init, BASE_STRING):
             self._value = self._from_string(init)
         else:
             raise ValueError("cannot make a {c} from {t} object {o!r}".format(
