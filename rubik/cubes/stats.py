@@ -36,7 +36,7 @@ import collections
 
 from .internals import output_mode_callback
 from .interpolate_filename import interpolate_filename
-from .input_output import fromfile_generic
+from .input_output import read_cube
 from .out_of_core import BlockReader
 from .utilities import precise_sum
 
@@ -536,7 +536,7 @@ def stats_file(filename, shape, dtype=None, file_format='raw',
                                             buffer_size=buffer_size, max_memory=max_memory,
                                             progress_frequency=progress_frequency)
     else:
-        cube = fromfile_generic(f=filename, shape=shape, dtype=dtype, file_format=file_format)
+        cube = read_cube(file=filename, shape=shape, dtype=dtype, file_format=file_format)
         stats_info = StatsInfo.stats_info(cube)
     return stats_info
 
@@ -577,8 +577,8 @@ def diff_files(filename_l, filename_r, shape, dtype=None, file_format='raw',
                                   in_threshold=in_threshold, out_threshold=out_threshold,
                                   progress_frequency=progress_frequency)
     else:
-        left = fromfile_generic(f=filename_l, shape=shape, dtype=dtype, file_format=file_format)
-        right = fromfile_generic(f=filename_r, shape=shape, dtype=dtype, file_format=file_format)
+        left = read_cube(file=filename_l, shape=shape, dtype=dtype, file_format=file_format)
+        right = read_cube(file=filename_r, shape=shape, dtype=dtype, file_format=file_format)
         diff_info = DiffInfo.diff_info(left, right,
                                        in_threshold=in_threshold, out_threshold=out_threshold)
     return diff_info

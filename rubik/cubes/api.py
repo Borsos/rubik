@@ -25,10 +25,14 @@ __all__ = [
            'write_linear_cube',
            'write_random_cube',
            'write_const_cube',
-           'fromfile_generic',
-           'fromfile_raw',
-           'fromfile_text',
-           'fromfile_csv',
+           'read_cube',
+           'read_cube_raw',
+           'read_cube_text',
+           'read_cube_csv',
+           'write_cube',
+           'write_cube_raw',
+           'write_cube_text',
+           'write_cube_csv',
            'not_equals_cube',
            'not_equals_num',
            'not_equals',
@@ -68,10 +72,14 @@ from .creation import \
     join
 
 from .input_output import \
-    fromfile_generic, \
-    fromfile_raw, \
-    fromfile_text, \
-    fromfile_csv, \
+    read_cube, \
+    read_cube_raw, \
+    read_cube_text, \
+    read_cube_csv, \
+    write_cube, \
+    write_cube_raw, \
+    write_cube_text, \
+    write_cube_csv, \
     write_linear_cube, \
     write_random_cube, \
     write_const_cube

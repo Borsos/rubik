@@ -71,7 +71,7 @@ class RubikTestInputOutput(RubikTestCase):
             format='raw',
         )
         self.assertFileExistsAndHasShape(filename_a, shape=shape, dtype=dtype)
-        ooc_cube = cb.fromfile_raw(filename_format_a, shape=shape, dtype=dtype)
+        ooc_cube = cb.read_cube_raw(filename_format_a, shape=shape, dtype=dtype)
         self.assertTrue(ooc_cube.dtype == dtype)
         self.assertEqual(ooc_cube.size, shape.count())
 

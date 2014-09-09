@@ -459,7 +459,7 @@ class Rubik(object):
         else:
             expected_input_count = shape.count()
             expected_read_count = expected_input_count
-        numpy_function = cubes_api.fromfile_generic
+        numpy_function = cubes_api.read_cube
         numpy_function_nargs = {}
         numpy_function_pargs = []
         if input_format == conf.FILE_FORMAT_RAW:

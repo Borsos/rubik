@@ -17,7 +17,8 @@
 
 __author__ = "Simone Campagna"
 
-__all__ = ['fromfile_generic', 'fromfile_raw', 'fromfile_text', 'fromfile_csv',
+__all__ = ['read_cube', 'read_cube_raw', 'read_cube_text', 'read_cube_csv',
+           'write_cube', 'write_cube_raw', 'write_cube_text', 'write_cube_csv',
            'write_linear_cube', 'write_random_cube', 'write_const_cube',
           ]
 
@@ -48,20 +49,17 @@ class ExtractReader(object):
             if not isinstance(extractor, Extractor):
                 extractor = Extractor(extractor)
         self.extractor = extractor
-        self.min_size = min_size
-        if isinstance(min_size, Memory):
-            self.min_size_bytes = min_size.get_bytes()
-        else:
-            self.min_size_bytes = min_size
-        self.min_size_count = self.min_size_bytes // dtype().itemsize
+        self.min_size = Memory(min_size)
+        self.min_size_bytes = min_size.get_bytes()
+        self.min_size_count = min(1, self.min_size_bytes // dtype().itemsize)
 
     def read(self, input_file):
-        if self.extractor is None:
+        if self.extractor is None or self.min_size_bytes  <= 0:
             return self.read_data(input_file, self.shape, self.extractor)
         else:
-            return self._read(input_file, self.shape, self.extractor)
+            return self.impl_read(input_file, self.shape, self.extractor)
 
-    def _read(self, input_file, shape, extractor):
+    def impl_read(self, input_file, shape, extractor):
         assert isinstance(shape, Shape)
         assert isinstance(extractor, Extractor)
         if extractor is None or len(shape) <= 1:
@@ -80,7 +78,7 @@ class ExtractReader(object):
                     subcubes = []
                     for curr_index in irange(start, stop, step):
                         self.skip_data(input_file, curr_index - prev_index, subshape)
-                        subcube = self._read(input_file, subshape, subextractor)
+                        subcube = self.impl_read(input_file, subshape, subextractor)
                         subcubes.append(subcube)
                         prev_index = curr_index + 1
                     # skipping remaining elements:
@@ -89,7 +87,7 @@ class ExtractReader(object):
                 else:
                     if index_picker0_value > 0:
                         self.skip_data(input_file, index_picker0_value, subshape)
-                    cube = self._read(input_file, subshape, subextractor)
+                    cube = self.impl_read(input_file, subshape, subextractor)
                     self.skip_data(input_file, dim0 - index_picker0_value - 1, subshape)
                     return cube
             else:
@@ -143,20 +141,20 @@ class ExtractTextReader(ExtractReader):
             cube = cube[extractor.index_pickers()]
         return cube
 
-def fromfile_generic(file_format, f, shape, dtype=None, extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE, **n_args):
-    """fromfile_generic(file_format, f, shape, dtype=None,
+def read_cube(file_format, file, shape, dtype=None, extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE, **n_args):
+    """read_cube(file_format, file, shape, dtype=None,
            extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE) ->
-       read a cube from raw file f with given shape and extractor
+       read a cube from raw file file with given shape and extractor
        file_format can be 'raw', 'text', 'csv'
-       f can be a  str or a file object
+       file can be a  str or a file object
        when reading less than min_size bytes, switch to the safe algorithm
     """
     if not isinstance(shape, Shape):
         shape = Shape(shape)
-    if isinstance(f, str):
-        filename = interpolate_filename(f, shape=shape, dtype=dtype, file_format=file_format)
+    if isinstance(file, str):
+        filename = interpolate_filename(file, shape=shape, dtype=dtype, file_format=file_format)
         with open(filename, 'rb') as f_in:
-            return fromfile_generic(file_format=file_format, f=f_in, shape=shape, dtype=dtype, extractor=extractor, min_size=min_size, **n_args)
+            return read_cube(file_format=file_format, file=f_in, shape=shape, dtype=dtype, extractor=extractor, min_size=min_size, **n_args)
     else:
         if file_format == conf.FILE_FORMAT_RAW:
             ereader_class = ExtractRawReader
@@ -165,55 +163,55 @@ def fromfile_generic(file_format, f, shape, dtype=None, extractor=None, min_size
         elif file_format == conf.FILE_FORMAT_CSV:
             ereader_class = ExtractCsvReader
         else:
-            raise RubikError("invalid file type {0}".format(file_format))
+            raise RubikError("invalid file format {0}".format(file_format))
         ereader = ereader_class(dtype=dtype, shape=shape, extractor=extractor, min_size=min_size, **n_args)
-        return ereader.read(f)
+        return ereader.read(file)
 
-def fromfile_raw(f, shape, dtype=None, extractor=None,
+def read_cube_raw(file, shape, dtype=None, extractor=None,
         min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE):
-    """fromfile_raw(f, shape, dtype=None,
+    """read_cube_raw(file, shape, dtype=None,
            extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE) ->
-               read a cube from raw file f with given shape and extractor
-       f can be a  str or a file object
+               read a cube from raw file file with given shape and extractor
+       file can be a  str or a file object
     """
-    return fromfile_generic(
+    return read_cube(
         file_format=conf.FILE_FORMAT_RAW,
-        f=f,
+        file=file,
         dtype=dtype,
         shape=shape,
         extractor=extractor,
         min_size=min_size)
 
-def fromfile_text(f, shape, dtype=None, extractor=None, 
+def read_cube_text(file, shape, dtype=None, extractor=None, 
         min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
         delimiter=conf.FILE_FORMAT_TEXT_DELIMITER):
-    """fromfile_text(f, shape, dtype=None,
+    """read_cube_text(file, shape, dtype=None,
                      extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
                      delimiter=conf.conf.FILE_FORMAT_TEXT_DELIMITER) ->
-       read a cube from text file f with given shape and extractor
-       f can be a  str or a file object
+       read a cube from text file file with given shape and extractor
+       file can be a  str or a file object
     """
-    return fromfile_generic(
+    return read_cube(
         file_format=conf.FILE_FORMAT_TEXT,
-        f=f,
+        file=file,
         dtype=dtype,
         shape=shape,
         extractor=extractor,
         min_size=min_size,
         delimiter=delimiter)
 
-def fromfile_csv(f, shape, dtype=None, extractor=None,
+def read_cube_csv(file, shape, dtype=None, extractor=None,
         min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
         sep=conf.FILE_FORMAT_CSV_SEPARATOR):
-    """fromfile_raw(f, shape, dtype=None,
+    """read_cube_raw(file, shape, dtype=None,
                     extractor=None, min_size=conf.DEFAULT_OPTIMIZED_MIN_SIZE,
                     sep=conf.FILE_FORMAT_CSV_SEPARATOR) -> read a cube from
-       CSV file f with given shape and extractor
-       f can be a  str or a file object
+       CSV file file with given shape and extractor
+       file can be a  str or a file object
     """
-    return fromfile_generic(
+    return read_cube(
         file_format=conf.FILE_FORMAT_CSV,
-        f=f,
+        file=file,
         dtype=dtype,
         shape=shape,
         extractor=extractor,
@@ -310,3 +308,30 @@ def write_const_cube(file, shape, value=0.0, buffer_size=None, dtype=None):
     output_mode_callback()
     rcw = ConstCubeWriter(file=file, shape=shape, buffer_size=buffer_size, value=value, dtype=dtype)
     rcw.write()
+
+def write_cube(file_format, cube, file):
+    """write_cube(cube, file) -> write cube to file with file format 'file_format'
+    """
+    if file_format == 'raw':
+        return write_cube_raw(cube, file)
+    elif file_format == 'csv':
+        return write_cube_csv(cube, file)
+    elif file_format == 'text':
+        return write_cube_text(cube, file)
+    else:
+        raise RubikError("invalid file format {0}".format(file_format))
+
+def write_cube_raw(cube, file):
+    """write_cube_raw(cube, file) -> write cube to raw file
+    """
+    cube.tofile(file)
+
+def write_cube_csv(cube, file, separator=" "):
+    """write_cube_csv(cube, file, separator=" ") -> write cube to csv file
+    """
+    cube.tofile(file, sep=separator)
+
+def write_cube_text(cube, file, delimiter=" ", newline="\n"):
+    """write_cube_text(cube, file, delimiter=" ", newline="\n") -> write cube to text file
+    """
+    cube.savetxt(file, delimiter=delimiter, newline=newline)
