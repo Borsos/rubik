@@ -46,6 +46,7 @@ __all__ = [
            'where_indices',
            'zero_cube',
            'nonzero_cube',
+           'split',
            'join',
            'StatsInfo',
            'stats_info',
@@ -61,15 +62,23 @@ __all__ = [
            'precise_mean',
            'set_random_seed',
            'get_dtype',
+           'as_dtype',
            'best_precise_dtype',
+           'interpolate_filename',
           ]
+
+from .operation import \
+    split, \
+    join
 
 from .creation import \
     linear_cube, \
     random_cube, \
     const_cube, \
     const_blocks_cube, \
-    join
+    write_linear_cube, \
+    write_random_cube, \
+    write_const_cube
 
 from .input_output import \
     read_cube, \
@@ -79,10 +88,7 @@ from .input_output import \
     write_cube, \
     write_cube_raw, \
     write_cube_text, \
-    write_cube_csv, \
-    write_linear_cube, \
-    write_random_cube, \
-    write_const_cube
+    write_cube_csv
 
 from .comparison import \
     not_equals_cube, \
@@ -111,9 +117,15 @@ from .stats import \
     diff_files, \
     print_diff_files
 
-from .utilities import \
-    set_random_seed, \
+from .dtypes import \
     best_precise_dtype, \
     get_dtype, \
+    as_dtype
+
+from .internals import \
+    set_random_seed
+
+from .utilities import \
     precise_sum, \
-    precise_mean
+    precise_mean, \
+    interpolate_filename

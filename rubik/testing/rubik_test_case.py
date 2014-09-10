@@ -31,7 +31,6 @@ import numpy as np
 
 from ..units import Memory
 from ..shape import Shape
-from ..cubes import internals
 from ..cubes import api as cb
 from .rubik_test_conf import RUBIK_TEST_CONF
 
@@ -91,8 +90,7 @@ class RubikTestCase(unittest.TestCase):
 
     def assertFileExistsAndHasShape(self, filename, shape, dtype=None):
         self.assertFileExists(filename)
-        if dtype is None:
-            dtype = internals.get_default_dtype()
+        dtype = cb.get_dtype(dtype)
         if not isinstance(shape, Shape):
             shape = Shape(shape)
         size = shape.count() * dtype().itemsize

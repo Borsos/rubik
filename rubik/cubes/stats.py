@@ -35,10 +35,9 @@ import numpy as np
 import collections
 
 from .internals import output_mode_callback
-from .interpolate_filename import interpolate_filename
 from .input_output import read_cube
 from .out_of_core import BlockReader
-from .utilities import precise_sum
+from .utilities import precise_sum, interpolate_filename
 
 from ..errors import RubikError
 from ..shape import Shape

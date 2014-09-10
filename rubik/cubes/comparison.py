@@ -26,7 +26,7 @@ __all__ = ['not_equals_cube', 'not_equals_num', 'not_equals',
 
 import numpy as np
 
-from .internals import get_default_dtype
+from .dtypes import as_dtype
 
 def not_equals_cube(cube_0, cube_1, tolerance=0.0):
     """not_equals_cube(cube_0, cube_1, tolerance=0.0) -> a cube with 1.0 where
@@ -119,17 +119,17 @@ def zero_cube(cube, tolerance=0.0):
     """zero_cube(cube_in, tolerance=0.0) -> a cube with 0.0 where cube_in != 0.0 within
     the given tolerance, 1.0 elsewhere"""
     if tolerance:
-        return (np.abs(cube) <= tolerance).astype(get_default_dtype())
+        return as_dtype((np.abs(cube) <= tolerance), dtype=cube.dtype)
     else:
-        return (cube == 0).astype(get_default_dtype())
+        return as_dtype((cube == 0), dtype=cube.dtype)
 
 def nonzero_cube(cube, tolerance=0.0):
     """nonzero_cube(cube_in, tolerance=0.0) -> a cube with 0.0 where cube_in == 0.0 within
     the given tolerance, 1.0 elsewhere"""
     if tolerance:
-        return (np.abs(cube) > tolerance).astype(get_default_dtype())
+        return as_dtype((np.abs(cube) > tolerance), dtype=cube.dtype)
     else:
-        return (cube != 0).astype(get_default_dtype())
+        return as_dtype((cube != 0), dtype=cube.dtype)
 
 def where_indices(cube, condition=None):
     """where_indices(cube, condition=None) -> returns an array containing of all the coordinates and

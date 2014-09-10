@@ -37,11 +37,12 @@ from ..application.argdict import ResultArgDict, InputArgDict, OutputArgDict
 from ..application.arglist import ArgList
 from ..application.logo import RUBIK
 from ..extractor import Extractor
-from ..cubes.interpolate_filename import interpolate_filename
+from ..cubes.utilities import interpolate_filename
 from ..visualizer.controller_builder import controller_builder
 from ..visualizer.visualizer_builder import visualizer_builder
 from .. import conf
 from ..cubes import internals as cubes_internals
+from ..cubes import dtypes as cubes_dtypes
 from ..cubes import api as cubes_api
 
 class Rubik(object):
@@ -55,7 +56,7 @@ class Rubik(object):
         self.input_filenames = InputArgDict(InputFilename)
         self.input_modes = InputArgDict(InputMode, default=InputMode("rb"))
         self.input_offsets = InputArgDict(Memory, default=None)
-        self.input_dtypes = InputArgDict(conf.get_dtype, default=None)
+        self.input_dtypes = InputArgDict(cubes_api.get_dtype, default=None)
         self.input_formats = InputArgDict(str, default=self.config.default_file_format)
         self.input_csv_separators = InputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
         self.input_text_delimiters = InputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
@@ -65,7 +66,7 @@ class Rubik(object):
         self.output_filenames = OutputArgDict(OutputFilename)
         self.output_modes = OutputArgDict(OutputMode)
         self.output_offsets = OutputArgDict(Memory, default=None)
-        self.output_dtypes = OutputArgDict(conf.get_dtype, default=None)
+        self.output_dtypes = OutputArgDict(cubes_api.get_dtype, default=None)
         self.output_formats = OutputArgDict(str, default=self.config.default_file_format)
         self.output_csv_separators = OutputArgDict(str, default=conf.FILE_FORMAT_CSV_SEPARATOR)
         self.output_text_delimiters = OutputArgDict(str, default=conf.FILE_FORMAT_TEXT_DELIMITER)
@@ -74,7 +75,7 @@ class Rubik(object):
 
         self.expressions = ArgList(str)
 
-        default_dtype = conf.get_dtype(self.config.default_data_type)
+        default_dtype = cubes_api.get_dtype(self.config.default_data_type)
         self.logger = log.LOGGER
 
         self.set_accept_bigger_raw_files(False)
@@ -139,8 +140,8 @@ class Rubik(object):
         self.dry_run = dry_run
 
     def set_dtype(self, dtype):
-        self.dtype = dtype
-        cubes_internals.set_default_dtype(self.dtype)
+        cubes_dtypes.set_default_dtype(dtype)
+        self.dtype = cubes_dtypes.get_default_dtype()
         self.dtype_bytes = self.dtype().itemsize
         self._cache_dtype_bytes = {self.dtype: self.dtype_bytes}
 
@@ -502,22 +503,12 @@ class Rubik(object):
         return cube
 
     def split_over_dimensions(self, cube):
-        if self.split_dimensions:
-            l = []
-            for dimension in self.split_dimensions:
-                if 0 <= dimension < len(cube.shape):
-                    l.append([(dimension, i) for i in irange(cube.shape[dimension])])
-            get_all = slice(None, None, None)
-            for d_indices in itertools.product(*l):
-                dd = dict(d_indices)
-                ex = []
-                for d in irange(len(cube.shape)):
-                    ex.append(dd.get(d, get_all))
-                dlabels = OrderedDict(('d{0}'.format(i), j) for i, j in d_indices)
-                subcube = cube[tuple(ex)]
-                yield subcube, dlabels
-        else:
-            yield cube, None
+        for subcube, axes_indices in cubes_api.split(cube, self.split_dimensions):
+            if axes_indices:
+                dlabels = OrderedDict(('d{0}'.format(i), j) for i, j in axes_indices)
+            else:
+                dlabels = None
+            yield subcube, dlabels
 
     def iterate_on_split(self, function, cube, *p_args, **n_args):
         if cube is None:

@@ -18,52 +18,16 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'get_dtype',
-           'best_precise_dtype',
            'precise_sum',
            'precise_mean',
+           'interpolate_filename',
           ]
 
 import numpy as np
 import random
 
-from .. import conf
-
-def get_dtype(dtype):
-    """get_dtype(dtype) -> numpy dtype
-       The argument dtype can be:
-        * a string, such as 'float32'
-        * a numpy dtype class, such as np.float32
-        * a numpy dtype object, such as cube.dtype
-       The return is always a numpy dtype class.
-    """
-    return conf.get_dtype(dtype)
-
-
-def best_precise_dtype(dtype):
-    """best_precise_dtype(dtype) -> best precise dtype
-       e.g.: best_precise_dtype(np.float32) -> np.float64
-             best_precise_dtype(np.int32)   -> np.int64
-             best_precise_dtype(np.uint32)  -> np.uint64
-    """
-    dtype = get_dtype(dtype)
-    if issubclass(dtype, np.signedinteger):
-        return np.int64
-    elif issubclass(dtype, np.unsignedinteger):
-        return np.uint64
-    elif issubclass(dtype, np.floating):
-        return np.float64
-    elif issubclass(dtype, np.complexfloating):
-        return np.complex128
-    else:
-        return dtype
-
-def set_random_seed(random_seed):
-    """set_random_seed(seed)
-       Sets the random seed for both the numpy and random modules
-    """
-    np.random.seed(random_seed)
-    random.seed(random_seed)
+from .dtypes import best_precise_dtype, get_dtype
+from ..shape import Shape
 
 def precise_sum(cube, axis=None, dtype=None, out=None, keepdims=False):
     """precise_sum(cube, axis=None, dtype=None, out=None, keepdims=False) -> 
@@ -85,3 +49,27 @@ def precise_mean(cube, axis=None, dtype=None, out=None, keepdims=False):
         dtype = best_precise_dtype(cube.dtype)
     return np.mean(a=cube, axis=axis, dtype=dtype, out=out, keepdims=keepdims)
 
+
+def interpolate_filename(filename, shape, dtype, file_format, keywords=None):
+    if file_format is None:
+        file_format = DEFAULT_FILE_FORMAT
+    dtype = get_dtype(dtype)
+    if keywords is None:
+        keywords = {}
+    count = 0
+    if shape:
+        count = 1
+        for i in shape:
+            count *= i
+    else:
+        count = 0
+    if not isinstance(shape, Shape):
+        shape = Shape(shape)
+    return filename.format(
+        shape=shape,
+        rank=len(shape),
+        count=count,
+        format=file_format,
+        dtype=dtype.__name__,
+        **keywords
+    )

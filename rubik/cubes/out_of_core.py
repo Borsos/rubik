@@ -31,8 +31,7 @@ from ..errors import RubikError
 from ..units import Memory
 from ..shape import Shape
 from ..py23 import BASE_STRING
-from .utilities import get_dtype
-from .internals import get_default_dtype
+from .dtypes import get_dtype
 
 def filelist(filenames):
     if isinstance(filenames, BASE_STRING):
@@ -62,10 +61,7 @@ class BlockReader(object):
         if isinstance(count, (BASE_STRING, tuple)):
             count = Shape(count).count()
         self.count = count
-        if dtype is None:
-            dtype = get_default_dtype()
-        else:
-            dtype = get_dtype(dtype)
+        dtype = get_dtype(dtype)
         self.dtype = dtype
         self.itemsize_b = dtype().itemsize
         if buffer_size is not None:

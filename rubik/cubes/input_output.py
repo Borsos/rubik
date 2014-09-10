@@ -19,13 +19,13 @@ __author__ = "Simone Campagna"
 
 __all__ = ['read_cube', 'read_cube_raw', 'read_cube_text', 'read_cube_csv',
            'write_cube', 'write_cube_raw', 'write_cube_text', 'write_cube_csv',
-           'write_linear_cube', 'write_random_cube', 'write_const_cube',
           ]
 
 import numpy as np
 
-from .internals import get_default_dtype, output_mode_callback
-from .interpolate_filename import interpolate_filename
+from .internals import output_mode_callback
+from .dtypes import get_dtype
+from .utilities import interpolate_filename
 from .creation import linear_cube, random_cube, const_cube
 
 from .. import conf
@@ -38,8 +38,7 @@ from ..asfile import asfile
 
 class ExtractReader(object):
     def __init__(self, dtype, shape, extractor, min_size):
-        if dtype is None:
-            dtype = get_default_dtype()
+        dtype = get_dtype(dtype)
         self.dtype = dtype
         self.dtype_bytes = dtype().itemsize
         if not isinstance(shape, Shape):
@@ -219,10 +218,50 @@ def read_cube_csv(file, shape, dtype=None, extractor=None,
         min_size=min_size,
         sep=sep)
 
+def write_cube(file_format, cube, file):
+    """write_cube(cube, file) -> write cube to file with file format 'file_format'
+    """
+    if file_format == 'raw':
+        return write_cube_raw(cube, file)
+    elif file_format == 'csv':
+        return write_cube_csv(cube, file)
+    elif file_format == 'text':
+        return write_cube_text(cube, file)
+    else:
+        raise RubikError("invalid file format {0}".format(file_format))
+
+def write_cube_raw(cube, file):
+    """write_cube_raw(cube, file) -> write cube to raw file
+    """
+    if isinstance(file, BASE_STRING):
+        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='raw')
+    cube.tofile(file)
+
+def write_cube_csv(cube, file, separator=None):
+    """write_cube_csv(cube, file, separator=None) -> write cube to csv file
+    """
+    if isinstance(file, BASE_STRING):
+        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='csv')
+    if separator is None:
+        separator = conf.FILE_FORMAT_CSV_SEPARATOR
+    cube.tofile(file, sep=separator)
+
+def write_cube_text(cube, file, delimiter=None, newline=None, converter=None):
+    """write_cube_text(cube, file, delimiter=" ", newline="\n", converter=None) -> write cube to text file
+    """
+    if isinstance(file, BASE_STRING):
+        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='text')
+    n_args = {}
+    if delimiter is not None:
+        n_args['delimiter'] = conf.FILE_FORMAT_TEXT_DELIMITER
+    if newline is not None:
+        n_args['newline'] = conf.FILE_FORMAT_TEXT_NEWLINE
+    if converter is not None:
+        n_args['fmt'] = conf.FILE_FORMAT_TEXT_CONVERTER
+    np.savetxt(file, cube, **n_args)
 class CubeWriter(object):
     def __init__(self, file, shape, buffer_size, dtype=None):
-        if dtype is None:
-            dtype = get_default_dtype()
+        dtype = get_dtype(dtype)
         if buffer_size is None:
             buffer_size = 1024 ** 3
         buffer_count = buffer_size // dtype().itemsize
@@ -310,44 +349,3 @@ def write_const_cube(file, shape, value=0.0, buffer_size=None, dtype=None):
     rcw = ConstCubeWriter(file=file, shape=shape, buffer_size=buffer_size, value=value, dtype=dtype)
     rcw.write()
 
-def write_cube(file_format, cube, file):
-    """write_cube(cube, file) -> write cube to file with file format 'file_format'
-    """
-    if file_format == 'raw':
-        return write_cube_raw(cube, file)
-    elif file_format == 'csv':
-        return write_cube_csv(cube, file)
-    elif file_format == 'text':
-        return write_cube_text(cube, file)
-    else:
-        raise RubikError("invalid file format {0}".format(file_format))
-
-def write_cube_raw(cube, file):
-    """write_cube_raw(cube, file) -> write cube to raw file
-    """
-    if isinstance(file, BASE_STRING):
-        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='raw')
-    cube.tofile(file)
-
-def write_cube_csv(cube, file, separator=None):
-    """write_cube_csv(cube, file, separator=None) -> write cube to csv file
-    """
-    if isinstance(file, BASE_STRING):
-        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='csv')
-    if separator is None:
-        separator = conf.FILE_FORMAT_CSV_SEPARATOR
-    cube.tofile(file, sep=separator)
-
-def write_cube_text(cube, file, delimiter=None, newline=None, converter=None):
-    """write_cube_text(cube, file, delimiter=" ", newline="\n", converter=None) -> write cube to text file
-    """
-    if isinstance(file, BASE_STRING):
-        file = interpolate_filename(file, shape=Shape(cube.shape), dtype=cube.dtype, file_format='text')
-    n_args = {}
-    if delimiter is not None:
-        n_args['delimiter'] = conf.FILE_FORMAT_TEXT_DELIMITER
-    if newline is not None:
-        n_args['newline'] = conf.FILE_FORMAT_TEXT_NEWLINE
-    if converter is not None:
-        n_args['fmt'] = conf.FILE_FORMAT_TEXT_CONVERTER
-    np.savetxt(file, cube, **n_args)

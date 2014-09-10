@@ -31,6 +31,7 @@ from .. import conf
 from .  import log
 from ..units import Memory
 from ..errors import RubikError
+from ..cubes.dtypes import DEFAULT_DATA_TYPE
 
 if py23.PY3:
     from configparser import ConfigParser
@@ -67,7 +68,7 @@ class Config(object):
         ('preferred_controller',        'Controller'),
         ('preferred_visualizer',        DEFAULT_VISUALIZER),
         ('default_options',             ''),
-        ('default_data_type',           conf.DEFAULT_DATA_TYPE),
+        ('default_data_type',           DEFAULT_DATA_TYPE),
         ('default_clobber',             str(conf.DEFAULT_CLOBBER)),
         ('default_read_mode',           conf.DEFAULT_READ_MODE),
         ('default_memory_limit',        str(conf.DEFAULT_MEMORY_LIMIT)),

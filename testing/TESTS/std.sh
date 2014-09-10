@@ -100,7 +100,7 @@ check_files_are_equal r0_${X}x${Y}.raw r1_${X}x${Y}.raw
 typeset -i _x=$(( $X - 2 ))
 
 # raw
-test_prex "-e 'cb.fromfile_raw(\"a_8x10.raw\", dtype=np.float32, shape=\"8x10\", extractor=\"2:x4\")' -o out10_{shape}.{format}"
+test_prex "-e 'cb.read_cube_raw(\"a_8x10.raw\", dtype=np.float32, shape=\"8x10\", extractor=\"2:x4\")' -o out10_{shape}.{format}"
 check_file_exists_and_has_size out10_${_x}.raw $(( $_x * ${bytes_float32} ))
 
 test_prex "-e 'np.fromfile(\"a_8x10.raw\", dtype=np.float32).reshape((8,10))[2:, 4]' -o out11_{shape}.{format}"
@@ -108,7 +108,7 @@ check_file_exists_and_has_size out11_${_x}.raw $(( $_x * ${bytes_float32} ))
 check_files_are_equal out10_${_x}.raw out11_${_x}.raw
 
 # csv
-test_prex "-e 'cb.fromfile_csv(\"a_8x10.csv\", dtype=np.float32, shape=\"8x10\", extractor=\"2:x4\")' -o out20_{shape}.{format}"
+test_prex "-e 'cb.read_cube_csv(\"a_8x10.csv\", dtype=np.float32, shape=\"8x10\", extractor=\"2:x4\")' -o out20_{shape}.{format}"
 check_file_exists_and_has_size out20_${_x}.raw $(( $_x * ${bytes_float32} ))
 
 test_prex "-e 'np.fromfile(\"a_8x10.csv\", dtype=np.float32, sep=\",\").reshape((8,10))[2:, 4]' -o out21_{shape}.{format}"
@@ -116,7 +116,7 @@ check_file_exists_and_has_size out21_${_x}.raw $(( $_x * ${bytes_float32} ))
 check_files_are_equal out20_${_x}.raw out21_${_x}.raw
 
 # text
-test_prex "-e 'cb.fromfile_text(\"a_8x10.text\", dtype=np.float32, shape=\"8x10\", extractor=\"2:x4\")' -o out30_{shape}.{format}"
+test_prex "-e 'cb.read_cube_text(\"a_8x10.text\", dtype=np.float32, shape=\"8x10\", extractor=\"2:x4\")' -o out30_{shape}.{format}"
 check_file_exists_and_has_size out30_${_x}.raw $(( $_x * ${bytes_float32} ))
 
 test_prex "-e 'np.loadtxt(\"a_8x10.text\", dtype=np.float32).reshape((8,10))[2:, 4]' -o out31_{shape}.{format}"
@@ -126,7 +126,7 @@ check_files_are_equal out30_${_x}.raw out31_${_x}.raw
 typeset -i _y=$(( $Y - 2 ))
 
 # raw
-test_prex "-e 'cb.fromfile_raw(\"a_8x10.raw\", dtype=np.float32, shape=\"8x10\", extractor=\"4x2:\")' -o out40_{shape}.{format}"
+test_prex "-e 'cb.read_cube_raw(\"a_8x10.raw\", dtype=np.float32, shape=\"8x10\", extractor=\"4x2:\")' -o out40_{shape}.{format}"
 check_file_exists_and_has_size out40_${_y}.raw $(( $_y * ${bytes_float32} ))
 
 test_prex "-e 'np.fromfile(\"a_8x10.raw\", dtype=np.float32).reshape((8,10))[4, 2:]' -o out41_{shape}.{format}"
@@ -134,7 +134,7 @@ check_file_exists_and_has_size out41_${_y}.raw $(( $_y * ${bytes_float32} ))
 check_files_are_equal out40_${_y}.raw out41_${_y}.raw
 
 # csv
-test_prex "-e 'cb.fromfile_csv(\"a_8x10.csv\", dtype=np.float32, shape=\"8x10\", extractor=\"4x2:\")' -o out50_{shape}.{format}"
+test_prex "-e 'cb.read_cube_csv(\"a_8x10.csv\", dtype=np.float32, shape=\"8x10\", extractor=\"4x2:\")' -o out50_{shape}.{format}"
 check_file_exists_and_has_size out50_${_y}.raw $(( $_y * ${bytes_float32} ))
 
 test_prex "-e 'np.fromfile(\"a_8x10.csv\", dtype=np.float32, sep=\",\").reshape((8,10))[4, 2:]' -o out51_{shape}.{format}"
@@ -142,7 +142,7 @@ check_file_exists_and_has_size out51_${_y}.raw $(( $_y * ${bytes_float32} ))
 check_files_are_equal out50_${_y}.raw out51_${_y}.raw
 
 # text
-test_prex "-e 'cb.fromfile_text(\"a_8x10.text\", dtype=np.float32, shape=\"8x10\", extractor=\"4x2:\")' -o out60_{shape}.{format}"
+test_prex "-e 'cb.read_cube_text(\"a_8x10.text\", dtype=np.float32, shape=\"8x10\", extractor=\"4x2:\")' -o out60_{shape}.{format}"
 check_file_exists_and_has_size out60_${_y}.raw $(( $_y * ${bytes_float32} ))
 
 test_prex "-e 'np.loadtxt(\"a_8x10.text\", dtype=np.float32).reshape((8,10))[4, 2:]' -o out61_{shape}.{format}"
