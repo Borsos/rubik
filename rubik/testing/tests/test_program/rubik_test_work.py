@@ -68,23 +68,27 @@ class RubikTestWork(RubikTestProgram):
             """-e 'cb.random_cube("{s}")' -o '{o}'""".format(
                 s=self.im_shape,
                 o=self.im_filename_format))
+        self.assertEqual(returncode, 0)
 
         returncode, output, error = self.run_program(
             """-e 'cb.random_cube("{s}")' -o '{o}'""".format(
                 s=self.og_shape,
                 o=self.og_filename_format))
+        self.assertEqual(returncode, 0)
 
         returncode, output, error = self.run_program(
             """-e 'cb.const_cube("{s}", value={c})' -o '{o}'""".format(
                 s=self.c_shape,
                 c=self.CONST_VALUE,
                 o=self.c_filename_format))
+        self.assertEqual(returncode, 0)
 
         returncode, output, error = self.run_program(
             """-e 'cb.linear_cube("{s}")' -o '{o}'""".format(
                 s=self.lin_shape,
                 c=self.CONST_VALUE,
                 o=self.lin_filename_format))
+        self.assertEqual(returncode, 0)
 
     @testmethod
     def im_exists(self):

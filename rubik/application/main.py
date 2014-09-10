@@ -38,7 +38,6 @@ from ..application import utils
 from ..application import help_functions
 from ..application.rubik import Rubik
 from ..application.config import get_config
-from ..application.argument_parser import CommandLineArgumentParser
 from ..cubes.api import set_random_seed
 
 _EXPRNUM = 0
@@ -174,7 +173,7 @@ Rubik can:
     rubik = Rubik()
     RubikAction.RUBIK = rubik
 
-    parser = CommandLineArgumentParser(
+    parser = argparse.ArgumentParser(
         #fromfile_prefix_chars='%',
         description=description,
         epilog=epilog,

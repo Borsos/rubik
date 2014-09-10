@@ -25,13 +25,13 @@ check_file_exists tmp_${X}x${Y}.csv2raw
 check_files_are_equal a_${X}x${Y}.raw tmp_${X}x${Y}.csv2raw
 
 test_prex "-e 'cb.linear_cube((${X}, ${Y}))' -o b_{shape}.{format}"
-check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
+check_file_exists_and_has_size b_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
 test_prex "-e 'cb.linear_cube((${X}, ${Y}))' -o c_{shape}.{format}"
-check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
+check_file_exists_and_has_size c_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
 test_prex "-e 'cb.linear_cube((${X}, ${Y}))' -o l_{shape}.{format}"
-check_file_exists_and_has_size a_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
+check_file_exists_and_has_size l_${X}x${Y}.raw $(( $X * $Y * ${bytes_float32} ))
 
 test_prex "-e 'cb.linear_cube((${X}, ${H}, ${Y}))' -o a_{shape}.{format}"
 check_file_exists_and_has_size a_${X}x${H}x${Y}.raw $(( $X * $H * $Y * ${bytes_float32} ))
