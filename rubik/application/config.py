@@ -73,7 +73,7 @@ class Config(object):
         ('default_optimized_min_size',  str(conf.DEFAULT_OPTIMIZED_MIN_SIZE)),
         ('default_file_format',         str(conf.DEFAULT_FILE_FORMAT)),
         ('default_warnings',            ''),
-        ('default_report_level',        '0'),
+        ('default_report_level',        '1'),
         ('default_verbose_level',       '1'),
         ('default_trace_errors',        'False'),
     ))

@@ -55,3 +55,19 @@ class RubikTestExecution(RubikTestProgram):
             returncode = 0
         self.assertEqual(returncode, 0)
         self.assertEqual(output, "rubik {}\n".format(VERSION))
+
+    @testmethod
+    def dry_run(self):
+        try:
+            returncode, output, error = self.run_program("-i non_existent.tmp1 -s 4x6 -o non_existent.tmp2 --dry-run")
+        except SystemExit as err:
+            returncode = 0
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def report_dry_run(self):
+        try:
+            returncode, output, error = self.run_program("-i non_existent.tmp1 -s 4x6 -o non_existent.tmp2 --dry-run --report")
+        except SystemExit as err:
+            returncode = 0
+        self.assertEqual(returncode, 0)

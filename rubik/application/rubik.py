@@ -205,7 +205,7 @@ class Rubik(object):
 
     def run(self):
         if self.print_report:
-            self._print_report()
+            self.impl_print_report()
         if not self.dry_run:
             self.initialize()
             self.evaluate_expressions(*self.expressions)
@@ -892,7 +892,7 @@ class Rubik(object):
             except Exception as err:
                 raise RubikExpressionError("cannot evaluate expression {0!r}".format(expression))
         
-    def _print_report(self):
+    def impl_print_report(self):
         def _log(condition):
             if condition:
                 return self.report_logger.info
@@ -917,7 +917,11 @@ class Rubik(object):
                 input_shape = self.shapes.get(input_filename, input_label)
                 input_extractor = self.extractors.get(input_filename, input_label)
                 logger.info("Input file {!r} [{}]".format(input_filename, input_label))
-                logger.info("  shape = {!s} [{}]".format(input_shape, input_shape.count()))
+                if input_shape is None:
+                    input_count = None
+                else:
+                    input_count = input_shape.count()
+                logger.info("  shape = {!s} [{}]".format(input_shape, input_count))
                 _log(input_extractor)("  extractor = {!r}".format(str(input_extractor)))
                 _log(input_mode)("  mode = {!s}".format(input_mode))
                 _log(input_offset)("  offset = {!s}".format(input_offset))
