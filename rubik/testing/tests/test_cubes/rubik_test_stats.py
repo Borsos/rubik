@@ -58,6 +58,8 @@ class RubikTestStats(RubikTestCase):
        
         self.assertAlmostEqualStatsInfo(stats_info_ooc, stats_info_cube)
 
+        self.assertEqual(stats_info_oc.report(), stats_info_ooc.report())
+
     def impl_stats_const_file(self, shape, dtype, buffer_size):
         dtype = cb.get_dtype(dtype)
         shape = Shape(shape)
@@ -121,7 +123,7 @@ class RubikTestStats(RubikTestCase):
     # random
     # 4x4, float32, buffer_size=(total_size // 2)
     @testmethod
-    def stats_random_file_4x4_2chunks(self):
+    def stats_random_file_4x4_float32_2chunks(self):
         dtype = np.float32
         shape = Shape("4x4")
         self.impl_stats_random_file(shape=shape, dtype=dtype, 
@@ -129,7 +131,7 @@ class RubikTestStats(RubikTestCase):
 
     # 4x4, float64, buffer_size=(total_size // 3)
     @testmethod
-    def stats_random_file_4x4_2chunks(self):
+    def stats_random_file_4x4_float64_2chunks(self):
         dtype = np.float64
         shape = Shape("4x4")
         self.impl_stats_random_file(shape=shape, dtype=dtype,
@@ -137,7 +139,7 @@ class RubikTestStats(RubikTestCase):
 
     # 12x8x19x5, float32, buffer_size=(total_size // 2)
     @testmethod
-    def stats_random_file_12x8x19x5_2chunks(self):
+    def stats_random_file_12x8x19x5_float32_2chunks(self):
         dtype = np.float32
         shape = Shape("12x8x19x5")
         self.impl_stats_random_file(shape=shape, dtype=dtype,
@@ -145,7 +147,7 @@ class RubikTestStats(RubikTestCase):
 
     # 12x8x19x5, float64, buffer_size=(total_size // 3)
     @testmethod
-    def stats_random_file_12x8x19x5_2chunks(self):
+    def stats_random_file_12x8x19x5_float64_3chunks(self):
         dtype = np.float64
         shape = Shape("12x8x19x5")
         self.impl_stats_random_file(shape=shape, dtype=dtype,
@@ -154,7 +156,7 @@ class RubikTestStats(RubikTestCase):
     # const
     # 4x4, float32, buffer_size=(total_size // 2)
     @testmethod
-    def stats_const_file_4x4_2chunks(self):
+    def stats_const_file_4x4_float32_2chunks(self):
         dtype = np.float32
         shape = Shape("4x4")
         self.impl_stats_const_file(shape=shape, dtype=dtype, 
@@ -162,7 +164,7 @@ class RubikTestStats(RubikTestCase):
 
     # 4x4, float64, buffer_size=(total_size // 3)
     @testmethod
-    def stats_const_file_4x4_2chunks(self):
+    def stats_const_file_4x4_float64_3chunks(self):
         dtype = np.float64
         shape = Shape("4x4")
         self.impl_stats_const_file(shape=shape, dtype=dtype,
@@ -170,7 +172,7 @@ class RubikTestStats(RubikTestCase):
 
     # 12x8x19x5, float32, buffer_size=(total_size // 2)
     @testmethod
-    def stats_const_file_12x8x19x5_2chunks(self):
+    def stats_const_file_12x8x19x5_float32_2chunks(self):
         dtype = np.float32
         shape = Shape("12x8x19x5")
         self.impl_stats_const_file(shape=shape, dtype=dtype,
@@ -178,7 +180,7 @@ class RubikTestStats(RubikTestCase):
 
     # 12x8x19x5, float64, buffer_size=(total_size // 3)
     @testmethod
-    def stats_const_file_12x8x19x5_2chunks(self):
+    def stats_const_file_12x8x19x5_float64_3chunks(self):
         dtype = np.float64
         shape = Shape("12x8x19x5")
         self.impl_stats_const_file(shape=shape, dtype=dtype,

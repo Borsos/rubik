@@ -18,7 +18,7 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'RubikTestExecution',
+           'RubikTestInterface',
           ]
 
 
@@ -28,7 +28,7 @@ from ....application import logo
 from ...rubik_test_case import testmethod
 from ...rubik_test_program import RubikTestProgram
 
-class RubikTestExecution(RubikTestProgram):
+class RubikTestInterface(RubikTestProgram):
     METHOD_NAMES = []
 
     @testmethod

@@ -114,8 +114,8 @@ class RubikTestInputOutput(RubikTestCase):
 
     # linear, float64, buffer_size=(total_size // 2)
     @testmethod
-    def write_linear_cube_out_of_core_4x4_float32(self):
-        dtype = np.float32
+    def write_linear_cube_out_of_core_4x4_float64(self):
+        dtype = np.float64
         shape = Shape("4x4")
         self.impl_write_cube_out_of_core(kind='linear', shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
 
@@ -128,8 +128,8 @@ class RubikTestInputOutput(RubikTestCase):
 
     # linear, int64, buffer_size=(total_size // 2)
     @testmethod
-    def write_linear_cube_out_of_core_4x4_int32(self):
-        dtype = np.int32
+    def write_linear_cube_out_of_core_4x4_int64(self):
+        dtype = np.int64
         shape = Shape("4x4")
         self.impl_write_cube_out_of_core(kind='linear', shape=shape, dtype=dtype, buffer_size=shape.count() * dtype().itemsize / 2)
 

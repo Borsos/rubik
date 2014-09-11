@@ -160,7 +160,7 @@ class RubikTestWork(RubikTestProgram):
         self.assertEqual(output, "{}\n".format(self.c_shape.count() * self.CONST_VALUE))
 
     @testmethod
-    def linear_cube_exists(self):
+    def linear_cube(self):
         shape = self.XYZ
         file_format = 'raw'
         out0_filename_format = 'l_{shape}.{format}'

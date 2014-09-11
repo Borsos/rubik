@@ -95,6 +95,10 @@ class RubikTestDiff(RubikTestCase):
             progress_frequency=-1.0)
         self.assertEqual(diff_info_oc, diff_info_cubes)
 
+        diff_info_oc_report = diff_info_oc.report()
+        diff_info_ooc_report = diff_info_ooc.report()
+        self.assertEqual(diff_info_oc_report, diff_info_ooc_report)
+
     def get_buffer_size(self, shape, dtype, buffer_size=None, chunks=2):
         if buffer_size is None:
             buffer_size = int(shape.count() * dtype().itemsize / chunks)
@@ -133,7 +137,7 @@ class RubikTestDiff(RubikTestCase):
 
     # 4x4, float64, buffer_size=(total_size // 3)
     @testmethod
-    def diff_random_files_4x4_2chunks(self):
+    def diff_random_files_4x4_3chunks(self):
         dtype = np.float64
         shape = Shape("4x4")
         self.impl_diff_random_files(shape=shape, dtype=dtype,
@@ -149,7 +153,7 @@ class RubikTestDiff(RubikTestCase):
 
     # 12x8x19x5, float64, buffer_size=(total_size // 3)
     @testmethod
-    def diff_random_files_12x8x19x5_2chunks(self):
+    def diff_random_files_12x8x19x5_3chunks(self):
         dtype = np.float64
         shape = Shape("12x8x19x5")
         self.impl_diff_random_files(shape=shape, dtype=dtype,
@@ -166,7 +170,7 @@ class RubikTestDiff(RubikTestCase):
 
     # 4x4, float64, buffer_size=(total_size // 3)
     @testmethod
-    def diff_linear_files_4x4_2chunks(self):
+    def diff_linear_files_4x4_3chunks(self):
         dtype = np.float64
         shape = Shape("4x4")
         self.impl_diff_linear_files(shape=shape, dtype=dtype,
@@ -182,7 +186,7 @@ class RubikTestDiff(RubikTestCase):
 
     # 12x8x19x5, float64, buffer_size=(total_size // 3)
     @testmethod
-    def diff_linear_files_12x8x19x5_2chunks(self):
+    def diff_linear_files_12x8x19x5_3chunks(self):
         dtype = np.float64
         shape = Shape("12x8x19x5")
         self.impl_diff_linear_files(shape=shape, dtype=dtype,

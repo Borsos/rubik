@@ -38,6 +38,8 @@ def testmethod(method):
     stack = inspect.stack()
     frame, filename, line_number, function_name, lines, index = stack[1]
     method_list = frame.f_locals['METHOD_NAMES']
+    if method.__name__ in method_list:
+        raise ValueError("test method {} already registered".format(method.__name__))
     method_list.append(method.__name__)
     return method
     

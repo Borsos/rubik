@@ -25,8 +25,8 @@ from ...rubik_test_suite import RubikTestSuite
 
 SUITE_PROGRAM = RubikTestSuite('Program')
 
-from .rubik_test_execution import RubikTestExecution
-SUITE_PROGRAM.register_test_class(RubikTestExecution)
+from .rubik_test_interface import RubikTestInterface
+SUITE_PROGRAM.register_test_class(RubikTestInterface)
 
 from .rubik_test_config import RubikTestConfig
 SUITE_PROGRAM.register_test_class(RubikTestConfig)
