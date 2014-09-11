@@ -130,12 +130,6 @@ class Rubik(object):
     def show_logo(self):
         self.PRINT(RUBIK)
 
-    def show_logo_once(self):
-        attr_name = '_logo_has_been_shown'
-        if not getattr(self, attr_name, False):
-            self.show_logo()
-            setattr(self, attr_name, True)
-
     def set_dry_run(self, dry_run):
         self.dry_run = dry_run
 

@@ -23,7 +23,9 @@ __all__ = [
 
 
 from ....conf import VERSION
+from ....shape import Shape
 from ....application import logo
+from ....cubes import api as cb
 
 from ...rubik_test_case import testmethod
 from ...rubik_test_program import RubikTestProgram
@@ -64,8 +66,18 @@ class RubikTestInterface(RubikTestProgram):
         self.assertEqual(returncode, 0)
 
     @testmethod
-    def histogram(self):
+    def histogram_number(self):
         returncode, output, error = self.run_program("-e 'cb.random_cube((4, 5))' --histogram")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def histogram_percentage(self):
+        returncode, output, error = self.run_program("-e 'cb.random_cube((4, 5))' --histogram --histogram-percentage")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def histogram_bins_8(self):
+        returncode, output, error = self.run_program("-e 'cb.random_cube((4, 5))' --histogram --histogram-bins=8 --histogram-range 0.1 0.9")
         self.assertEqual(returncode, 0)
 
     @testmethod
@@ -123,8 +135,111 @@ class RubikTestInterface(RubikTestProgram):
         returncode, output, error = self.run_program("--help-memory-usage")
         self.assertEqual(returncode, 0)
 
-#    @testmethod
-#    def help_usage(self):
-#        returncode, output, error = self.run_program("--help-usage")
-#        self.assertEqual(returncode, 0)
+    # labeled options
+    def impl_labeled_options(self, shape, dtype, i0_label=None, i1_label=None, i2_label=None, o0_label=None, o1_label=None):
+        i0_label_definition = ''
+        i1_label_definition = ''
+        i2_label_definition = ''
+        o0_label_definition = ''
+        o1_label_definition = ''
+        if i0_label is None:
+            i0_label = 'i0'
+        else:
+            i0_label_definition = '{}='.format(i0_label)
+        if i1_label is None:
+            i1_label = 'i1'
+        else:
+            i1_label_definition = '{}='.format(i1_label)
+        if i2_label is None:
+            i2_label = 'i2'
+        else:
+            i2_label_definition = '{}='.format(i2_label)
+        if o0_label is None:
+            o0_label = 'o0'
+        else:
+            o0_label_definition = '{}='.format(o0_label)
+        if o1_label is None:
+            o1_label = 'o1'
+        else:
+            o1_label_definition = '{}='.format(o1_label)
 
+        shape = Shape(shape)
+        dtype = cb.get_dtype(dtype)
+        file_format = 'raw'
+
+        lc_filename_format = "lcube_{shape}_{dtype}.{format}"
+        lc_filename = lc_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
+        returncode, output, error = self.run_program(
+            """-e 'cb.linear_cube("{s}")' -o {lc}""".format(
+                s=shape,
+                lc=lc_filename_format,
+            )
+        )
+        self.assertEqual(returncode, 0)
+        self.assertFileExistsAndHasShape(lc_filename, shape=shape, dtype=dtype)
+
+        rc_shape = Shape("100x{}".format(shape))
+        rc_extractor = "3," + ','.join(':' for d in shape)
+        rc_filename_format = "rcube_{shape}_{dtype}.{format}"
+        rc_filename = rc_filename_format.format(shape=rc_shape, dtype=dtype.__name__, format=file_format)
+        returncode, output, error = self.run_program(
+            """-e 'cb.random_cube("{s}")' -o {rc}""".format(
+                s=rc_shape,
+                rc=rc_filename_format,
+            )
+        )
+        self.assertEqual(returncode, 0)
+
+        cc_filename_format = "ccube_{shape}_{dtype}.{format}"
+        cc_filename = cc_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
+        returncode, output, error = self.run_program(
+            """-e 'cb.const_cube("{s}", value=0.2)' -o {cc}""".format(
+                s=shape,
+                cc=cc_filename_format,
+            )
+        )
+        self.assertEqual(returncode, 0)
+        self.assertFileExistsAndHasShape(cc_filename, shape=shape, dtype=dtype)
+        
+        o0_filename_format = "o0cube_{shape}_{dtype}.{format}"
+        o0_file_format = 'text'
+        o0_filename = o0_filename_format.format(shape=shape, dtype=dtype.__name__, format=o0_file_format)
+
+        o1_filename_format = "o1cube_{shape}_{dtype}.{format}"
+        o1_file_format = 'csv'
+        o1_filename = o1_filename_format.format(shape=shape, dtype=dtype.__name__, format=o1_file_format)
+        command = """-i '{i0ld}{lc}' -i '{i1ld}{rc}' -i '{i2ld}{cc}' -s '{s}' -s '{i1l}={rs}' -x '{i1l}={rcx}' -e '{i0l} + {i1l}' -o '{o0ld}{o0}' -e '{i0l} - {i1l}' -o '{o1ld}{o1}' -Of '{o0l}={o0f}' -Of '{o1l}={o1f}'""".format(
+            s=shape,
+            rs=rc_shape,
+            lc=lc_filename_format,
+            rc=rc_filename_format,
+            cc=cc_filename_format,
+            o0=o0_filename_format,
+            o0f=o0_file_format,
+            o1=o1_filename_format,
+            o1f=o1_file_format,
+            rcx=rc_extractor,
+            i0l=i0_label,
+            i1l=i1_label,
+            i2l=i2_label,
+            o0l=o0_label,
+            o1l=o1_label,
+            i0ld=i0_label_definition,
+            i1ld=i1_label_definition,
+            i2ld=i2_label_definition,
+            o0ld=o0_label_definition,
+            o1ld=o1_label_definition,
+        )
+        returncode, output, error = self.run_program(command)
+        self.assertEqual(returncode, 0)
+        self.assertFileExists(o0_filename)
+        self.assertFileExists(o1_filename)
+        self.remove_files(rc_filename, lc_filename, cc_filename, o0_filename, o1_filename)
+
+    @testmethod
+    def labeled_options_4x5_float32(self, shape="4x5", dtype="float32"):
+        self.impl_labeled_options(shape=shape, dtype=dtype)
+
+    @testmethod
+    def labeled_options_4x5_float32_l_r_c_x_y(self, shape="4x5", dtype="float32"):
+        self.impl_labeled_options(shape=shape, dtype=dtype, i0_label='l', i1_label='r', i2_label='c', o0_label='x', o1_label='y')

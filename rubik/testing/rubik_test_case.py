@@ -70,6 +70,11 @@ class RubikTestCase(unittest.TestCase):
             test_name = "{}.{}".format(class_name, test_method)
             yield test_name
 
+    def remove_files(self, *filenames):
+        for filename in filenames:
+            if os.path.exists(filename) and os.path.isfile(filename):
+                os.remove(filename)
+
     def assertPathExists(self, filename):
         if not os.path.exists(filename):
             raise AssertionError("path {!r} does not exists".format(filename))
