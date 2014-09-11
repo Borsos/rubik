@@ -65,6 +65,8 @@ __all__ = [
            'as_dtype',
            'best_precise_dtype',
            'interpolate_filename',
+           'histogram',
+           'print_histogram',
           ]
 
 from .operation import \
@@ -129,3 +131,7 @@ from .utilities import \
     precise_sum, \
     precise_mean, \
     interpolate_filename
+
+from .histogram import \
+    histogram, \
+    print_histogram

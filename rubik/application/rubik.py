@@ -186,6 +186,7 @@ class Rubik(object):
         self.histogram_bins = bins
         self.histogram_range = range
         self.histogram_length = length
+        self.histogram_mode = mode
         fmt_base = "{b}{s_start:{l_start}s}, {s_end:{l_end}s}{k}|{h}|"
         fmt_num = fmt_base + "{s_num:>{l_num}s}"
         fmt_percentage = fmt_base + "{s_percentage:>{l_percentage}s}"
@@ -669,107 +670,35 @@ class Rubik(object):
         if len(self._diff_cubes) > 2:
             raise RubikError("cannot diff more than 2 cubes")
         
-    def print_histogram(self, cube=None, bins=None, hrange=None, decimals=None, fmt=None):
+    def print_histogram(self, cube=None, bins=None, hlength=None, hrange=None, decimals=None, fmt=None, mode=None):
         self.notify_output_mode()
-        self.iterate_on_split(self.print_histogram_impl, cube, bins=bins, hrange=hrange, decimals=decimals, fmt=fmt)
+        self.iterate_on_split(self.impl_print_histogram, cube, bins=bins, hlength=hlength, hrange=hrange, decimals=decimals, fmt=fmt, mode=mode)
 
-    def print_histogram_impl(self, cube, dlabels, bins=None, hrange=None, decimals=None, fmt=None):
+    def impl_print_histogram(self, cube, dlabels, bins=None, hlength=None, hrange=None, decimals=None, fmt=None, mode=None):
         if cube is None:
             cube = self._result
         if bins is None:
             bins = self.histogram_bins
         if hrange is None:
             hrange = self.histogram_range
+        if hlength is None:
+            hlength = self.histogram_length
         if decimals is None:
             decimals = self.histogram_decimals
         if fmt is None:
             fmt = self.histogram_fmt
-        if not isinstance(cube, np.ndarray):
-            raise RubikError("cannot make an histogram from result of type {0}: it is not a numpy.ndarray".format(type(cube).__name__))
-        histogram, bins = np.histogram(cube, bins=bins, range=hrange)
-        start = bins[0]
-        d_min = None
-        for end in bins[1:]:
-            d = abs(end - start)
-            if d_min is None or d < d_min:
-                d_min = d
-        if decimals is None:
-            power = 0
-            f_d_min = d_min - int(d_min)
-            if f_d_min > 0:
-                while True:
-                    if int(f_d_min * 10 ** power) > 0:
-                        break
-                    power += 1
-            else:
-                power = 0
-        else:
-            power = decimals
-        if power:
-            fmt_float = "{{:.{power}f}}".format(power=power)
-        else:
-            fmt_float = "{{:f}}".format()
-        start = bins[0]
-        l = []
-        num_max = 0
-        l_num, l_percentage, l_start, l_end = 0, 0, 0, 0
-        num_tot = histogram.sum()
-        for num, end in zip(histogram, bins[1:]):
-            s_num = str(num)
-            fraction = float(num) / num_tot
-            s_percentage = "{:.2%}".format(fraction)
-            s_start = fmt_float.format(start)
-            s_end = fmt_float.format(end)
-            if len(s_num) > l_num:
-                l_num = len(s_num)
-            if len(s_percentage) > l_percentage:
-                l_percentage = len(s_percentage)
-            if len(s_start) > l_start:
-                l_start = len(s_start)
-            if len(s_end) > l_end:
-                l_end = len(s_end)
-            l.append((num, s_num, s_percentage, s_start, s_end))
-            if num > num_max:
-                num_max = num
-            start = end
-        
-        fixed_text = fmt.format(
-            b='[',
-            s_start='',
-            l_start=l_start,
-            s_end='',
-            l_end=l_end,
-            k=']',
-            h='',
-            s_num='',
-            l_num=l_num,
-            s_percentage='',
-            l_percentage=l_percentage)
-        text_length = len(fixed_text)
-        h_max = max(0, self.histogram_length - text_length)
-        b = '['
-        for c, (num, s_num, s_percentage, s_start, s_end) in enumerate(l):
-            if c == len(l) - 1:
-                k = ']'
-            else:
-                k = ')'
-            l_l = int(0.5 + (h_max * num) / float(num_max))
-            l_r = h_max - l_l
-            #self.PRINT("@@@ h_max={}, num={}, num_max={}, l_l={}, l_r={}".format(h_max, num, num_max, l_l, l_r))
-            h = '*' * l_l + ' ' * l_r
-            self.PRINT(fmt.format(
-                s_num=s_num,
-                l_num=l_num,
-                s_percentage=s_percentage,
-                l_percentage=l_percentage,
-                s_start=s_start,
-                l_start=l_start,
-                s_end=s_end,
-                l_end=l_end,
-                h=h,
-                b=b,
-                k=k,
-            ))
+        if mode is None:
+            mode = self.histogram_mode
+        hlength = self.histogram_length
+        cubes_api.print_histogram(
+            cube=cube,
+            bins=bins,
+            hlength=hlength,
+            hrange=hrange,
+            decimals=decimals,
+            fmt=fmt,
+            mode=mode,
+            print_function=self.PRINT)
 
     def _check_output_filename(self, output_filename):
         if (not self.clobber) and os.path.exists(output_filename):

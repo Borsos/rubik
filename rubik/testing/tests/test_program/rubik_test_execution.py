@@ -49,25 +49,82 @@ class RubikTestExecution(RubikTestProgram):
 
     @testmethod
     def version(self):
-        try:
-            returncode, output, error = self.run_program("--version")
-        except SystemExit as err:
-            returncode = 0
+        returncode, output, error = self.run_program("--version")
         self.assertEqual(returncode, 0)
         self.assertEqual(output, "rubik {}\n".format(VERSION))
 
     @testmethod
     def dry_run(self):
-        try:
-            returncode, output, error = self.run_program("-i non_existent.tmp1 -s 4x6 -o non_existent.tmp2 --dry-run")
-        except SystemExit as err:
-            returncode = 0
+        returncode, output, error = self.run_program("-i non_existent.tmp1 -s 4x6 -o non_existent.tmp2 --dry-run")
         self.assertEqual(returncode, 0)
 
     @testmethod
     def report_dry_run(self):
-        try:
-            returncode, output, error = self.run_program("-i non_existent.tmp1 -s 4x6 -o non_existent.tmp2 --dry-run --report")
-        except SystemExit as err:
-            returncode = 0
+        returncode, output, error = self.run_program("-i non_existent.tmp1 -s 4x6 -o non_existent.tmp2 --dry-run --report")
         self.assertEqual(returncode, 0)
+
+    @testmethod
+    def histogram(self):
+        returncode, output, error = self.run_program("-e 'cb.random_cube((4, 5))' --histogram")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_expression(self):
+        returncode, output, error = self.run_program("--help-expression")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_extractor(self):
+        returncode, output, error = self.run_program("--help-extractor")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_user_defined_variables(self):
+        returncode, output, error = self.run_program("--help-user-defined-variables")
+        self.assertEqual(returncode, 0)
+
+#    @testmethod
+#    def help_numpy(self):
+#        returncode, output, error = self.run_program("--help-numpy")
+#        self.assertEqual(returncode, 0)
+#
+#    @testmethod
+#    def help_cubes(self):
+#        returncode, output, error = self.run_program("--help-cubes")
+#        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_filenames(self):
+        returncode, output, error = self.run_program("--help-filenames")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_split(self):
+        returncode, output, error = self.run_program("--help-split")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_environment_variables(self):
+        returncode, output, error = self.run_program("--help-environment-variables")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_creating_cubes(self):
+        returncode, output, error = self.run_program("--help-creating-cubes")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_output(self):
+        returncode, output, error = self.run_program("--help-output")
+        self.assertEqual(returncode, 0)
+
+    @testmethod
+    def help_memory_usage(self):
+        returncode, output, error = self.run_program("--help-memory-usage")
+        self.assertEqual(returncode, 0)
+
+#    @testmethod
+#    def help_usage(self):
+#        returncode, output, error = self.run_program("--help-usage")
+#        self.assertEqual(returncode, 0)
+
