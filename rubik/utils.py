@@ -20,7 +20,6 @@ __author__ = "Simone Campagna"
 __all__ = [
            'flatten_list',
            'flatten_tuple',
-           'concatenate',
           ]
 
 def flatten_list(sequence, depth=-1):

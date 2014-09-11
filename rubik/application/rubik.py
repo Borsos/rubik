@@ -26,7 +26,6 @@ import itertools
 from collections import OrderedDict
 
 from . import log
-from . import utils
 from . import config
 from ..py23 import irange
 from ..units import Memory
@@ -41,6 +40,7 @@ from ..cubes.utilities import interpolate_filename
 from ..visualizer.controller_builder import controller_builder
 from ..visualizer.visualizer_builder import visualizer_builder
 from .. import conf
+from .. import utils
 from ..cubes import internals as cubes_internals
 from ..cubes import dtypes as cubes_dtypes
 from ..cubes import api as cubes_api

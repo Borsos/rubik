@@ -33,10 +33,10 @@ from . import environment
 from .. import conf
 from ..units import Memory
 from ..errors import RubikError, RubikMemoryError, RubikExpressionError
+from .. import utils
 
 from ..application import log
 from ..application import logo
-from ..application import utils
 from ..application import help_functions
 from ..application.rubik import Rubik
 from ..application.config import get_config
