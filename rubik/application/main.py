@@ -28,6 +28,8 @@ import itertools
 
 import numpy as np
 
+from . import environment
+
 from .. import conf
 from ..units import Memory
 from ..errors import RubikError, RubikMemoryError, RubikExpressionError
@@ -146,9 +148,10 @@ def main(arguments=None):
         arguments = sys.argv[1:]
 
     try:
-        config = get_config()
+        rubik_config = get_config()
     except Exception as err:
-        log.trace_error(False)
+        log.trace_error(True)
+        sys.exit(1)
 
     description = """\
 ================================================================================
@@ -189,27 +192,27 @@ Global options""")
     global_group.add_argument("--verbose", "-v",
         dest="verbose_level",
         action="count",
-        default=config.default_verbose_level,
+        default=rubik_config.default_verbose_level,
         help="increase verbose level")
 
     global_group.add_argument("--verbose-level",
         metavar="VL",
         dest="verbose_level",
         type=int,
-        default=config.default_verbose_level,
+        default=rubik_config.default_verbose_level,
         help="set verbose level")
 
     global_group.add_argument("--quiet", "--silent", "-q",
         dest="verbose_level",
         action="store_const",
         const=0,
-        default=config.default_verbose_level,
+        default=rubik_config.default_verbose_level,
         help="set quiet mode (warning messages are disabled)")
 
     global_group.add_argument("--report", "-R",
         dest="report_level",
         action="count",
-        default=config.default_report_level,
+        default=rubik_config.default_report_level,
         help="increase report level")
 
     global_group.add_argument("--dry-run", "-d",
@@ -229,42 +232,42 @@ Global options""")
     global_group.add_argument("--trace-errors", "-E",
         dest="trace_errors",
         action="store_true",
-        default=config.default_trace_errors,
+        default=rubik_config.default_trace_errors,
         help="show error traceback")
 
     global_group.add_argument("--safe",
         dest="read_mode",
         action="store_const",
         const=conf.READ_MODE_SAFE,
-        default=config.default_read_mode,
+        default=rubik_config.default_read_mode,
         help="safe read mode")
 
     global_group.add_argument("--optimized",
         dest="read_mode",
         action="store_const",
         const=conf.READ_MODE_OPTIMIZED,
-        default=config.default_read_mode,
+        default=rubik_config.default_read_mode,
         help="safe read mode")
 
     global_group.add_argument("--optimized-min-size",
         metavar="S",
         dest="optimized_min_size",
         type=Memory,
-        default=config.default_optimized_min_size,
+        default=rubik_config.default_optimized_min_size,
         help="switch from optimized to safe read mode when reading less than C bytes (a huge value is equivalent to --safe)")
 
     global_group.add_argument("--memory-limit", "-m",
         metavar="L[units]",
         dest="memory_limit",
         type=Memory,
-        default=config.default_memory_limit,
+        default=rubik_config.default_memory_limit,
         help="when more than the given limit is needed for a single extracted cube, raise an error")
 
     global_group.add_argument("--dtype", "-t",
         metavar="D",
         dest="dtype",
         type=conf.get_dtype,
-        default=config.default_data_type,
+        default=rubik_config.default_data_type,
         help="data type name (--help-data-types/-hd to show all available data types)")
 
     global_group.add_argument("--accept-bigger-raw-files", "-a",
@@ -274,12 +277,12 @@ Global options""")
 
     global_group.add_argument("--clobber",
         action="store_true",
-        default=config.default_clobber,
+        default=rubik_config.default_clobber,
         help="overwrite existing output files")
 
     global_group.add_argument("--no-clobber",
         action="store_false",
-        default=config.default_clobber,
+        default=rubik_config.default_clobber,
         help="do not overwrite existing output files")
 
     global_group.add_argument("--random-seed", "-r",
@@ -607,13 +610,13 @@ Options related to tests.""")
     test_group.add_argument("--test-verbose", "-Tv",
         dest="test_verbose_level",
         action="count",
-        default=config.default_verbose_level,
+        default=rubik_config.default_verbose_level,
         help="increase test verbose level")
 
     test_group.add_argument("--test-verbose-level", "-TV",
         dest="test_verbose_level",
         type=int,
-        default=config.default_verbose_level,
+        default=rubik_config.default_verbose_level,
         help="set test verbose level")
 
     help_group = parser.add_argument_group(
@@ -721,7 +724,7 @@ Options to show help on specific topics """)
         default=False,
         help="show demo")
 
-    arguments = list(itertools.chain(config.default_options, conf.RUBIK_OPTIONS, arguments))
+    arguments = list(itertools.chain(rubik_config.default_options, environment.RUBIK_OPTIONS, arguments))
 
     try:
         args = parser.parse_args(arguments)

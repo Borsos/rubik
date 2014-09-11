@@ -39,7 +39,6 @@ __all__ = [
            'DEFAULT_MEMORY_LIMIT',
            'DEFAULT_OPTIMIZED_MIN_SIZE',
            'DEFAULT_CLOBBER'
-           'RUBIK_OPTIONS',
            'DATA_TYPES',
            'DEFAULT_FILE_FORMAT',
            'DEFAULT_DATA_TYPE',
@@ -54,7 +53,6 @@ __all__ = [
 
 import os
 import sys
-import shlex
 import warnings
 import collections
 
@@ -97,8 +95,6 @@ DEFAULT_OPTIMIZED_MIN_SIZE = Memory("100mb")
 
 DEFAULT_CLOBBER = True
 
-RUBIK_OPTIONS = shlex.split(os.environ.get('RUBIK_OPTIONS', ''))
-    
 DATA_TYPES = collections.OrderedDict((
 	("bool_",	"Boolean (True or False) stored as a byte"),
 	("int_",	"Default integer type (same as C long; normally either int64 or int32)"),

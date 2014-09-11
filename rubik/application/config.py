@@ -29,6 +29,7 @@ from collections import OrderedDict
 from .. import py23
 from .. import conf
 from .  import log
+from .  import environment
 from ..units import Memory
 from ..errors import RubikError
 from ..cubes.dtypes import DEFAULT_DATA_TYPE
@@ -41,9 +42,6 @@ else:
 
 
 class Config(object):
-    RUBIK_DIR = os.path.expanduser("~/.rubik")
-    CONFIG_FILE = os.path.join(RUBIK_DIR, 'rubik.config')
-
     OUTPUT_ACTION_VISUALIZE = 'visualize'
     OUTPUT_ACTION_PRINT = 'print'
     OUTPUT_ACTION_STATS = 'stats'
@@ -79,14 +77,20 @@ class Config(object):
         ('default_verbose_level',       '1'),
         ('default_trace_errors',        'False'),
     ))
-    def __init__(self, filename=None):
+
+    CURRENT_CONFIG_FILENAME = None
+    CURRENT_CONFIG= None
+    def __init__(self, rubik_config=None, rubik_dir=None):
+        rubik_dir, rubik_config = self.get_config_rubik_dir_and_config(rubik_config=rubik_config, rubik_dir=rubik_dir)
+        self.rubik_dir = rubik_dir
+        self.rubik_config = rubik_config
         self.create_missing_files()
         config = ConfigParser(defaults=self.CONFIG_DEFAULTS)
-        if os.path.exists(self.CONFIG_FILE):
+        if os.path.exists(self.rubik_config):
             try:
-                config.read(self.CONFIG_FILE)
+                config.read(self.rubik_config)
             except Exception as err:
-                raise RubikError("cannot read config file {}: {}: {}".format(self.CONFIG_FILE, type(err).__name__, err))
+                raise RubikError("cannot read config file {}: {}: {}".format(self.rubik_config, type(err).__name__, err))
         if not config.has_section("general"):
             config.add_section("general")
         try:
@@ -105,7 +109,7 @@ class Config(object):
             self.default_verbose_level = config.getint("general", "default_verbose_level")
             self.default_report_level = config.getint("general", "default_report_level")
         except Exception as err:
-            raise RubikError("invalid config file {}: {}: {}".format(self.CONFIG_FILE, type(err).__name__, err))
+            raise RubikError("invalid config file {}: {}: {}".format(self.rubik_config, type(err).__name__, err))
         self.visualizer_attributes = {
             self.VISUALIZER_VolumeSlicer: self.read_attribute_file(self.get_visualizer_defaults_filename(self.VISUALIZER_VolumeSlicer)),
         }
@@ -114,8 +118,42 @@ class Config(object):
         }
 
     @classmethod
+    def get_config_rubik_dir_and_config(cls, rubik_config=None, rubik_dir=None):
+        RUBIK_DIR = environment.get_rubik_dir()
+        RUBIK_CONFIG = environment.get_rubik_config()
+        if rubik_dir is None:
+            rubik_dir = RUBIK_DIR
+        else:
+            rubik_dir = os.path.expanduser(os.path.expandvars(rubik_dir))
+        if rubik_config is None:
+            rubik_config = RUBIK_CONFIG
+        else:
+            rubik_config = os.path.expanduser(os.path.expandvars(rubik_config))
+        if not os.path.isabs(rubik_config):
+            rubik_config = os.path.join(rubik_dir, rubik_config)
+        rubik_config = os.path.normpath(os.path.realpath(os.path.abspath(rubik_config)))
+        return rubik_dir, rubik_config
+
+    def get_option(self, key):
+        value = getattr(self, key)
+        if isinstance(value, (tuple, list)):
+            return ' '.join(repr(o) for o in value)
+        elif isinstance(value, py23.BASE_STRING):
+            return value
+        else:
+            return str(value)
+
+    @classmethod
+    def get_config(cls, rubik_config=None, rubik_dir=None):
+        rubik_dir, rubik_config = cls.get_config_rubik_dir_and_config(rubik_config=rubik_config, rubik_dir=rubik_dir)
+        if cls.CURRENT_CONFIG is None or cls.CURRENT_CONFIG_FILENAME != rubik_config:
+            cls.CURRENT_CONFIG_FILENAME = rubik_config
+            cls.CURRENT_CONFIG = cls(rubik_config=rubik_config, rubik_dir=rubik_dir)
+        return cls.CURRENT_CONFIG
+        
+    @classmethod
     def get_defaults_filename(cls, type, name):
-        return os.path.join(cls.RUBIK_DIR, '{}-{}.defaults'.format(type, name))
+        return os.path.join(environment.get_rubik_dir(), '{}-{}.defaults'.format(type, name))
 
     @classmethod
     def get_visualizer_defaults_filename(cls, name):
@@ -126,14 +164,14 @@ class Config(object):
         return cls.get_defaults_filename("CONTROLLER", name)
 
     def create_missing_files(self):
-        if not os.path.exists(self.RUBIK_DIR):
-            os.makedirs(self.RUBIK_DIR)
-        if not os.path.exists(self.CONFIG_FILE):
-            with open(self.CONFIG_FILE, 'w') as f_out:
-               f_out.write("# configuration file for rubik {}\n".format(conf.VERSION))
-               f_out.write("[general]\n")
-               for key, value in self.CONFIG_DEFAULTS.iteritems():
-                   f_out.write("# {} = {}\n".format(key, value))
+        if not os.path.exists(self.rubik_dir):
+            os.makedirs(self.rubik_dir)
+        if not os.path.exists(self.rubik_config):
+            with open(self.rubik_config, 'w') as f_out:
+                f_out.write("# configuration file for rubik {}\n".format(conf.VERSION))
+                f_out.write("[general]\n")
+                for key, value in self.CONFIG_DEFAULTS.iteritems():
+                    f_out.write("# {} = {}\n".format(key, value))
         for visualizer, filename in (
                                      (self.VISUALIZER_VolumeSlicer, self.get_visualizer_defaults_filename(self.VISUALIZER_VolumeSlicer)),
                                      (self.CONTROLLER_Controller, self.get_controller_defaults_filename(self.CONTROLLER_Controller)),
@@ -144,6 +182,21 @@ class Config(object):
                     f_out.write("# This file contains the default attributes for the {} visualizer\n".format(visualizer))
                     f_out.write("# e.g.:\n")
                     f_out.write("# colorbar = True\n")
+
+    def write_config_file(self, file):
+        if isinstance(file, py23.BASE_STRING):
+            with open(file, "w") as f_out:
+                self.write_config_file(f_out)
+        else:
+            file.write("# configuration file for rubik {}\n".format(conf.VERSION))
+            file.write("[general]\n")
+            for key, default_value in self.CONFIG_DEFAULTS.iteritems():
+                value = self.get_option(key)
+                if value == default_value:
+                    comment = "# "
+                else:
+                    comment = ""
+                file.write("{}{} = {}\n".format(comment, key, value))
         
     def get_default_options(self):
         return self._default_options
@@ -231,8 +284,5 @@ class Config(object):
 
 CONFIG = None
 
-def get_config():
-    global CONFIG
-    if CONFIG is None:
-        CONFIG = Config()
-    return CONFIG
+def get_config(rubik_config=None, rubik_dir=None):
+    return Config.get_config(rubik_config=rubik_config, rubik_dir=rubik_dir)

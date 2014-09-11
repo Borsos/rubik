@@ -28,6 +28,12 @@ SUITE_PROGRAM = RubikTestSuite('Program')
 from .rubik_test_execution import RubikTestExecution
 SUITE_PROGRAM.register_test_class(RubikTestExecution)
 
+from .rubik_test_config import RubikTestConfig
+SUITE_PROGRAM.register_test_class(RubikTestConfig)
+
+from .rubik_test_opt import RubikTestOpt
+SUITE_PROGRAM.register_test_class(RubikTestOpt)
+
 from .rubik_test_work import RubikTestWork
 SUITE_PROGRAM.register_test_class(RubikTestWork)
 
