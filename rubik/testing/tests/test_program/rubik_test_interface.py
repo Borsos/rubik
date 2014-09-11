@@ -137,6 +137,10 @@ class RubikTestInterface(RubikTestProgram):
 
     # labeled options
     def impl_labeled_options(self, shape, dtype, i0_label=None, i1_label=None, i2_label=None, o0_label=None, o1_label=None):
+        shape = Shape(shape)
+        dtype = cb.get_dtype(dtype)
+        file_format = 'raw'
+
         i0_label_definition = ''
         i1_label_definition = ''
         i2_label_definition = ''
@@ -163,9 +167,6 @@ class RubikTestInterface(RubikTestProgram):
         else:
             o1_label_definition = '{}='.format(o1_label)
 
-        shape = Shape(shape)
-        dtype = cb.get_dtype(dtype)
-        file_format = 'raw'
 
         lc_filename_format = "lcube_{shape}_{dtype}.{format}"
         lc_filename = lc_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
@@ -243,3 +244,41 @@ class RubikTestInterface(RubikTestProgram):
     @testmethod
     def labeled_options_4x5_float32_l_r_c_x_y(self, shape="4x5", dtype="float32"):
         self.impl_labeled_options(shape=shape, dtype=dtype, i0_label='l', i1_label='r', i2_label='c', o0_label='x', o1_label='y')
+
+    def impl_expression_filename(self, shape, dtype, mode):
+        shape = Shape(shape)
+        dtype = cb.get_dtype(dtype)
+        file_format = 'raw'
+
+        out_filename_format = "outcube_{mode}_{{shape}}_{{dtype}}.{{format}}".format(mode=mode)
+        out_filename = out_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
+        expr_filename = "expr_{mode}.txt".format(mode=mode)
+        with open(expr_filename, "w") as f_out:
+            f_out.write("""\
+cube = cb.linear_cube(shape="{s}", dtype="{d}")
+cb.write_cube(file_format="{f}", cube=cube, file="{o}")
+""".format(s=shape, d=dtype.__name__, o=out_filename_format, f=file_format))
+        if mode == "f_option":
+            command = "-f {e}".format(e=expr_filename)
+        else:
+            command = "-e '@{e}'".format(e=expr_filename)
+        returncode, output, error = self.run_program(command)
+        self.assertEqual(returncode, 0)
+        self.assertFileExistsAndHasShape(out_filename, shape=shape, dtype=dtype)
+        
+
+    @testmethod
+    def expression_filename_4x5_float32_f_option(self):
+        self.impl_expression_filename(shape="4x5", dtype="float64", mode="f_option")
+
+    @testmethod
+    def expression_filename_8x3x2_float32_f_option(self):
+        self.impl_expression_filename(shape="8x3x2", dtype="float64", mode="f_option")
+
+    @testmethod
+    def expression_filename_4x5_float32_at_option(self):
+        self.impl_expression_filename(shape="4x5", dtype="float64", mode="at_option")
+
+    @testmethod
+    def expression_filename_8x3x2_float32_at_option(self):
+        self.impl_expression_filename(shape="8x3x2", dtype="float64", mode="at_option")
