@@ -23,6 +23,7 @@ __all__ = [
 
 from ....conf import VERSION
 from ....shape import Shape
+from ....cubes import api as cb
 
 from ...rubik_test_program import RubikTestProgram
 from ...rubik_test_case import testmethod
@@ -132,3 +133,68 @@ class RubikTestStd(RubikTestProgram):
                 s=shape,
                 o=out_filename_format))
         self.assertFileExistsAndHasShape(out_filename, shape)
+
+    ### read/write
+    def impl_read_write(self, shape, dtype, file_format):
+        dtype = cb.get_dtype(dtype)
+        shape = Shape(shape)
+
+        out0_filename_format = "o0tmp_{shape}_{dtype}.{format}"
+        out0_filename = out0_filename_format.format(shape=shape, dtype=dtype.__name__, format='raw')
+        
+        out1_filename_format = "o1tmp_{shape}_{dtype}.{format}"
+        out1_filename = out1_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
+        
+        out2_filename_format = "o2tmp_{shape}_{dtype}.{format}"
+        out2_filename = out2_filename_format.format(shape=shape, dtype=dtype.__name__, format='raw')
+        
+        cube = cb.linear_cube(shape=shape, dtype=dtype)
+        cb.write_cube_raw(cube=cube, file=out0_filename_format)
+        self.assertFileExistsAndHasShape(out0_filename, shape, dtype=dtype)
+
+        returncode, output, error = self.run_program(
+            """-i '{i}' -It '{t}' -s '{s}' -e 'write_cube(cube=_r, filename="{o}", format="{f}", dtype="{t}")'""".format(
+                i=out0_filename_format,
+                s=shape,
+                o=out1_filename_format,
+                f=file_format,
+                t=dtype.__name__))
+
+        self.assertFileExists(out1_filename)
+
+        returncode, output, error = self.run_program(
+            """-e 'read_cube(shape="{s}", filename="{i}", format="{f}", dtype="{t}")' -e 'write_cube(cube=_r, filename="{o}", format="raw", dtype="{t}")'""".format(
+                i=out1_filename_format,
+                s=shape,
+                o=out2_filename_format,
+                f=file_format,
+                t=dtype.__name__))
+
+        self.assertFileExistsAndHasShape(out2_filename, shape, dtype=dtype)
+        self.assertFilesAreEqual(out0_filename, out2_filename)
+        self.remove_files(out0_filename, out1_filename, out2_filename)
+
+    @testmethod
+    def read_write_30x20_float32_raw(self):
+        self.impl_read_write(shape="30x20", dtype="float32", file_format="raw")
+
+    @testmethod
+    def read_write_30x20_float32_csv(self):
+        self.impl_read_write(shape="30x20", dtype="float32", file_format="csv")
+
+    @testmethod
+    def read_write_30x20_float32_text(self):
+        self.impl_read_write(shape="30x20", dtype="float32", file_format="text")
+
+    @testmethod
+    def read_write_30x20_float64_raw(self):
+        self.impl_read_write(shape="30x20", dtype="float64", file_format="raw")
+
+    @testmethod
+    def read_write_30x20_float64_csv(self):
+        self.impl_read_write(shape="30x20", dtype="float64", file_format="csv")
+
+    @testmethod
+    def read_write_30x20_float64_text(self):
+        self.impl_read_write(shape="30x20", dtype="float64", file_format="text")
+
