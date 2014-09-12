@@ -622,19 +622,6 @@ class Rubik(object):
                     raise RubikError(message)
         return input_filename
 
-    def extract(self, cube, extractor):
-        assert isinstance(extractor, Extractor)
-        if extractor.rank() != len(cube.shape):
-            raise RubikError("invalid extractor {extractor} for shape {shape}: rank {rextractor} does not match {rshape}".format(
-                extractor=extractor,
-                rextractor=extractor.rank(),
-                shape=cube.shape,
-                rshape=len(cube.shape),
-            ))
-        self.log_info("extracting '{0}'...".format(extractor))
-        subcube = cube[extractor.index_pickers()]
-        return subcube
- 
     def evaluate_expressions(self, *expressions):
         globals_d = {
             'np': np,
