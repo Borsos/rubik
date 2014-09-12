@@ -68,9 +68,8 @@ class Config(object):
         ('default_options',             ''),
         ('default_data_type',           DEFAULT_DATA_TYPE),
         ('default_clobber',             str(conf.DEFAULT_CLOBBER)),
-        ('default_read_mode',           conf.DEFAULT_READ_MODE),
         ('default_memory_limit',        str(conf.DEFAULT_MEMORY_LIMIT)),
-        ('default_optimized_min_size',  str(conf.DEFAULT_OPTIMIZED_MIN_SIZE)),
+        ('default_read_threshold_size', str(conf.DEFAULT_READ_THRESHOLD_SIZE)),
         ('default_file_format',         str(conf.DEFAULT_FILE_FORMAT)),
         ('default_warnings',            ''),
         ('default_report_level',        '1'),
@@ -101,8 +100,7 @@ class Config(object):
             self.default_data_type = config.get("general", "default_data_type")
             self.default_file_format = config.get("general", "default_file_format")
             self.default_memory_limit = Memory(config.get("general", "default_memory_limit"))
-            self.default_read_mode = config.get("general", "default_read_mode")
-            self.default_optimized_min_size = Memory(config.get("general", "default_optimized_min_size"))
+            self.default_read_threshold_size = Memory(config.get("general", "default_read_threshold_size"))
             self.default_clobber = config.getboolean("general", "default_clobber")
             self.default_warnings = shlex.split(config.get("general", "default_warnings"))
             self.default_trace_errors = config.getboolean("general", "default_trace_errors")
@@ -238,14 +236,6 @@ class Config(object):
             raise RubikError("invalid data type {}".format(t))
         self._default_data_type = t
     default_data_type = property(get_default_data_type, set_default_data_type)
-
-    def get_default_read_mode(self):
-        return self._default_read_mode
-    def set_default_read_mode(self, t):
-        if not t in conf.READ_MODES:
-            raise RubikError("invalid read mode {}".format(t))
-        self._default_read_mode = t
-    default_read_mode = property(get_default_read_mode, set_default_read_mode)
 
     def get_default_file_format(self):
         return self._default_file_format

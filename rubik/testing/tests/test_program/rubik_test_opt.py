@@ -37,10 +37,10 @@ class RubikTestOpt(RubikTestProgram):
     def setUp(self):
         super(RubikTestOpt, self).setUp()
 
-    def impl_read(self, shape, extractor, dtype, min_size):
+    def impl_read(self, shape, extractor, dtype, threshold_size):
         shape = Shape(shape)
         extractor = Extractor(extractor)
-        min_size = Memory(min_size)
+        threshold_size = Memory(threshold_size)
         dtype = cb.get_dtype(dtype)
         file_format = 'raw'
         out_filename_format = 'xtmp_{shape}_{dtype}.{format}'
@@ -55,7 +55,7 @@ class RubikTestOpt(RubikTestProgram):
         out1_filename_format = 'xtmp1_{shape}_{dtype}.{format}'
         out1_filename = out1_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
         returncode, output, error = self.run_program(
-            """-i '{o}' -s {s} -x '{x}' --safe -o {o1}""".format(
+            """-i '{o}' -s {s} -x '{x}' --read-threshold-size=0 -o {o1}""".format(
                 s=shape,
                 x=extractor,
                 o=out_filename_format,
@@ -65,34 +65,34 @@ class RubikTestOpt(RubikTestProgram):
         out2_filename_format = 'xtmp2_{shape}_{dtype}.{format}'
         out2_filename = out2_filename_format.format(shape=shape, dtype=dtype.__name__, format=file_format)
         returncode, output, error = self.run_program(
-            """-i '{o}' -s {s} -x '{x}' --optimized --optimized-min-size={ms} -o {o2}""".format(
+            """-i '{o}' -s {s} -x '{x}' --read-threshold-size={ms} -o {o2}""".format(
                 s=shape,
                 x=extractor,
                 o=out_filename_format,
                 o2=out2_filename_format,
-                ms=min_size))
+                ms=threshold_size))
         self.assertEqual(returncode, 0)
 
     @testmethod
     def random_4x5x6_float32_1g(self):
-        self.impl_read(shape="4x5x6", extractor="1:,::2,:-1", dtype="float32", min_size="1g")
+        self.impl_read(shape="4x5x6", extractor="1:,::2,:-1", dtype="float32", threshold_size="1g")
 
     @testmethod
     def random_4x5x6_float32_13b(self):
-        self.impl_read(shape="4x5x6", extractor="1:,::2,:-1", dtype="float32", min_size="13b")
+        self.impl_read(shape="4x5x6", extractor="1:,::2,:-1", dtype="float32", threshold_size="13b")
 
     @testmethod
     def random_4x5x6_float32_1k(self):
-        self.impl_read(shape="4x5x6", extractor="1:,::2,:-1", dtype="float32", min_size="1k")
+        self.impl_read(shape="4x5x6", extractor="1:,::2,:-1", dtype="float32", threshold_size="1k")
 
     @testmethod
     def random_40x50x60x8_float32_1g(self):
-        self.impl_read(shape="40x50x60x8", extractor="::2,:,:,:", dtype="float32", min_size="1g")
+        self.impl_read(shape="40x50x60x8", extractor="::2,:,:,:", dtype="float32", threshold_size="1g")
 
     @testmethod
     def random_40x50x60x8_float32_13b(self):
-        self.impl_read(shape="40x50x60x8", extractor="::2,:,:,:", dtype="float32", min_size="13b")
+        self.impl_read(shape="40x50x60x8", extractor="::2,:,:,:", dtype="float32", threshold_size="13b")
 
     @testmethod
     def random_40x50x60x8_float32_1k(self):
-        self.impl_read(shape="40x50x60x8", extractor="::2,:,:,:", dtype="float32", min_size="1k")
+        self.impl_read(shape="40x50x60x8", extractor="::2,:,:,:", dtype="float32", threshold_size="1k")

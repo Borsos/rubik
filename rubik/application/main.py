@@ -235,26 +235,12 @@ Global options""")
         default=rubik_config.default_trace_errors,
         help="show error traceback")
 
-    global_group.add_argument("--safe",
-        dest="read_mode",
-        action="store_const",
-        const=conf.READ_MODE_SAFE,
-        default=rubik_config.default_read_mode,
-        help="safe read mode")
-
-    global_group.add_argument("--optimized",
-        dest="read_mode",
-        action="store_const",
-        const=conf.READ_MODE_OPTIMIZED,
-        default=rubik_config.default_read_mode,
-        help="safe read mode")
-
-    global_group.add_argument("--optimized-min-size",
+    global_group.add_argument("--read-threshold-size",
         metavar="S",
-        dest="optimized_min_size",
+        dest="read_threshold_size",
         type=Memory,
-        default=rubik_config.default_optimized_min_size,
-        help="switch from optimized to safe read mode when reading less than C bytes (a huge value is equivalent to --safe)")
+        default=rubik_config.default_read_threshold_size,
+        help="set the threshold size for optimized read&extract algorithm: when reading less than S bytes, switch to traditional algorithm; a null or negative size means no optimization")
 
     global_group.add_argument("--memory-limit", "-m",
         metavar="L[units]",
@@ -761,8 +747,7 @@ Options to show help on specific topics """)
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)
     rubik.set_accept_bigger_raw_files(args.accept_bigger_raw_files)
-    rubik.set_read_mode(args.read_mode)
-    rubik.set_optimized_min_size(args.optimized_min_size)
+    rubik.set_read_threshold_size(args.read_threshold_size)
     rubik.set_memory_limit(args.memory_limit)
     rubik.set_split_dimensions(args.split_dimensions)
     rubik.set_clobber(args.clobber)

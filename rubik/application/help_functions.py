@@ -859,8 +859,8 @@ option:
 
 $ rubik '-cb.linear_cube("3x4")' --print
 usage: rubik [-h] [--verbose] [--quiet] [--report] [--dry-run] [--version]
-             [--logo] [--trace-errors] [--safe] [--optimized]
-             [--optimized-min-size S] [--memory-limit L[units]] [--dtype D]
+             [--logo] [--trace-errors]
+             [--read-threshold-size S] [--memory-limit L[units]] [--dtype D]
              [--accept-bigger-raw-files] [--clobber] [--no-clobber]
              [--random-seed RANDOM_SEED] [--warnings {RuntimeWarning,all}]
              [--source-file E [E ...]] [--expression E [E ...]]
@@ -1291,27 +1291,40 @@ For instance, with the option '--memory-limit 16gb', you will not allowed to
 read more than 16 gb of data. The default memory limit is '0', which means no
 limit.
 
-Optimized read vs Safe read
-===========================
+Optimized read vs direct read
+=============================
 When loading input files, two algorithms are available:
 * optimized read
-* safe read
+* direct read
 The optimized read is memory efficient: if an extractor is used, it is applied
 directly during the read, so only the exact amount of memory to store the
-subcube is used. On the other hand, the safe read reads the full cube, and
+subcube is used. On the opposite, the direct read reads the full cube, and
 then applies the extractor in memory.
 
-The two algorithms are fully equivalent, but the safe one can do some more
-checks (for instance, if the file format is 'text' or 'csv', the optimized
-algorithm is not able to check if the input file is bigger than the specified
-shape).
-
-The safe algorithm is used when the extractor is missing, or when the
-extracted subcube has the same size as the input cube. Moreover, the safe
+The direct algorithm is used when the extractor is missing, or when the
+extracted subcube has the same size as the input cube. Moreover, the direct
 algorithm is used if the size of the input cube is lower than a limit that
-can be set through the '--optimized-min-size' option. For instance, if
-'--optimized-min-size 1gb', the safe algorithm is always used if the input
-file is less than 1gb. By default, the optimized min size is 100mb.
+can be set through the '--read-threshold-size' option. For instance, if
+'--read-threshold-size 1gb', the direct algorithm is always used if the input
+file is less than 1gb. By default, the read_threshold_size is 100mb.
+
+The 'read_threshold_size' parameter can be used to switch from one algorithm to
+the other; when less than 'read_threshold_size' bytes have to be read, the
+direct read is used, otherwise the optimized read algorithm is performed.
+
+The optimized read&extract algorithm is iterative: when it is applied, only the
+necessary indices of the slowest dimension are read. For instance:
+
+* shape: "10x10x10"
+* extractor: "5:,::2,10"
+
+The slowest dimension extractor is '5:', so only these five indices are read;
+so, the algorithm is then applied to 5 "10x10" subcubes. The optimized algorithm
+is iterated until the subcube size is less than read_threshold_size (or the
+related extractor extracts all the subcube, i.e. it is ':' for all the
+dimensions): in this case, the full subcube is read, and then the related
+extractor is applied.
+
 """)
 
 def show_example_usage(test, interactive, writer=None):

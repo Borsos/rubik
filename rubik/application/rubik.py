@@ -79,8 +79,7 @@ class Rubik(object):
         self.logger = log.LOGGER
 
         self.set_accept_bigger_raw_files(False)
-        self.set_read_mode(conf.DEFAULT_READ_MODE)
-        self.set_optimized_min_size(self.config.default_optimized_min_size)
+        self.set_read_threshold_size(self.config.default_read_threshold_size)
         self.set_memory_limit(self.config.default_memory_limit)
         self.set_split_dimensions(None)
         self.set_clobber(self.config.default_clobber)
@@ -148,11 +147,8 @@ class Rubik(object):
     def set_accept_bigger_raw_files(self, accept_bigger_raw_files):
         self.accept_bigger_raw_files = accept_bigger_raw_files
 
-    def set_read_mode(self, read_mode):
-        self.read_mode = read_mode
-
-    def set_optimized_min_size(self, optimized_min_size):
-        self.optimized_min_size = optimized_min_size
+    def set_read_threshold_size(self, read_threshold_size):
+        self.read_threshold_size = read_threshold_size
 
     def set_memory_limit(self, memory_limit):
         self.memory_limit = memory_limit
@@ -290,10 +286,7 @@ class Rubik(object):
             input_dtype = self.dtype
         input_dtype_bytes = self.get_dtype_bytes(input_dtype)
         input_bytes_sub = sub_count * input_dtype_bytes 
-        if self.read_mode is conf.READ_MODE_OPTIMIZED:
-            input_bytes_read = input_bytes_sub
-        else:
-            input_bytes_read = count * input_dtype_bytes 
+        input_bytes_read = input_bytes_sub
         self.log_debug("trying to read {0} bytes and extract {1} bytes; already read {2} bytes...".format(
                     input_bytes_read,
                     input_bytes_sub,
@@ -308,124 +301,6 @@ class Rubik(object):
 
     def read_cube_impl(self, input_label, input_filename, attributes):
         self._check_memory_limit(input_label, input_filename)
-        if self.read_mode == conf.READ_MODE_SAFE:
-            return self.read_cube_impl_safe(input_label, input_filename, attributes)
-        elif self.read_mode == conf.READ_MODE_OPTIMIZED:
-            return self.read_cube_impl_optimized(input_label, input_filename, attributes)
-        else:
-            raise RubikError("invalid read mode {0!r}".format(self.read_mode))
-
-    def get_attribute(self, attribute_name, attributes, label, ordinal):
-        attribute_value = attributes.get(attribute_name, None)
-        if attribute_value is not None:
-            return attribute_value
-        else:
-            attribute_value = getattr(self, attribute_name + 's').get(label, ordinal)
-            return attribute_value
-        
-    def read_cube_impl_safe(self, input_label, input_filename, attributes):
-        self.log_debug("executing safe read...")
-        input_ordinal = self.input_filenames.get_ordinal(input_label)
-        shape = self.get_attribute('shape', attributes, input_label, input_ordinal)
-        if shape is None:
-            raise RubikError("missing shape for filename {0}".format(input_filename))
-        input_format = self.get_attribute('input_format', attributes, input_label, input_ordinal)
-        if input_format is None:
-            input_format = conf.DEFAULT_FILE_FORMAT
-        input_mode = self.get_attribute('input_mode', attributes, input_label, input_ordinal)
-        if input_mode is None:
-            input_mode = 'rb'
-        else:
-            input_mode = input_mode.mode
-        input_offset = self.get_attribute('input_offset', attributes, input_label, input_ordinal)
-        input_dtype = self.get_attribute('input_dtype', attributes, input_label, input_ordinal)
-        if input_dtype is None:
-            input_dtype = self.dtype
-        input_dtype_bytes = self.get_dtype_bytes(input_dtype)
-        extractor = self.get_attribute('extractor', attributes, input_label, input_ordinal)
-        assert isinstance(input_filename, InputFilename), "not an InputFilename: {!r} [{}]".format(input_filename, type(input_filename))
-        assert (extractor is None) or isinstance(extractor, Extractor), "not a valid extractor: {!r} [{}]".format(extractor, type(extractor))
-        input_filename = input_filename.filename
-        if not isinstance(shape, Shape):
-            shape = Shape(shape)
-        expected_input_count = shape.count()
-        numpy_function = None
-        numpy_function_nargs = {}
-        numpy_function_pargs = []
-        if input_format == conf.FILE_FORMAT_RAW:
-            num_bytes = shape.count() * input_dtype_bytes
-            msg_bytes = "({b} bytes) ".format(b=num_bytes)
-            # read only expected elements (number of elements already checked)
-            numpy_function = np.fromfile
-            numpy_function_nargs['count'] = expected_input_count
-        elif input_format == conf.FILE_FORMAT_CSV:
-            msg_bytes = ''
-            # read all elements (must check number of elements)
-            numpy_function = np.fromfile
-            input_csv_separator = self.get_attribute('input_csv_separator', attributes, input_label, input_ordinal)
-            numpy_function_nargs['sep'] = input_csv_separator
-        elif input_format == conf.FILE_FORMAT_TEXT:
-            msg_bytes = ''
-            # read all elements (must check number of elements)
-            numpy_function = np.loadtxt
-            input_text_delimiter = self.get_attribute('input_text_delimiter', attributes, input_label, input_ordinal)
-            if input_text_delimiter is not None:
-                numpy_function_nargs['delimiter'] = input_text_delimiter
-        else:
-            raise RubikError("invalid file format {0!r}".format(input_format))
-        input_filename = interpolate_filename(input_filename, shape=shape.shape(), dtype=input_dtype, file_format=input_format)
-        input_filename = self._check_input_filename(shape, input_format, input_filename, input_dtype, input_offset)
-        self.log_info("reading {c} {t!r} elements {b}from {f!r} file {i!r}...".format(
-            c=expected_input_count,
-            t=input_dtype.__name__,
-            b=msg_bytes,
-            f=input_format,
-            i=input_filename))
-        with open(input_filename, input_mode) as f_in:
-            if input_offset is not None:
-                offset = input_offset.get_bytes()
-                self.log_info("seeking {f!r}@{o}...".format(
-                    f=input_filename,
-                    o=offset,
-                ))
-                f_in.seek(offset)
-            array = numpy_function(f_in, dtype=input_dtype, *numpy_function_pargs, **numpy_function_nargs)
-        input_count = array.size
-        if array.size != expected_input_count:
-            if input_count < expected_input_count:
-                raise RubikError("input file {0} is not big enough: it contains {1} elements, expected {2} elements".format(
-                    input_filename,
-                    input_count,
-                    expected_input_count,
-                ))
-            elif input_count > expected_input_count:
-                message = "input file {0} is greater than expected: {1} elements found, {2} elements expected".format(
-                    input_filename,
-                    input_count,
-                    expected_input_count,
-                )
-                if self.accept_bigger_raw_files:
-                    warnings.warn(RuntimeWarning(message))
-                    #self.logger.warning("warning: " + message)
-                else:
-                    raise RubikError(message)
-                array.resize(shape.shape())
-        try:
-            cube = array.reshape(shape.shape())
-        except ValueError as err:
-            raise RubikError("cannot reshape read data: {t}: {e} [input size={ic}, shape={s}, shape size={sc}]".format(
-                    t=type(err).__name__,
-                    e=err,
-                    ic=array.size,
-                    s=shape,
-                    sc=shape.count(),
-            ))
-        if extractor:
-            cube = self.extract(cube, extractor)
-        self.register_input_cube(input_label, input_filename, cube)
-        return cube
-
-    def read_cube_impl_optimized(self, input_label, input_filename, attributes):
         self.log_debug("executing optimized read...")
         input_ordinal = self.input_filenames.get_ordinal(input_label)
         shape = self.get_attribute('shape', attributes, input_label, input_ordinal)
@@ -493,10 +368,18 @@ class Rubik(object):
                     o=offset,
                 ))
                 f_in.seek(offset)
-            cube = numpy_function(input_format, f_in, shape=shape, extractor=extractor, dtype=input_dtype, min_size=self.optimized_min_size, *numpy_function_pargs, **numpy_function_nargs)
+            cube = numpy_function(input_format, f_in, shape=shape, extractor=extractor, dtype=input_dtype, threshold_size=self.read_threshold_size, *numpy_function_pargs, **numpy_function_nargs)
         self.register_input_cube(input_label, input_filename, cube)
         return cube
 
+    def get_attribute(self, attribute_name, attributes, label, ordinal):
+        attribute_value = attributes.get(attribute_name, None)
+        if attribute_value is not None:
+            return attribute_value
+        else:
+            attribute_value = getattr(self, attribute_name + 's').get(label, ordinal)
+            return attribute_value
+        
     def split_over_dimensions(self, cube):
         for subcube, axes_indices in cubes_api.split(cube, self.split_dimensions):
             if axes_indices:
