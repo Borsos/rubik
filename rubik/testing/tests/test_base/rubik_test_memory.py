@@ -64,3 +64,14 @@ class RubikTestMemory(RubikTestCase):
             self.assertEqual(mem_human.units(), mem_h.units())
             self.assertEqual(str(mem_human), mem_hs)
 
+    @testmethod
+    def test_operations(self):
+        mem0 = Memory("1048576b")
+        mem1 = Memory("1m")
+        mem2 = Memory("1023k")
+        self.assertEqual(mem0, mem1)
+        self.assertGreaterEqual(mem0, mem1)
+        self.assertLessEqual(mem0, mem1)
+        self.assertGreater(mem0, mem2)
+        self.assertLess(mem2, mem0)
+

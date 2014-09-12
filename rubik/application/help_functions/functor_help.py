@@ -17,26 +17,22 @@
 
 __author__ = "Simone Campagna"
 
-__all__ = [
-            'SUITES',
-          ]
+from ..log import get_print
 
-import collections
+class Help(object):
+    DEFAULT_TEST = True
+    DEFAULT_INTERACTIVE = False
+    def __init__(self, test=False, interactive=False, writer=None):
+        if test is None:
+            test = self.DEFAULT_TEST
+        self.test = test
+        if interactive is None:
+            interactive = self.DEFAULT_INTERACTIVE
+        self.interactive = interactive
+        if writer is None:
+            writer = get_print()
+        self.writer = writer
 
-class RubikTestSuites(collections.OrderedDict):
-    def add_suite(self, suite):
-        self[suite.suite_name] = suite
+    def __call__(self):
+        raise NotImplementedError("Help.__call__")
 
-SUITES = RubikTestSuites()
-
-from .test_base import SUITE_BASE
-SUITES.add_suite(SUITE_BASE)
-
-from .test_cubes import SUITE_CUBES
-SUITES.add_suite(SUITE_CUBES)
-
-from .test_help import SUITE_HELP
-SUITES.add_suite(SUITE_HELP)
-
-from .test_program import SUITE_PROGRAM
-SUITES.add_suite(SUITE_PROGRAM)

@@ -135,6 +135,11 @@ class RubikTestInterface(RubikTestProgram):
         returncode, output, error = self.run_program("--help-memory-usage")
         self.assertEqual(returncode, 0)
 
+    @testmethod
+    def help_usage(self):
+        returncode, output, error = self.run_program("--help-usage")
+        self.assertEqual(returncode, 0)
+
     # labeled options
     def impl_labeled_options(self, shape, dtype, i0_label=None, i1_label=None, i2_label=None, o0_label=None, o1_label=None):
         shape = Shape(shape)

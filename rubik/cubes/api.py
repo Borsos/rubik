@@ -77,10 +77,7 @@ from .creation import \
     linear_cube, \
     random_cube, \
     const_cube, \
-    const_blocks_cube, \
-    write_linear_cube, \
-    write_random_cube, \
-    write_const_cube
+    const_blocks_cube
 
 from .input_output import \
     read_cube, \
@@ -90,7 +87,10 @@ from .input_output import \
     write_cube, \
     write_cube_raw, \
     write_cube_text, \
-    write_cube_csv
+    write_cube_csv, \
+    write_linear_cube, \
+    write_random_cube, \
+    write_const_cube
 
 from .comparison import \
     not_equals_cube, \

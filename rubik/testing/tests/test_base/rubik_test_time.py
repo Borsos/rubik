@@ -62,3 +62,13 @@ class RubikTestTime(RubikTestCase):
             self.assertEqual(time_human.units(), time_h.units())
             self.assertEqual(str(time_human), time_hs)
 
+    @testmethod
+    def test_operations(self):
+        time0 = Time("3600s")
+        time1 = Time("1h")
+        time2 = Time("59m")
+        self.assertEqual(time0, time1)
+        self.assertGreaterEqual(time0, time1)
+        self.assertLessEqual(time0, time1)
+        self.assertGreater(time0, time2)
+        self.assertLess(time2, time0)

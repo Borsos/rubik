@@ -24,9 +24,9 @@ import textwrap
 import subprocess
 import collections
 
-from .log import get_print
-from .. import py23
-from ..errors import RubikTestError, RubikError
+from ..log import get_print
+from ... import py23
+from ...errors import RubikTestError, RubikError
 
 MatchResult = collections.namedtuple('MatchResult', ('match_type', 'match'))
 

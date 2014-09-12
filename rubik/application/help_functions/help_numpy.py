@@ -17,26 +17,18 @@
 
 __author__ = "Simone Campagna"
 
+import numpy as np
+
 __all__ = [
-            'SUITES',
+              'help_numpy',
+              'HelpNumpy',
           ]
 
-import collections
+from .functor_help import Help
 
-class RubikTestSuites(collections.OrderedDict):
-    def add_suite(self, suite):
-        self[suite.suite_name] = suite
+def help_numpy(test=None, interactive=None, writer=None):
+    HelpNumpy(test=test, interactive=interactive, writer=writer)()
 
-SUITES = RubikTestSuites()
-
-from .test_base import SUITE_BASE
-SUITES.add_suite(SUITE_BASE)
-
-from .test_cubes import SUITE_CUBES
-SUITES.add_suite(SUITE_CUBES)
-
-from .test_help import SUITE_HELP
-SUITES.add_suite(SUITE_HELP)
-
-from .test_program import SUITE_PROGRAM
-SUITES.add_suite(SUITE_PROGRAM)
+class HelpNumpy(Help):
+    def __call__(self):
+        help(np)

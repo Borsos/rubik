@@ -17,17 +17,15 @@
 
 __author__ = "Simone Campagna"
 
-__all__ = [
-           'RubikTestUsage',
-          ]
+from ..log import get_print
+from .functor_help import Help
 
-from ....application import help_functions
+class HelpText(Help):
+    TEXT = ""
 
-from ...rubik_test_case import RubikTestCase, testmethod
+    def get_text(self):
+        return self.TEXT
 
-class RubikTestUsage(RubikTestCase):
-    METHOD_NAMES = []
+    def __call__(self):
+        self.writer(self.get_text())
 
-    @testmethod
-    def help_usage(self):
-        help_functions.show_example_usage(test=True, interactive=False, writer=lambda x: None)

@@ -17,26 +17,18 @@
 
 __author__ = "Simone Campagna"
 
-__all__ = [
-            'SUITES',
-          ]
+from ..log import get_print
+from ..tempdir import chtempdir
+from .functor_help_text import HelpText
+from .example import Example
 
-import collections
+class HelpExample(HelpText):
+    def __call__(self):
+        with chtempdir():
+            self.setUp()
+            example = Example(self.get_text())
+            example.show(test=self.test, interactive=self.interactive, writer=self.writer)
 
-class RubikTestSuites(collections.OrderedDict):
-    def add_suite(self, suite):
-        self[suite.suite_name] = suite
 
-SUITES = RubikTestSuites()
-
-from .test_base import SUITE_BASE
-SUITES.add_suite(SUITE_BASE)
-
-from .test_cubes import SUITE_CUBES
-SUITES.add_suite(SUITE_CUBES)
-
-from .test_help import SUITE_HELP
-SUITES.add_suite(SUITE_HELP)
-
-from .test_program import SUITE_PROGRAM
-SUITES.add_suite(SUITE_PROGRAM)
+    def setUp(self):
+        pass

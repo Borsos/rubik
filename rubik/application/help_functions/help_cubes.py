@@ -17,13 +17,19 @@
 
 __author__ = "Simone Campagna"
 
+
 __all__ = [
-           'SUITE_EXAMPLES',
+              'help_cubes',
+              'HelpCubes',
           ]
 
-from ...rubik_test_suite import RubikTestSuite
+from ...cubes import api as cb
 
-SUITE_EXAMPLES = RubikTestSuite('Examples')
+from .functor_help import Help
 
-from .rubik_test_usage import RubikTestUsage
-SUITE_EXAMPLES.register_test_class(RubikTestUsage)
+def help_cubes(test=None, interactive=None, writer=None):
+    HelpCubes(test=test, interactive=interactive, writer=writer)()
+
+class HelpCubes(Help):
+    def __call__(self):
+        help(cb)
