@@ -1,0 +1,6 @@
+#!/bin/bash
+
+
+python-coverage run --omit '*/visualizer/*,*/tmp.*' ./bin/rubik -T || exit 1
+
+python-coverage html || exit 2
