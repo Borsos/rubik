@@ -43,4 +43,6 @@ SUITE_PROGRAM.register_test_class(RubikTestUsage)
 from .rubik_test_std import RubikTestStd
 SUITE_PROGRAM.register_test_class(RubikTestStd)
 
+from .rubik_test_info import RubikTestInfo
+SUITE_PROGRAM.register_test_class(RubikTestInfo)
 
