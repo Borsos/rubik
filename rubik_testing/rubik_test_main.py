@@ -23,6 +23,7 @@ __all__ = [
 
 import collections
 import fnmatch
+import re
 import sys
 
 from rubik.cubes.api import set_random_seed
@@ -37,6 +38,7 @@ from .rubik_test_conf import RUBIK_TEST_CONF
 
 
 class RubikTestMain(object):
+    RE_NEGATE = re.compile("^[\!\^]")
     def __init__(self, logger=None, verbose_level=0, trace_errors=False, patterns=None):
         if logger is None: 
             logger = conf.get_test_logger()
@@ -58,14 +60,15 @@ class RubikTestMain(object):
         main_suite = RubikTestSuite('Main')
 
         # add suites
-        for suite_name, suite in SUITES.iteritems():
-            suite_num_tests = 0
-            for test_class, test_name in suite.test_classes_and_names():
-                if self.match_patterns(test_name, patterns):
-                    suite.addTest(test_class(test_name=test_name))
-                    suite_num_tests += 1
-            if suite_num_tests > 0:
-                main_suite.addTest(suite)
+        suite_id_num_tests = collections.Counter()
+        suite_by_id = {}
+        for suite, test_class, test_name in self.filter_tests(patterns):
+            suite.addTest(test_class(test_name=test_name))
+            suite_id_num_tests[id(suite)] += 1
+            suite_by_id[id(suite)] = suite
+        for suite_id, num_tests in suite_id_num_tests.iteritems():
+            if num_tests > 0:
+                main_suite.addTest(suite_by_id[suite_id])
 
         return main_suite
         
@@ -78,21 +81,30 @@ class RubikTestMain(object):
         return self.result
     
     @classmethod
-    def match_patterns(cls, test_name, patterns):
-        if patterns:
-            for pattern in patterns:
-                if fnmatch.fnmatchcase(test_name, pattern):
-                    return True
+    def filter_tests(cls, patterns):
+        if not patterns:
+            patterns = ['*']
+        selected_tests = []
+        for pattern in patterns:
+            if pattern and pattern[0] in '!^':
+                negate = True
+                pattern = pattern[1:]
             else:
-                return False
-        else:
-            # select all
-            return True
+                negate = False
+            if negate:
+                l = []
+                for suite, test_class, test_name in selected_tests:
+                    if not fnmatch.fnmatchcase(test_name, pattern):
+                        l.append(test_name)
+                selected_tests = l
+            else:
+                for suite_name, suite in SUITES.iteritems():
+                    for test_class, test_name in suite.test_classes_and_names():
+                        if fnmatch.fnmatchcase(test_name, pattern):
+                            selected_tests.append((suite, test_class, test_name))
+        return selected_tests
 
     @classmethod
     def filter_test_names(cls, patterns):
-        for suite_name, suite in SUITES.iteritems():
-            for test_name in suite.test_names():
-                if cls.match_patterns(test_name, patterns):
-                    yield test_name
-
+        for suite, test_class, test_name in cls.filter_tests(patterns):
+            yield test_name

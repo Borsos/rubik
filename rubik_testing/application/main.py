@@ -126,7 +126,7 @@ This is the command line interface to the rubik testing system.
     parser.add_argument("test_patterns",
         type=str,
         nargs='*',
-        help="add a test pattern")
+        help="add a test pattern; if preceded by ! or ^, skip matching tests; if no patterns are specified, the default is '*'")
 
     try:
         args = parser.parse_args(arguments)
@@ -145,7 +145,7 @@ This is the command line interface to the rubik testing system.
         if os.path.exists(coverage_htmldir):
             shutil.rmtree(coverage_htmldir)
         if args.coverage_tool == "python-coverage":
-            omit_args = ["--omit", "*/visualizer/*,*/tmp.*"]
+            omit_args = ["--omit", "*/visualizer/*,*/tmp.*,*/tvtk/*,*/apptools/*,*/mayavi/*,*/vtk/*"]
             command_line = [args.coverage_tool, "run"]
             command_line.extend(omit_args)
             command_line.append(sys.argv[0])

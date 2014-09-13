@@ -28,10 +28,10 @@ __all__ = [
     'list_visualizers',
 ]
 
-import sys
 import textwrap
 
 from ..errors import RubikError
+from ..application.log import get_print
 
 _VISUALIZER_TYPES = ('VolumeSlicer', )
 _VISUALIZER_CLASSES = {}
@@ -85,7 +85,7 @@ def list_controllers(logger=None, print_function=None):
 
 def list_controller(controller_type, logger=None, print_function=None):
     if print_function is None:
-        print_function = lambda message: sys.stdout.write('{}\n'.format(message))
+        print_function = get_print() 
     controller_class = get_controller_class(controller_type, logger)
     if controller_class is not None:
         print_function("=== CONTROLLER {}:".format(controller_type))
@@ -109,7 +109,7 @@ def list_visualizers(logger=None, print_function=None):
 
 def list_visualizer(visualizer_type, logger=None, print_function=None):
     if print_function is None:
-        print_function = lambda message: sys.stdout.write('{}\n'.format(message))
+        print_function = get_print()
     visualizer_class = get_visualizer_class(visualizer_type, logger)
     if visualizer_class is not None:
         print_function("=== VISUALIZER {}:".format(visualizer_type))
