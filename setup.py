@@ -40,11 +40,10 @@ setup(
     url="https://github.com/simone-campagna/rubik",
     packages = ["rubik",
                 "rubik.application",
+                "rubik.application.help_functions",
                 "rubik.cubes",
                 "rubik.visualizer",
                 "rubik.visualizer.impl"
-                "rubik.testing",
-                "rubik.testing.tests",
                ],
     scripts = scripts,
     package_data = {},
