@@ -21,6 +21,7 @@ __all__ = [
            'RubikTestInterface',
           ]
 
+import os
 
 from rubik.conf import VERSION
 from rubik.shape import Shape
@@ -287,3 +288,38 @@ cb.write_cube(file_format="{f}", cube=cube, file="{o}")
     @testmethod
     def expression_filename_8x3x2_float32_at_option(self):
         self.impl_expression_filename(shape="8x3x2", dtype="float64", mode="at_option")
+
+    # view attributes
+    def impl_view_attribute(self, attribute_name, attribute_value):
+        returncode, output, error = self.run_program("--view-attribute {}={!r}".format(attribute_name, attribute_value))
+        self.assertEqual(returncode, 0)
+        
+    @testmethod
+    def view_attribute_clip_symmetric(self):
+        self.impl_view_attribute("clip_symmetric", "True")
+        
+    @testmethod
+    def view_attribute_x(self):
+        self.impl_view_attribute("x", "0.33")
+
+    # view attribute files
+    def impl_view_attributes(self, **attribute_dict):
+        filename = "view_attributes.txt"
+        try:
+            with open(filename, "w") as f_out:
+                for attribute_name, attribute_value in attribute_dict.iteritems():
+                    f_out.write("{}={!r}\n".format(attribute_name, attribute_value))
+            returncode, output, error = self.run_program("--view-attribute-file {}".format(filename))
+            self.assertEqual(returncode, 0)
+            self.assertEqual(returncode, 0)
+        finally:
+            os.remove(filename)
+        
+    @testmethod
+    def view_attribute_file(self):
+        self.impl_view_attributes(clip_min=0.3, clip_symmetric=True, y=1.2)
+
+    # view list
+    @testmethod
+    def view_attribute_list(self):
+        returncode, output, error = self.run_program("--view-list")
