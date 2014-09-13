@@ -25,11 +25,11 @@ import contextlib
 __all__ = [
            'STDOUT', 'get_stdout',
            'STDERR', 'get_stderr',
+           'set_verbose_level',
            'create_logger', 'set_logger', 'get_logger',
            'set_report_logger', 'get_report_logger',
-           'set_test_logger', 'get_test_logger',
            'get_print_logger', 'get_print',
-           'LOGGER', 'REPORT_LOGGER', 'TEST_LOGGER',
+           'LOGGER', 'REPORT_LOGGER',
            'swap_streams',
            'trace_error',
            'set_trace_errors',
@@ -72,15 +72,12 @@ def create_logger(logger_name, verbose_level, stream=None):
 
 LOGGER_NAME = "RUBIK"
 REPORT_LOGGER_NAME = "REPORT"
-TEST_LOGGER_NAME = "TEST"
 PRINT_LOGGER_NAME = "PRINT"
 
 LOGGER = None
 LOGGER_VERBOSE_LEVEL = None
 REPORT_LOGGER = None
 REPORT_LOGGER_VERBOSE_LEVEL = None
-TEST_LOGGER = None
-TEST_LOGGER_VERBOSE_LEVEL = None
 
 PRINT_LOGGER_VERBOSE_LEVEL = 10
 PRINT_LOGGER = create_logger(PRINT_LOGGER_NAME, PRINT_LOGGER_VERBOSE_LEVEL, stream=STDOUT)
@@ -120,19 +117,6 @@ def set_report_logger(verbose_level, stream=None):
 
 def get_report_logger():
     return REPORT_LOGGER
-
-def set_test_logger(verbose_level, stream=None):
-    global TEST_LOGGER
-    global TEST_LOGGER_VERBOSE_LEVEL
-    if TEST_LOGGER is None:
-        TEST_LOGGER = create_logger(TEST_LOGGER_NAME, verbose_level=verbose_level, stream=stream)
-    else:
-        set_verbose_level(TEST_LOGGER, verbose_level)
-        TEST_LOGGER_VERBOSE_LEVEL = verbose_level
-    return TEST_LOGGER
-
-def get_test_logger():
-    return TEST_LOGGER
 
 @contextlib.contextmanager
 def swap_streams(stdout, stderr):

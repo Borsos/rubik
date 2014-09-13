@@ -296,12 +296,6 @@ Global options""")
         nargs='+',
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
-    global_group.add_argument("--test", "-T",
-        dest="run_test",
-        action="store_true",
-        default=False,
-        help="run test suites")
-
     global_group.add_argument("expression",
         type=rubik.expressions.store,
         nargs='*',
@@ -574,37 +568,6 @@ Arguments for graphical visualization""")
         type=rubik.output_text_converters.store,
         help="converter to be used with '{0}' output file format (e.g. '%%.18e')".format(conf.FILE_FORMAT_TEXT))
 
-    test_group = parser.add_argument_group(
-        "test options",
-        description="""\
-Options related to tests.""")
-
-    test_group.add_argument("--test-pattern", "-Tp",
-        metavar="SP[.TP]",
-        dest="test_patterns",
-        type=str,
-        default=[],
-        nargs='+',
-        help="add pattern to filter suites/tests")
-
-    test_group.add_argument("--test-list", "-Tl",
-        dest="test_list",
-        action="store_true",
-        default=False,
-        help="list available tests")
-
-    test_group.add_argument("--test-verbose", "-Tv",
-        dest="test_verbose_level",
-        action="count",
-        default=rubik_config.default_verbose_level,
-        help="increase test verbose level")
-
-    test_group.add_argument("--test-verbose-level", "-TV",
-        dest="test_verbose_level",
-        type=int,
-        default=rubik_config.default_verbose_level,
-        help="set test verbose level")
-
     help_group = parser.add_argument_group(
         "help options",
         description="""\
@@ -726,23 +689,6 @@ Options to show help on specific topics """)
     PRINT = log.get_print()
 
     conf.enable_warnings(*args.warnings)
-
-    # test
-    if args.test_list or args.run_test:
-        test_logger = log.set_test_logger(args.test_verbose_level)
-        patterns = utils.flatten_list(args.test_patterns, depth=1)
-        from ..testing.rubik_test_main import RubikTestMain
-        rubik_test_main = RubikTestMain(logger=test_logger, verbose_level=args.test_verbose_level)
-        if args.test_list:
-            for test_num, test_name in enumerate(rubik_test_main.filter_test_names(patterns)):
-                PRINT("{:5d}) {}".format(test_num, test_name))
-            #for test_name in rubik_test_main.filter_test_names(patterns):
-            #    PRINT("  {}".format(test_name))
-        if args.run_test:
-            result = rubik_test_main.run(patterns)
-            return_code = len(result.failures)
-            return return_code
-        return 0
 
     rubik.set_dry_run(args.dry_run)
     rubik.set_logger(logger, report_logger)

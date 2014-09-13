@@ -59,7 +59,8 @@ from .errors import RubikDataTypeError
 from .units import Memory
 from .py23 import BASE_STRING
 
-PROGRAM_NAME = os.path.basename(sys.argv[0])
+#PROGRAM_NAME = os.path.basename(sys.argv[0])
+PROGRAM_NAME = "rubik"
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
