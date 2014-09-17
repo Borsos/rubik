@@ -733,12 +733,15 @@ Options to show help on specific topics """)
     except RubikMemoryError:
         log.trace_error()
         logger.error("error: the memory limit of {0} has been exceeded; you can try to increase the memory limit (--memory-limit/-m)".format(args.memory_limit))
+        return_code = 1
     except RubikExpressionError as err:
         log.trace_error()
         logger.error("\n=== expression error ===\n")
         log.trace_error(exc_info=err.expression_exception_info)
+        return_code = 2
     except:
         log.trace_error()
+        return_code = 3
 
     return return_code
 

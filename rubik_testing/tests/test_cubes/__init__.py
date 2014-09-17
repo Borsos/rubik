@@ -31,6 +31,9 @@ SUITE_CUBES.register_test_class(RubikTestInputOutput)
 from .rubik_test_stats import RubikTestStats
 SUITE_CUBES.register_test_class(RubikTestStats)
 
+from .rubik_test_dtypes import RubikTestDtypes
+SUITE_CUBES.register_test_class(RubikTestDtypes)
+
 from .rubik_test_diff import RubikTestDiff
 SUITE_CUBES.register_test_class(RubikTestDiff)
 

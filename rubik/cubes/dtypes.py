@@ -59,8 +59,8 @@ DATA_TYPES = collections.OrderedDict((
 DEFAULT_DATA_TYPE = "float32"
 
 
-def get_dtype(dtype):
-    """get_dtype(dtype) -> numpy dtype
+def get_dtype(dtype=None):
+    """get_dtype(dtype=None) -> numpy dtype
        The argument dtype can be:
         * a string, such as 'float32'
         * a numpy dtype class, such as np.float32
@@ -85,7 +85,7 @@ def get_dtype(dtype):
 
 DEFAULT_DTYPE = get_dtype(DEFAULT_DATA_TYPE)
 
-def get_dtype_name(dtype):
+def get_dtype_name(dtype=None):
     """get_dtype_name(dtype) -> data type name
        The argument dtype can be:
         * a string, such as 'float32'
@@ -97,7 +97,7 @@ def get_dtype_name(dtype):
     dtype = get_dtype(dtype)
     return dtype.__name__
 
-def set_default_dtype(dtype):
+def set_default_dtype(dtype=None):
     """set_default_dtype(dtype)
        Sets the default data type
        The argument dtype can be:

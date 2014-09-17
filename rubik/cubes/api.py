@@ -62,6 +62,8 @@ __all__ = [
            'precise_mean',
            'set_random_seed',
            'get_dtype',
+           'get_default_dtype',
+           'get_dtype_name',
            'as_dtype',
            'best_precise_dtype',
            'interpolate_filename',
@@ -122,6 +124,8 @@ from .stats import \
 from .dtypes import \
     best_precise_dtype, \
     get_dtype, \
+    get_default_dtype, \
+    get_dtype_name, \
     as_dtype
 
 from .internals import \
