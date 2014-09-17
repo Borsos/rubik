@@ -4,13 +4,16 @@ python:
   - "2.7"
   #- "3.2"
   #- "3.3"
+
 # command to install dependencies
 install: 
   - "pip install coveralls"
   - "pip install numpy"
   - "pip install ."
+
 # command to run tests
 script: 
-  - PYTHONPATH="${PWD}:$PYTHONPATH" coverage run --source=rubik ./bin/rubik_test
+  - PYTHONPATH="${PWD}:$PYTHONPATH" coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes ./bin/rubik_test
+
 after_success:
   - coveralls --rcfile=.coveragerc
