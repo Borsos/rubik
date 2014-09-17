@@ -5,7 +5,9 @@ python:
   - "3.2"
   - "3.3"
 # command to install dependencies
-install: "pip install ."
+install: 
+  - "pip install numpy"
+  #- "pip install ."
 # command to run tests
 script: 
   - nosetests
