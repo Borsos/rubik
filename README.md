@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/simone-campagna/rubik/badge.png?branch=master)](https://coveralls.io/r/simone-campagna/rubik?branch=master)
+
 rubik
 ======
 Read, process, visualize and write N-dimensional cubes.
