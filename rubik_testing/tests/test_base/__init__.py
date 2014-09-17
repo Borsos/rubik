@@ -31,6 +31,9 @@ SUITE_BASE.register_test_class(RubikTestMemory)
 from .rubik_test_time import RubikTestTime
 SUITE_BASE.register_test_class(RubikTestTime)
 
+from .rubik_test_bandwidth import RubikTestBandwidth
+SUITE_BASE.register_test_class(RubikTestBandwidth)
+
 from .rubik_test_index_picker import RubikTestIndexPicker
 SUITE_BASE.register_test_class(RubikTestIndexPicker)
 

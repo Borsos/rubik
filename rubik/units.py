@@ -133,13 +133,6 @@ class Units(object):
     def units_from_string(cls, u_s):
         return u_s
 
-    @classmethod
-    def try_create(cls, s):
-        try:
-            return cls(s)
-        except UnitsError:
-            return None
-
     def value(self):
         return self._value
 

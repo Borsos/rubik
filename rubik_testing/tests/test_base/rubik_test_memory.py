@@ -69,9 +69,33 @@ class RubikTestMemory(RubikTestCase):
         mem0 = Memory("1048576b")
         mem1 = Memory("1m")
         mem2 = Memory("1023k")
+        memz = Memory(0)
         self.assertEqual(mem0, mem1)
+        self.assertNotEqual(mem0, mem2)
         self.assertGreaterEqual(mem0, mem1)
         self.assertLessEqual(mem0, mem1)
         self.assertGreater(mem0, mem2)
         self.assertLess(mem2, mem0)
+        self.assertGreater(mem1, 10)
+
+    @testmethod
+    def test_bool(self):
+        memz = Memory(0)
+        memn = Memory(2)
+        self.assertTrue(memn)
+        self.assertFalse(memz)
+
+    @testmethod
+    def test_value(self):
+        mem = Memory('1.5g')
+        self.assertEqual(mem.value(), 1.5)
+
+    @testmethod
+    def test_units(self):
+        mem = Memory('1.5g')
+        self.assertEqual(mem.units(), "g")
+
+    @testmethod
+    def get_available_units(self):
+        self.assertIn('m', Memory.get_available_units())
 
