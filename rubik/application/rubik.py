@@ -767,11 +767,11 @@ class Rubik(object):
         logger.info("  visualizer_attributes = {}".format(self.visualizer_attributes))
         logger.info("  visualizer_attribute_files = {}".format(self.visualizer_attribute_files))
 
-    def do_viewer(self, cube=None):
+    def do_viewer(self, cube=None): # pragma: no cover
         if cube is None:
             cube = self._result
       
-    def get_controller(self, cube=None):
+    def get_controller(self, cube=None): # pragma: no cover
         if cube is None:
             cube = self._result
         if self._controller is None:
@@ -787,7 +787,7 @@ class Rubik(object):
 
     controller = property(get_controller)
 
-    def view(self, cube=None, visualizer_type=None, title=None):
+    def view(self, cube=None, visualizer_type=None, title=None): # pragma: no cover
         self.notify_output_mode()
         if cube is None:
             cube = self._result
@@ -801,7 +801,7 @@ class Rubik(object):
             data=cube,
         )
       
-    def run_controller(self):
+    def run_controller(self): # pragma: no cover
         if self._controller is not None:
             self.controller.run()
 
