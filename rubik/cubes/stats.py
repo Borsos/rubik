@@ -401,40 +401,6 @@ class StatsInfo(Info):
         result += stats_info
         return result
 
-    def old_report(self):
-        """report(self) -> StatsInfo report
-        """
-
-        return """\
-shape         = {shape}
-#elements     = {count}
-min           = {min} [{min_index}]
-max           = {max} [{max_index}]
-sum           = {sum}
-ave           = {ave}
-#zero         = {count_zero} [{fraction_zero:.2%}]
-#nonzero      = {count_nonzero} [{fraction_nonzero:.2%}]
-#nan          = {count_nan} [{fraction_nan:.2%}]
-#inf          = {count_inf} [{fraction_inf:.2%}]
-""".format(
-            shape=self.cube_shape,
-            min=self.cube_min,
-            min_index=self.cube_min_index,
-            max=self.cube_max,
-            max_index=self.cube_max_index,
-            sum=self.cube_sum,
-            ave=self.cube_ave,
-            count=self.cube_count,
-            count_zero=self.cube_count_zero,
-            fraction_zero=self.cube_fraction_zero,
-            count_nonzero=self.cube_count_nonzero,
-            fraction_nonzero=self.cube_fraction_nonzero,
-            count_nan=self.cube_count_nan,
-            fraction_nan=self.cube_fraction_nan,
-            count_inf=self.cube_count_inf,
-            fraction_inf=self.cube_fraction_inf,
-        )
-
 stats_info = StatsInfo.stats_info
 
 class DiffInfo(Info):
