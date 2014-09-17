@@ -10,6 +10,6 @@ install:
   - "pip install ."
 # command to run tests
 script: 
-  - bin/rubik_test
+  - ./bin/rubik_test
 after_success:
   - coveralls --rcfile=.coveragerc
