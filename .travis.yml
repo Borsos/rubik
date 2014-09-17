@@ -7,7 +7,7 @@ python:
 # command to install dependencies
 install: 
   - "pip install numpy"
-  #- "pip install ."
+  - "pip install ."
 # command to run tests
 script: 
   - bin/rubik_test
