@@ -28,7 +28,7 @@ __all__ = [
 
 import sys
 
-if sys.version_info.major == 2:
+if sys.version_info[0] == 2:
     PY3 = False
 else:
     PY3 = True
