@@ -27,9 +27,9 @@ from ...cubes import api as cb
 
 from .functor_help import Help
 
-def help_cubes(test=None, interactive=None, writer=None):
+def help_cubes(test=None, interactive=None, writer=None): # pragma: no cover
     HelpCubes(test=test, interactive=interactive, writer=writer)()
 
 class HelpCubes(Help):
-    def __call__(self):
+    def __call__(self): # pragma: no cover
         help(cb)

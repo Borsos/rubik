@@ -26,9 +26,9 @@ __all__ = [
 
 from .functor_help import Help
 
-def help_numpy(test=None, interactive=None, writer=None):
+def help_numpy(test=None, interactive=None, writer=None): # pragma: no cover
     HelpNumpy(test=test, interactive=interactive, writer=writer)()
 
 class HelpNumpy(Help):
-    def __call__(self):
+    def __call__(self): # pragma: no cover
         help(np)
