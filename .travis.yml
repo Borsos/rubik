@@ -13,7 +13,7 @@ install:
 
 # command to run tests
 script: 
-  - PYTHONPATH="${PWD}:$PYTHONPATH" coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes ./bin/rubik_test
+  - PYTHONPATH="${PWD}:$PYTHONPATH" coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes --omit "*/visualizer/*" ./bin/rubik_test
 
 after_success:
   - coveralls --rcfile=.coveragerc
