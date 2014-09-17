@@ -140,7 +140,7 @@ This is the command line interface to the rubik testing system.
     # test
     test_logger = log.set_test_logger(args.verbose_level)
 
-    if args.coverage:
+    if args.coverage: # pragma: no cover
         coverage_htmldir = os.path.abspath(args.coverage_htmldir)
         if os.path.exists(coverage_htmldir):
             shutil.rmtree(coverage_htmldir)
