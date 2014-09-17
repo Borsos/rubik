@@ -1,5 +1,5 @@
 [![Build Status](https://coveralls.io/repos/simone-campagna/rubik/badge.png?branch=master)](https://coveralls.io/r/simone-campagna/rubik?branch=master)
-[![Coverage Status](https://travis-ci.org/simone-campagna/rubik.svg?branch=master)](https://travis-ci.org/simone-campagna/rubik.svg?branch=master)
+[![Coverage Status](https://travis-ci.org/simone-campagna/rubik.svg?branch=master)](https://travis-ci.org/simone-campagna/rubik?branch=master)
 
 rubik
 ======
