@@ -11,6 +11,6 @@ install:
   - "pip install ."
 # command to run tests
 script: 
-  - PYTHONPATH="${PWD}:$PYTHONPATH"./bin/rubik_test
+  - PYTHONPATH="${PWD}:$PYTHONPATH" coverage run ./bin/rubik_test
 after_success:
   - coveralls --rcfile=.coveragerc
