@@ -35,47 +35,47 @@ __all__ = [
            'help_filenames',
           ]
 
-from help_creating_cubes import \
+from .help_creating_cubes import \
     help_creating_cubes
 
-from help_cubes import \
+from .help_cubes import \
     help_cubes
 
-from help_dtypes import \
+from .help_dtypes import \
     help_dtypes
 
-from help_environment_variables import \
+from .help_environment_variables import \
     help_environment_variables
 
-from help_expression import \
+from .help_expression import \
     help_expression
 
-from help_extractor import \
+from .help_extractor import \
     help_extractor
 
-from help_filenames import \
+from .help_filenames import \
     help_filenames
 
-from help_labeled_options import \
+from .help_labeled_options import \
     help_labeled_options
 
-from help_memory_usage import \
+from .help_memory_usage import \
     help_memory_usage
 
-from help_numpy import \
+from .help_numpy import \
     help_numpy
 
-from help_output import \
+from .help_output import \
     help_output
 
-from help_split import \
+from .help_split import \
     help_split
 
-from help_usage import \
+from .help_usage import \
     help_usage, \
     help_demo
 
-from help_user_defined_variables import \
+from .help_user_defined_variables import \
     help_user_defined_variables
 
 
