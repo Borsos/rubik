@@ -20,7 +20,7 @@ __author__ = "Simone Campagna"
 from ..log import get_print
 
 class Help(object):
-    DEFAULT_TEST = True
+    DEFAULT_TEST = False
     DEFAULT_INTERACTIVE = False
     def __init__(self, test=False, interactive=False, writer=None):
         if test is None:
