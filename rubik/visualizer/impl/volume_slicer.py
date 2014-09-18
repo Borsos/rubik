@@ -278,7 +278,6 @@ Volume slicer visualizer
         self.coords = str(tpl)
 
     def set_size(self):
-        print self.data.shape, self.data_src3d.scalar_data.shape
         self.size = str(self.data.shape)
 
     ### D e f a u l t s :
