@@ -2,8 +2,8 @@ language: python
 python:
   #- "2.6"
   - "2.7"
-  #- "3.2"
-  #- "3.3"
+  - "3.2"
+  - "3.3"
 
 # command to install dependencies
 install: 
@@ -17,3 +17,11 @@ script:
 
 after_success:
   - coveralls --rcfile=.coveragerc
+
+# notifications:
+notifications:
+  email:
+    recipients:
+      - simone.campagna11@gmail.com
+    on_success: change
+    on_failure: always
