@@ -26,6 +26,8 @@ import collections
 from .base_class_impl import BaseClassImpl
 from ... import conf
 
+from ...py23 import iteritems
+
 class BaseControllerImpl(BaseClassImpl):
     CURRENT_ID = 0
     ID_FORMAT = "Controller[{id}]"
@@ -42,14 +44,14 @@ class BaseControllerImpl(BaseClassImpl):
         self.set_attributes(**attributes)
 
     def set_defaults(self):
-        for attribute_name, attribute in self.ATTRIBUTES.iteritems():
+        for attribute_name, attribute in iteritems(self.ATTRIBUTES):
             self.attributes[attribute_name] = attribute.default()
             
     def set_attributes(self, **attributes):
-        for attribute_name, attribute_value in attributes.iteritems():
+        for attribute_name, attribute_value in iteritems(attributes):
             if not attribute_name in self.ATTRIBUTES:
                 self.logger.warn("{}: warning: invalid attribute {!r} ignored".format(self.name, attribute_name))
-        for attribute_name, attribute in self.ATTRIBUTES.iteritems():
+        for attribute_name, attribute in iteritems(self.ATTRIBUTES):
             if attribute_name in attributes:
                 attribute_value = attributes[attribute_name]
                 self.logger.info("{}: setting attribute {}={!r}".format(self.name, attribute_name, attribute_value))

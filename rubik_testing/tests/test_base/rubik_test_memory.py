@@ -50,13 +50,13 @@ class RubikTestMemory(RubikTestCase):
         
     @testmethod
     def constructor(self):
-        for mem_i, (mem_b, mem_hs) in self._mems.iteritems():
+        for mem_i, (mem_b, mem_hs) in self._mems.items():
             mem = Memory(mem_i)
             self.assertEqual(mem.get_bytes(), mem_b)
 
     @testmethod
     def human(self):
-        for mem_i, (mem_b, mem_hs) in self._mems.iteritems():
+        for mem_i, (mem_b, mem_hs) in self._mems.items():
             mem = Memory(mem_i)
             mem_h = Memory(mem_hs)
             mem_human = mem.human()

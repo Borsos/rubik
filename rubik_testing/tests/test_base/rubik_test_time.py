@@ -47,14 +47,14 @@ class RubikTestTime(RubikTestCase):
         
     @testmethod
     def constructor(self):
-        for time_i, (time_s, time_hs) in self._times.iteritems():
+        for time_i, (time_s, time_hs) in self._times.items():
             time = Time(time_i)
             time_h = Time(time_hs)
             self.assertEqual(time.get_seconds(), time_s)
 
     @testmethod
     def human(self):
-        for time_i, (time_s, time_hs) in self._times.iteritems():
+        for time_i, (time_s, time_hs) in self._times.items():
             time = Time(time_i)
             time_h = Time(time_hs)
             time_human = time.human()

@@ -92,7 +92,7 @@ def list_controller(controller_type, logger=None, print_function=None):
         print_function("    TARGET DIMENSIONS: {}".format(controller_class.DIMENSIONS))
         print_function("    DESCRIPTION: {}".format(textwrap.fill(controller_class.DESCRIPTION,
                                                                   initial_indent="", subsequent_indent="                 ")))
-        for attribute_name, attribute in controller_class.ATTRIBUTES.iteritems():
+        for attribute_name, attribute in controller_class.ATTRIBUTES.items():
             print_function("    * ATTRIBUTE {}:".format(attribute_name))
             print_function("      TYPE: {}".format(textwrap.fill(str(attribute.attribute_type()),
                                                           initial_indent="",
@@ -116,7 +116,7 @@ def list_visualizer(visualizer_type, logger=None, print_function=None):
         print_function("    TARGET DIMENSIONS: {}".format(visualizer_class.DIMENSIONS))
         print_function("    DESCRIPTION: {}".format(textwrap.fill(visualizer_class.DESCRIPTION,
                                                                   initial_indent="", subsequent_indent="                 ")))
-        for attribute_name, attribute in visualizer_class.ATTRIBUTES.iteritems():
+        for attribute_name, attribute in visualizer_class.ATTRIBUTES.items():
             print_function("    * ATTRIBUTE {}:".format(attribute_name))
             print_function("      TYPE: {}".format(textwrap.fill(str(attribute.attribute_type()),
                                                           initial_indent="",

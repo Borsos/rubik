@@ -24,6 +24,7 @@ __all__ = [
            'StringIO',
            'get_input',
            'decode',
+           'iteritems',
           ]
 
 import sys
@@ -53,3 +54,10 @@ else:
     get_input = raw_input
     def decode(t):
         return t
+
+if PY3:
+    def iteritems(dct):
+        return dct.items()
+else:
+    def iteritems(dct):
+        return dct.iteritems()

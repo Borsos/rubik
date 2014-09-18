@@ -44,7 +44,7 @@ class RubikTestExtractor(RubikTestCase):
         
     @testmethod
     def constructor(self):
-        for ex_i, (shape, count, sub_count) in self._exs.iteritems():
+        for ex_i, (shape, count, sub_count) in self._exs.items():
             ex = Extractor(ex_i)
             ex_count, ex_sub_count = ex.get_counts(shape)
             self.assertEqual(ex_count, count)

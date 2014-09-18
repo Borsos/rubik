@@ -62,7 +62,7 @@ from .attributes import \
     LOCATE_MODE_VALUE, \
     LOCATE_MODES
 
-from ...py23 import BASE_STRING
+from ...py23 import BASE_STRING, iteritems
 
 class VolumeSlicerHandler(ModelView, BaseHandlerMixIn):
     def init(self, info):
@@ -453,7 +453,7 @@ Volume slicer visualizer
         # move the others
         def move_view(obj, evt):
             position = obj.GetCurrentCursorPosition()
-            for other_axis, axis_number in self.controller.LOCAL_AXIS_NUMBERS.iteritems():
+            for other_axis, axis_number in iteritems(self.controller.LOCAL_AXIS_NUMBERS):
                 ipw3d = getattr(self, 'ipw_3d_{}'.format(other_axis))
                 if other_axis == axis_name:
                     axis_index_value = int(round(ipw3d.ipw.slice_position)) - 1

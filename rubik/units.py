@@ -206,7 +206,7 @@ class SimpleUnits(Units):
     def human(self):
         base_value = self.base_value()
         diffs = []
-        for units_s, units_v in self.__units__.iteritems():
+        for units_s, units_v in self.__units__.items():
             diffs.append((units_s, abs(units_v - base_value)))
         diffs.sort(key=lambda x: x[-1])
         units = diffs[0][0]

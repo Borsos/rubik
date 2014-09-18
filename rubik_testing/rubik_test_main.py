@@ -66,7 +66,7 @@ class RubikTestMain(object):
             suite.addTest(test_class(test_name=test_name))
             suite_id_num_tests[id(suite)] += 1
             suite_by_id[id(suite)] = suite
-        for suite_id, num_tests in suite_id_num_tests.iteritems():
+        for suite_id, num_tests in suite_id_num_tests.items():
             if num_tests > 0:
                 main_suite.addTest(suite_by_id[suite_id])
 
@@ -98,7 +98,7 @@ class RubikTestMain(object):
                         l.append(test_name)
                 selected_tests = l
             else:
-                for suite_name, suite in SUITES.iteritems():
+                for suite_name, suite in SUITES.items():
                     for test_class, test_name in suite.test_classes_and_names():
                         if fnmatch.fnmatchcase(test_name, pattern):
                             selected_tests.append((suite, test_class, test_name))

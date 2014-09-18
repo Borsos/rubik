@@ -139,7 +139,7 @@ class Info(object):
         table = []
         if headers:
             table.append(("", ) + headers)
-        for key, (label, compare) in cls.KEYS.iteritems():
+        for key, (label, compare) in cls.KEYS.items():
             row = [label, '=']
             empty = True
             for instance in instances:
@@ -163,7 +163,7 @@ class Info(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             raise ValueError("cannot compare {} with {}".format(self.__class__.__name__, other.__class__.__name__))
-        for key, (label, compare) in self.KEYS.iteritems():
+        for key, (label, compare) in self.KEYS.items():
             if compare and getattr(self, key) != getattr(other, key):
                 return False
         return True
@@ -173,7 +173,7 @@ class Info(object):
 
     @classmethod
     def get_keys(cls):
-        for key, (label, compare) in cls.KEYS.iteritems():
+        for key, (label, compare) in cls.KEYS.items():
             if compare:
                 yield key
 

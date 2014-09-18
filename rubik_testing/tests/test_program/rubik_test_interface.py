@@ -307,7 +307,7 @@ cb.write_cube(file_format="{f}", cube=cube, file="{o}")
         filename = "view_attributes.txt"
         try:
             with open(filename, "w") as f_out:
-                for attribute_name, attribute_value in attribute_dict.iteritems():
+                for attribute_name, attribute_value in attribute_dict.items():
                     f_out.write("{}={!r}\n".format(attribute_name, attribute_value))
             returncode, output, error = self.run_program("--view-attribute-file {}".format(filename))
             self.assertEqual(returncode, 0)

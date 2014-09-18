@@ -168,7 +168,7 @@ class Config(object):
             with open(self.rubik_config, 'w') as f_out:
                 f_out.write("# configuration file for rubik {}\n".format(conf.VERSION))
                 f_out.write("[general]\n")
-                for key, value in self.CONFIG_DEFAULTS.iteritems():
+                for key, value in self.CONFIG_DEFAULTS.items():
                     f_out.write("# {} = {}\n".format(key, value))
         for visualizer, filename in (
                                      (self.VISUALIZER_VolumeSlicer, self.get_visualizer_defaults_filename(self.VISUALIZER_VolumeSlicer)),
@@ -188,7 +188,7 @@ class Config(object):
         else:
             file.write("# configuration file for rubik {}\n".format(conf.VERSION))
             file.write("[general]\n")
-            for key, default_value in self.CONFIG_DEFAULTS.iteritems():
+            for key, default_value in self.CONFIG_DEFAULTS.items():
                 value = self.get_option(key)
                 if value == default_value:
                     comment = "# "
