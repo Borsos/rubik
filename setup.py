@@ -38,7 +38,7 @@ setup(
     author = "Simone Campagna",
     author_email = "simone.campagna@tiscali.it",
     url="https://github.com/simone-campagna/rubik",
-    download_url = 'https://github.com/simone-campagna/rubik/tarball/{}.tar.gz'.format(conf.VERSION),
+    download_url = 'https://github.com/simone-campagna/rubik/archive/{}.tar.gz'.format(conf.VERSION),
     packages = ["rubik",
                 "rubik.application",
                 "rubik.application.help_functions",
