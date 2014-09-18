@@ -38,8 +38,6 @@ class HelpUsage(HelpExample):
 ## 1. Create a random cube with a given shape:
 
 $ rubik -r 100 -e 'cb.random_cube("8x10x20")' -o r_{shape}.{format}
-$ echo ciao
-ciao
 $
 
 This will create 'r_8x10x20.raw'.
