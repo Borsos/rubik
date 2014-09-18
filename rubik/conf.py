@@ -64,7 +64,7 @@ PROGRAM_NAME = "rubik"
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
-VERSION_PATCH = 0
+VERSION_PATCH = 1
 VERSION = "{major}.{minor}.{patch}".format(
     major=VERSION_MAJOR,
     minor=VERSION_MINOR,

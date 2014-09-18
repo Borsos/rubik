@@ -31,10 +31,10 @@ sys.path.insert(0, py_dirname)
 from rubik import conf
 
 setup(
-    name = "rubik",
+    name = "python-rubik",
     version = conf.VERSION,
     requires = [],
-    description = "Tool to read/write N-dimensional cubes",
+    description = "Tool to read/write/visualize N-dimensional cubes",
     author = "Simone Campagna",
     author_email = "simone.campagna@tiscali.it",
     url="https://github.com/simone-campagna/rubik",
