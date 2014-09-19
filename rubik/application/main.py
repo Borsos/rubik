@@ -296,11 +296,6 @@ Global options""")
         nargs='+',
         help="add an expressions to evaluate (--help-expression/-he for more information)")
 
-    global_group.add_argument("expression",
-        type=rubik.expressions.store,
-        nargs='*',
-        help="add an expressions to evaluate (--help-expression/-he for more information)")
-
     input_group = parser.add_argument_group(
         "input options",
         description="""\
@@ -667,6 +662,12 @@ Options to show help on specific topics """)
         default=False,
         help="help about usage: shows some examples and common recipes")
 
+    help_group.add_argument("--run-help-tests", "-hr",
+        dest="run_help_tests",
+        action="store_true",
+        default=False,
+        help="run tests contained in examples and validate the result")
+
     help_group.add_argument("--demo",
         dest="help_demo",
         action="store_true",
@@ -712,7 +713,7 @@ Options to show help on specific topics """)
     for key in dir(args):
         if key.startswith('help_') and getattr(args, key):
             help_function = getattr(help_functions, key)
-            help_function()
+            help_function(test=args.run_help_tests)
             help_done = True
     if help_done:
         return 0

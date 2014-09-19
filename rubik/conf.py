@@ -62,9 +62,9 @@ from .py23 import BASE_STRING
 #PROGRAM_NAME = os.path.basename(sys.argv[0])
 PROGRAM_NAME = "rubik"
 
-VERSION_MAJOR = 1
-VERSION_MINOR = 2
-VERSION_PATCH = 2
+VERSION_MAJOR = 2
+VERSION_MINOR = 0
+VERSION_PATCH = 0
 VERSION = "{major}.{minor}.{patch}".format(
     major=VERSION_MAJOR,
     minor=VERSION_MINOR,

@@ -128,7 +128,7 @@ $ rubik -i rsub_y0_{shape}.raw \
         -i rsub_y3_{shape}.raw \
         -i rsub_y4_{shape}.raw \
         -s 8x20 \
-        'cb.join(_i)' \
+        -e 'cb.join(_i)' \
         -o rj.{shape}.raw \
         -v
 rubik: evaluating expression "read_cube(label='i0')"...
@@ -562,7 +562,7 @@ Two functions are available to create big cubes out of core:
 * write_const_cube(file, shape, value=0.0, buffer_size=None)
 
 
-$ rubik 'cb.write_linear_cube("l.{shape}.raw", "3x4x5", buffer_size=2, start=-1, increment=0.5)'
+$ rubik -e 'cb.write_linear_cube("l.{shape}.raw", "3x4x5", buffer_size=2, start=-1, increment=0.5)'
 $ rubik -i l.{shape}.raw -s 3x4x5 -v --print
 rubik: evaluating expression "read_cube(label='i0')"...
 rubik: reading 60 'float32' elements (240 bytes) from 'raw' file 'l.3x4x5.raw'...
@@ -586,7 +586,7 @@ $
 <<<BREAK>>>
 ## 22. Reading a portion of a file
 
-$ rubik 'cb.linear_cube("3x4x5")' \\
+$ rubik -e 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
 rubik: evaluating expression 'cb.linear_cube("3x4x5")'...
 rubik: evaluating expression "write_cube(label='o0')"...
@@ -608,12 +608,12 @@ $
 <<<BREAK>>>
 ## 23. Overriding part of a file
 
-$ rubik 'cb.linear_cube("3x4x5")' \\
+$ rubik -e 'cb.linear_cube("3x4x5")' \\
         -o l.{shape}.{format} -v
 rubik: evaluating expression 'cb.linear_cube("3x4x5")'...
 rubik: evaluating expression "write_cube(label='o0')"...
 rubik: writing 60 'float32' elements (240 bytes) to 'raw' file 'l.3x4x5.raw'...
-$ rubik 'cb.const_cube("4x5", value=1.5)' \\
+$ rubik -e 'cb.const_cube("4x5", value=1.5)' \\
         -o l.3x4x5.{format} \\
         -Oo 80b
 $ rubik -i l.{shape}.{format} \\
@@ -640,14 +640,14 @@ $
 
 This is equivalent to
 
-$ rubik 'cb.linear_cube("3x4x5")' \\
+$ rubik -e 'cb.linear_cube("3x4x5")' \\
         -o l2.{shape}.{format} -v
 rubik: evaluating expression 'cb.linear_cube("3x4x5")'...
 rubik: evaluating expression "write_cube(label='o0')"...
 rubik: writing 60 'float32' elements (240 bytes) to 'raw' file 'l2.3x4x5.raw'...
 $ rubik -i l2.3x4x5.raw \\
         -s 3x4x5 \\
-        'i0[1] = cb.const_cube("4x5", value=1.5)' \\
+        -e 'i0[1] = cb.const_cube("4x5", value=1.5)' \\
         -P
 [[[  0.    1.    2.    3.    4. ]
   [  5.    6.    7.    8.    9. ]
@@ -669,7 +669,7 @@ Or also
 
 $ rubik -i l2.3x4x5.raw \\
         -s 3x4x5 \\
-        'i0[1] = 1.5' \\
+        -e 'i0[1] = 1.5' \\
         -P
 [[[  0.    1.    2.    3.    4. ]
   [  5.    6.    7.    8.    9. ]
@@ -690,7 +690,7 @@ $
 <<<BREAK>>>
 ## 24. Printing the histogram of a cube
 
-$ rubik 'cb.random_cube("6x4x5")' --random-seed 100 -H
+$ rubik -e 'cb.random_cube("6x4x5")' --random-seed 100 -H
 [0.00, 0.10)|****************************************                        |10
 [0.10, 0.20)|********************************************************        |14
 [0.20, 0.30)|****************************************************************|16
@@ -701,13 +701,13 @@ $ rubik 'cb.random_cube("6x4x5")' --random-seed 100 -H
 [0.70, 0.79)|********************************                                | 8
 [0.79, 0.89)|****************************************************            |13
 [0.89, 0.99]|****************************************************            |13
-$ rubik 'cb.random_cube("6x4x5")' --random-seed 100 -H -Hb 5 -Hr 0.0 1.0
+$ rubik -e 'cb.random_cube("6x4x5")' --random-seed 100 -H -Hb 5 -Hr 0.0 1.0
 [0.0, 0.2)|**********************************************                    |23
 [0.2, 0.4)|******************************************************************|33
 [0.4, 0.6)|**************************************                            |19
 [0.6, 0.8)|****************************************                          |20
 [0.8, 1.0]|**************************************************                |25
-$ rubik 'cb.random_cube("6x4x5")' --random-seed 100 -H -Hb 5 -Hr 0.0 1.0 -Hp
+$ rubik -e 'cb.random_cube("6x4x5")' --random-seed 100 -H -Hb 5 -Hr 0.0 1.0 -Hp
 [0.0, 0.2)|*******************************************                   |19.17%
 [0.2, 0.4)|**************************************************************|27.50%
 [0.4, 0.6)|************************************                          |15.83%

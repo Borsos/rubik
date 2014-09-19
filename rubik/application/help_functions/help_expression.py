@@ -43,26 +43,31 @@ code can be:
 
 Expressions/source can be passed:
 
-* positionally, for instance
-
-  $ rubik 'cb.linear_cube("4x4")' --print
-
 * through the '--expression/-e' option:
 
-  $ rubik -e 'cb.linear_cube("4x4")' --print
+$ rubik -e 'cb.linear_cube("2x4")' --print
+[[ 0.  1.  2.  3.]
+ [ 4.  5.  6.  7.]]
+$
 
 * through the '--source-file/-f' option, that :
 
-  $ rubik -f expr.txt --print
+$ cat expr_2x4.txt
+_r = cb.linear_cube("2x4")
+$ rubik -f expr_2x4.txt --print
+[[ 0.  1.  2.  3.]
+ [ 4.  5.  6.  7.]]
+$
 
-  in this case, 'expr.txt' must be an existing file containing valid source
+  in this case, 'expr_2x4.txt' must be an existing file containing valid source
   code;
 
 * passing an expression starting with '@', for instance
 
-  $ rubik @expr.txt --print
+  $ rubik -e @expr_2x4.txt --print
+  ...
 
-  which is equivalent to 'rubik -f expr.txt --print'.
+  which is equivalent to 'rubik -f expr_2x4.txt --print'.
 
 You can pass multiple expressions/source files; they will be evaluated in order.
 
@@ -139,8 +144,7 @@ usage: rubik [--verbose] [--verbose-level VL] [--quiet] [--report] [--dry-run]
              [--help-user-defined-variables] [--help-numpy] [--help-cubes]
              [--help-filenames] [--help-split] [--help-environment-variables]
              [--help-creating-cubes] [--help-output] [--help-memory-usage]
-             [--help-usage] [--demo]
-             [expression [expression ...]]
+             [--help-usage] [--run-help-tests] [--demo]
 rubik: error: unrecognized arguments: -cb.linear_cube("2x4")
 $
 
@@ -158,40 +162,21 @@ $ rubik -e='-cb.linear_cube("2x4")' --print
 $ rubik --expression='-cb.linear_cube("2x4")' --print
 [[-0. -1. -2. -3.]
  [-4. -5. -6. -7.]]
-$ rubik '0 - cb.linear_cube("2x4")' --print
+$ rubik -e '0 - cb.linear_cube("2x4")' --print
 [[ 0. -1. -2. -3.]
  [-4. -5. -6. -7.]]
 $
-
-It is also possible to use the '--' option to mark the end of options; 
-nevertheless, in this case the '--print' option will not be recognized,
-so the 'print_cube()' function must be called instead:
-
-$ rubik -- '-cb.linear_cube("2x4")' 'print_cube()'
-[[-0. -1. -2. -3.]
- [-4. -5. -6. -7.]]
-$
-
-or also
-
-$ rubik 'print_cube(-cb.linear_cube("2x4"))'
-[[-0. -1. -2. -3.]
- [-4. -5. -6. -7.]]
-$
-
-In the latter case, the '--' option is not necessary, since the expression
-does not start with '-'.
 
 ## Loading expressions from files
 
 It is possible to load expressions from file; for instance:
 
-$ cat expr.txt
+$ cat expr_3x4.txt
 a = cb.linear_cube("3x4")
 a[1, :] += 10
 a[:, 1] -= 10
 _r = a + 0.5
-$ rubik -f expr.txt --print
+$ rubik -f expr_3x4.txt --print
 [[  0.5  -8.5   2.5   3.5]
  [ 14.5   5.5  16.5  17.5]
  [  8.5  -0.5  10.5  11.5]]
@@ -200,7 +185,7 @@ $
 If an expression starts with '@', it is considered a filename to be load. For
 instance:
 
-$ rubik @expr.txt --print
+$ rubik -e @expr_3x4.txt --print
 [[  0.5  -8.5   2.5   3.5]
  [ 14.5   5.5  16.5  17.5]
  [  8.5  -0.5  10.5  11.5]]
@@ -209,7 +194,12 @@ $
 """
 
     def setUp(self):
-        with open("expr.txt", "w") as f_out:
+        with open("expr_2x4.txt", "w") as f_out:
+            f_out.write("""\
+_r = cb.linear_cube("2x4")
+""")
+
+        with open("expr_3x4.txt", "w") as f_out:
             f_out.write("""\
 a = cb.linear_cube("3x4")
 a[1, :] += 10
