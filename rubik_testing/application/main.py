@@ -34,8 +34,8 @@ from rubik.application import log as rubik_log
 from . import log
 from ..rubik_test_main import RubikTestMain
 
-AVAILABLE_COVERAGE_TOOLS = ('python-coverage', )
-DEFAULT_COVERAGE_TOOL = 'python-coverage'
+AVAILABLE_COVERAGE_TOOLS = ('python-coverage', 'coverage')
+DEFAULT_COVERAGE_TOOL = 'coverage'
 
 def main(arguments=None):
     if arguments is None:
@@ -144,10 +144,17 @@ This is the command line interface to the rubik testing system.
         coverage_htmldir = os.path.abspath(args.coverage_htmldir)
         if os.path.exists(coverage_htmldir):
             shutil.rmtree(coverage_htmldir)
-        if args.coverage_tool == "python-coverage":
+        if args.coverage_tool == "coverage":
+            coverage_tool = "coverage"
+            coverage_tool_args = ["--source", "rubik,rubik.application,rubik.application.help_functions,rubik.cubes"]
+        elif args.coverage_tool == "python-coverage":
+            coverage_tool = "coverage"
+            coverage_tool_args = []
+        if coverage_tool == "coverage":
             omit_args = ["--omit", "*/visualizer/*,*/tmp.*,*/tvtk/*,*/apptools/*,*/mayavi/*,*/vtk/*"]
             command_line = [args.coverage_tool, "run"]
             command_line.extend(omit_args)
+            command_line.extend(coverage_tool_args)
             command_line.append(sys.argv[0])
             command_line.append("--verbose-level={}".format(args.verbose_level))
             command_line.extend(repr(p) for p in args.test_patterns)

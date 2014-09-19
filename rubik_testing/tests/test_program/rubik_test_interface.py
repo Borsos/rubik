@@ -23,6 +23,8 @@ __all__ = [
 
 import os
 
+import numpy as np
+
 from rubik.conf import VERSION
 from rubik.shape import Shape
 from rubik.application import logo
@@ -311,7 +313,6 @@ cb.write_cube(file_format="{f}", cube=cube, file="{o}")
                     f_out.write("{}={!r}\n".format(attribute_name, attribute_value))
             returncode, output, error = self.run_program("--view-attribute-file {}".format(filename))
             self.assertEqual(returncode, 0)
-            self.assertEqual(returncode, 0)
         finally:
             os.remove(filename)
         
@@ -323,3 +324,28 @@ cb.write_cube(file_format="{f}", cube=cube, file="{o}")
     @testmethod
     def view_attribute_list(self):
         returncode, output, error = self.run_program("--view-list")
+
+    ## interface expressions
+    @testmethod
+    def read_cube(self):
+        a = np.array([[1.0, -1.3], [1.3, -0.2]], dtype=cb.get_default_dtype())
+        a.tofile("file_a.raw")
+        returncode, output, error = self.run_program("""-e 'read_cube(filename="file_a.raw", shape=("{s}"), dtype="{t!r}")' '_r.sum()' --print""".format(
+            s=Shape(a.shape),
+            t=cb.get_dtype_name(a.dtype),
+        ))
+        self.assertEqual(returncode, 0)
+        v = float(output.strip())
+        self.assertAlmostEqual(v, a.sum())
+    
+    @testmethod
+    def write_cube(self):
+        returncode, output, error = self.run_program("""-e '_r = cb.as_dtype(np.array([[1.0, -1.3], [1.3, -0.2]]))' -e 'write_cube(filename="file_b.raw", cube=_r)'""")
+        self.assertEqual(returncode, 0)
+        self.assertFileExistsAndHasShape("file_b.raw", Shape("2x2"))
+    
+    @testmethod
+    def write_cube_default(self):
+        returncode, output, error = self.run_program("""-e '_r = cb.as_dtype(np.array([[1.0, -1.3], [1.3, -0.2]]))' -e 'write_cube(filename="file_c.raw")'""")
+        self.assertEqual(returncode, 0)
+        self.assertFileExistsAndHasShape("file_c.raw", Shape("2x2"))

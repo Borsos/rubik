@@ -31,10 +31,25 @@ class RubikTestErrors(RubikTestProgram):
     METHOD_NAMES = []
 
     @testmethod
-    def test_RubikExpressionError(self):
+    def error_RubikExpressionError(self):
         returncode, output, error = self.run_program(
             """-e 'cb.linear_cube("AxB")'""",
             expect_failure=True,
         )
         self.assertNotEqual(returncode, 0)
 
+    @testmethod
+    def error_read_cube(self):
+        returncode, output, error = self.run_program(
+            """-e 'read_cube()'""",
+            expect_failure=True,
+        )
+        self.assertNotEqual(returncode, 0)
+
+    @testmethod
+    def error_write_cube(self):
+        returncode, output, error = self.run_program(
+            """-e 'write_cube()'""",
+            expect_failure=True,
+        )
+        self.assertNotEqual(returncode, 0)
