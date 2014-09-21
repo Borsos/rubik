@@ -24,11 +24,14 @@ scripts = [
 	'bin/rubik_test',
 ]
 
-dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
-py_dirname = os.path.join(dirname, "..")
-sys.path.insert(0, py_dirname)
+try:
+    dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
+    py_dirname = os.path.join(dirname, "..")
+    sys.path.insert(0, py_dirname)
 
-from rubik import conf
+    from rubik import conf
+finally:
+    del sys.path[0]
 
 setup(
     name = "python-rubik-testing",
