@@ -25,7 +25,7 @@ scripts = [
 ]
 
 dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
-py_dirname = os.path.join(dirname, "lib", "python")
+py_dirname = dirname
 sys.path.insert(0, py_dirname)
 
 from rubik import conf
