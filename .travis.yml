@@ -14,7 +14,7 @@ install:
 
 # command to run tests
 script: 
-  - cd testing ; coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes --omit "*/visualizer/*" `which rubik_test`
+  - env PYTHONPATH="${PWD}:$PYTHNPATH" coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes --omit "*/visualizer/*" `which rubik_test`
 
 after_success:
   - coveralls --rcfile=testing/.coveragerc
