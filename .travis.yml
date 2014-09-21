@@ -10,13 +10,14 @@ install:
   - "pip install coveralls"
   - "pip install -r requirements.txt"
   - "pip install ."
+  - "pip install testing"
 
 # command to run tests
 script: 
-  - PYTHONPATH="${PWD}:$PYTHONPATH" coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes --omit "*/visualizer/*" ./bin/rubik_test
+  - coverage run --source=rubik,rubik.application,rubik.application.help_functions,rubik.cubes --omit "*/visualizer/*" rubik_test
 
 after_success:
-  - coveralls --rcfile=.coveragerc
+  - coveralls --rcfile=testing/.coveragerc
 
 # notifications:
 notifications:
