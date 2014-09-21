@@ -18,7 +18,6 @@
 __author__ = "Simone Campagna"
 
 __all__ = [
-           'PY3',
            'lrange',
            'irange',
            'BASE_STRING',
@@ -31,8 +30,19 @@ __all__ = [
 import sys
 
 if sys.version_info[0] == 2: # pragma: no cover
-    PY3 = False
-    from .py2 import lrange, irange, BASE_STRING, StringIO, get_input, decode, iteritems
-else: # pragma: no cover
-    PY3 = True
-    from .py3 import lrange, irange, BASE_STRING, StringIO, get_input, decode, iteritems
+    def lrange(*n_args, **p_args):
+        return list(range(*n_args, **p_args))
+
+    irange = range
+
+    from io import StringIO
+
+    BASE_STRING = str
+
+    get_input = input
+
+    def decode(b):
+        return b.decode('utf8')
+
+    def iteritems(dct):
+        return dct.items()

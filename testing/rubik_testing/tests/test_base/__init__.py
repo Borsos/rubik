@@ -25,6 +25,9 @@ from ...rubik_test_suite import RubikTestSuite
 
 SUITE_BASE = RubikTestSuite('Base')
 
+from .rubik_test_py23 import RubikTestPy23
+SUITE_BASE.register_test_class(RubikTestPy23)
+
 from .rubik_test_memory import RubikTestMemory
 SUITE_BASE.register_test_class(RubikTestMemory)
 
