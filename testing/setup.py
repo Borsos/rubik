@@ -25,9 +25,7 @@ scripts = [
 ]
 
 dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
-print dirname
 py_dirname = os.path.join(dirname, "..")
-print py_dirname
 sys.path.insert(0, py_dirname)
 
 from rubik import conf
