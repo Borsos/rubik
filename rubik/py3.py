@@ -29,7 +29,7 @@ __all__ = [
 
 import sys
 
-if sys.version_info[0] == 2: # pragma: no cover
+if sys.version_info[0] == 3: # pragma: no cover
     def lrange(*n_args, **p_args):
         return list(range(*n_args, **p_args))
 
