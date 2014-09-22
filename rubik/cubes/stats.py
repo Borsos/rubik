@@ -41,6 +41,7 @@ from .utilities import precise_sum, interpolate_filename
 
 from ..errors import RubikError
 from ..shape import Shape
+from ..table import Table
 from .comparison import rel_diff_cube, abs_diff_cube
 
 def default_print_function(message):
@@ -135,10 +136,8 @@ class Info(object):
     @classmethod
     def reports(cls, instances, headers=None):
         if headers:
-            headers = tuple(headers) + tuple("" for i in range(len(instances) - len(headers)))
-        table = []
-        if headers:
-            table.append(("", ) + headers)
+            headers = ("", ) + tuple(headers) + tuple("" for i in range(len(instances) - len(headers)))
+        table = Table(headers=headers)
         for key, (label, compare) in cls.KEYS.items():
             row = [label, '=']
             empty = True
@@ -148,14 +147,15 @@ class Info(object):
                     empty = False
                 row.append(key_repr)
             if not empty:
-                table.append(row)
-        ln = [max(len(row[i]) for row in table) for i in range(len(instances) + 2)]
-        f_list = []
-        for lni in ln[:-1]:
-            f_list.append("{{:{}s}}".format(lni))
-        f_list.append("{}")
-        fmt = ' '.join(f_list)
-        return '\n'.join(fmt.format(*row) for row in table)
+                table.add_row(row)
+        return table.render()
+#        ln = [max(len(row[i]) for row in table) for i in range(len(instances) + 2)]
+#        f_list = []
+#        for lni in ln[:-1]:
+#            f_list.append("{{:{}s}}".format(lni))
+#        f_list.append("{}")
+#        fmt = ' '.join(f_list)
+#        return '\n'.join(fmt.format(*row) for row in table)
 
     def info_progress(self, frequency=None, print_function=None):
         return InfoProgress(self, frequency=frequency, print_function=print_function)
