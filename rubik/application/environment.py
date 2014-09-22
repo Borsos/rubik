@@ -21,6 +21,9 @@ __all__ = [
     'RUBIK_OPTIONS'
     'RUBIK_DIR'
     'RUBIK_CONFIG'
+    'DEFAULT_RUBIK_OPTIONS'
+    'DEFAULT_RUBIK_DIR'
+    'DEFAULT_RUBIK_CONFIG'
     'load_rubik_environment'
     'get_rubik_dir'
     'get_rubik_config'
@@ -29,18 +32,22 @@ __all__ = [
 import os
 import shlex
 
+DEFAULT_RUBIK_DIR = '~/.rubik'
+DEFAULT_RUBIK_CONFIG = 'rubik.config'
+DEFAULT_RUBIK_OPTIONS = ''
+
 RUBIK_OPTIONS = None
 RUBIK_DIR = None
 RUBIK_CONFIG = None
 
 def load_rubik_environment():
     global RUBIK_OPTIONS
-    RUBIK_OPTIONS = shlex.split(os.environ.get('RUBIK_OPTIONS', ''))
+    RUBIK_OPTIONS = shlex.split(os.environ.get('RUBIK_OPTIONS', DEFAULT_RUBIK_OPTIONS))
 
     global RUBIK_DIR
     global RUBIK_CONFIG
-    RUBIK_DIR = os.path.expanduser(os.path.expandvars(os.environ.get('RUBIK_DIR', '~/.rubik')))
-    RUBIK_CONFIG = os.path.expanduser(os.path.expandvars(os.environ.get('RUBIK_CONFIG', 'rubik.config')))
+    RUBIK_DIR = os.path.expanduser(os.path.expandvars(os.environ.get('RUBIK_DIR', DEFAULT_RUBIK_DIR)))
+    RUBIK_CONFIG = os.path.expanduser(os.path.expandvars(os.environ.get('RUBIK_CONFIG', DEFAULT_RUBIK_CONFIG)))
     if not os.path.isabs(RUBIK_CONFIG):
         RUBIK_CONFIG = os.path.join(RUBIK_DIR, RUBIK_CONFIG)
     RUBIK_CONFIG = os.path.normpath(os.path.realpath(os.path.abspath(RUBIK_CONFIG)))

@@ -22,6 +22,7 @@ __all__ = [
            'help_cubes',
            'help_dtypes',
            'help_environment_variables',
+           'help_configuration',
            'help_expression',
            'help_extractor',
            'help_user_defined_variables',
@@ -46,6 +47,9 @@ from .help_dtypes import \
 
 from .help_environment_variables import \
     help_environment_variables
+
+from .help_configuration import \
+    help_configuration
 
 from .help_expression import \
     help_expression

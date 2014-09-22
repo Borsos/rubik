@@ -48,6 +48,10 @@ class RubikTestHelp(RubikTestCase):
         self.impl_help('environment_variables')
 
     @testmethod
+    def help_configuration(self):
+        self.impl_help('configuration')
+
+    @testmethod
     def help_expression(self):
         self.impl_help('expression')
 

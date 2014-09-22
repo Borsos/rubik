@@ -52,3 +52,5 @@ SUITE_BASE.register_test_class(RubikTestShape)
 from .rubik_test_utils import RubikTestUtils
 SUITE_BASE.register_test_class(RubikTestUtils)
 
+from .rubik_test_table import RubikTestTable
+SUITE_BASE.register_test_class(RubikTestTable)

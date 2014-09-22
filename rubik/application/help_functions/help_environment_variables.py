@@ -26,6 +26,8 @@ from ... import conf
 
 from .functor_help_text import HelpText
 
+from .. import environment
+
 def help_environment_variables(test=None, interactive=None, writer=None):
     HelpEnvironmentVariables(test=test, interactive=interactive, writer=writer)()
 
@@ -33,12 +35,32 @@ class HelpEnvironmentVariables(HelpText):
     TEXT = """\
 # Environment variables
 
-Currently the only accepted environment variable is '$RUBIK_OPTIONS', that can
-be set to a list of valid rubik options. For instance:
+The followinf variables affect the behavior of rubik:
+
+* RUBIK_OPTIONS
+This variable be set to a list of valid rubik options. For instance:
 
 $ export RUBIK_OPTIONS='-v --memory-limit 16gb'
-$
+$ 
  
 These options will be prepended to the list of command line arguments. So, they
 can be overwritten by command line arguments.
-"""
+
+By default, it is set to {default_rubik_options!r}
+
+* RUBIK_DIR
+This variable can be set to a directory containing a valid rubik configuration
+(see --help-configuration/-hC option).
+
+By default, it is set to {default_rubik_dir!r}
+
+* RUBIK_CONFIG
+This variable can be set to a rubik configuration file
+(see --help-configuration/-hC option).
+
+By default, it is set to {default_rubik_config!r}
+""".format(
+    default_rubik_options=environment.DEFAULT_RUBIK_OPTIONS,
+    default_rubik_dir=environment.DEFAULT_RUBIK_DIR,
+    default_rubik_config=environment.DEFAULT_RUBIK_CONFIG,
+)

@@ -638,6 +638,12 @@ Options to show help on specific topics """)
         default=False,
         help="help about environment variables")
 
+    help_group.add_argument("--help-configuration", "-hg",
+        dest="help_configuration",
+        action="store_true",
+        default=False,
+        help="help about rubik's configuration")
+
     help_group.add_argument("--help-creating-cubes", "-hC",
         dest="help_creating_cubes",
         action="store_true",
