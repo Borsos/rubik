@@ -143,8 +143,8 @@ usage: rubik [--verbose] [--verbose-level VL] [--quiet] [--report] [--dry-run]
              [--help-expression] [--help-extractor]
              [--help-user-defined-variables] [--help-numpy] [--help-cubes]
              [--help-filenames] [--help-split] [--help-environment-variables]
-             [--help-creating-cubes] [--help-output] [--help-memory-usage]
-             [--help-usage] [--run-help-tests] [--demo]
+             [--help-configuration] [--help-creating-cubes] [--help-output]
+             [--help-memory-usage] [--help-usage] [--run-help-tests] [--demo]
 rubik: error: unrecognized arguments: -cb.linear_cube("2x4")
 $
 

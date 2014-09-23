@@ -186,7 +186,7 @@ This is the command line interface to the rubik testing system.
                 PRINT("{:5d}) {}".format(test_num, test_name))
         if not args.dry_run:
             result = rubik_test_main.run(patterns)
-            return_code = len(result.failures)
+            return_code = len(result.failures) + len(result.errors)
             return return_code
     return 0
 
