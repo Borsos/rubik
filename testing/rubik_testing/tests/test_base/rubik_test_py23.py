@@ -40,7 +40,7 @@ class RubikTestPy23(RubikTestCase):
         if self.version == 2:
             self.assertFalse(py23.PY3)
         else:
-            self.assertFalse(py23.PY3)
+            self.assertTrue(py23.PY3)
 
     @testmethod
     def lrange(self):
