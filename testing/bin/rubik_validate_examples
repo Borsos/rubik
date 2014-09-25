@@ -19,7 +19,7 @@ __author__ = "Simone Campagna"
 
 import sys
 
-from rubik_testing.application.main_test import main
+from rubik_testing.application.main_validate_examples import main
 
 if __name__ == "__main__":
     sys.exit(main())
