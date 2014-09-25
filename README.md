@@ -1,8 +1,9 @@
-[![Build Status](https://coveralls.io/repos/simone-campagna/rubik/badge.png?branch=master)](https://coveralls.io/r/simone-campagna/rubik?branch=master)
-[![Coverage Status](https://travis-ci.org/simone-campagna/rubik.svg?branch=master)](https://travis-ci.org/simone-campagna/rubik?branch=master)
-
 rubik
 ======
+
+[![Build Status](https://travis-ci.org/simone-campagna/rubik.svg?branch=master)](https://travis-ci.org/simone-campagna/rubik?branch=master)
+[![Coverage Status](https://coveralls.io/repos/simone-campagna/rubik/badge.png?branch=master)](https://coveralls.io/r/simone-campagna/rubik?branch=master)
+
 Read, process, visualize and write N-dimensional cubes.
 
 Rubik is based on the *numpy* python module; it allows to manage numpy arrays from the command line.
